@@ -1,0 +1,126 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@font-face {
+  font-family: 'Izhitsa';
+  src: url('/Izhitsa.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --color-parchment: #f8e8c8;
+  --color-ink: #342327;
+  --color-cinnabar: #b91f26;
+  --font-sans: "Izhitsa", serif;
+  --font-serif: "Izhitsa", serif;
+  --font-philosopher: "Izhitsa", serif;
+  --font-kurale: "Izhitsa", serif;
+  --font-izhitsa: "Izhitsa", serif;
+}
+
+@layer base {
+  * {
+    font-family: 'Izhitsa', serif;
+  }
+  body {
+    background-color: var(--color-parchment);
+    color: var(--color-ink);
+    font-family: 'Izhitsa', serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer utilities {
+  .font-izhitsa {
+    font-family: "Izhitsa", serif;
+  }
+  
+  .drop-cap::first-letter {
+    font-family: "Izhitsa", serif;
+    color: var(--color-cinnabar);
+    font-size: 2.5em;
+    line-height: 0.8;
+    float: left;
+    margin-right: 0.1em;
+    margin-top: 0.1em;
+  }
+  
+  .ornament-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: var(--color-cinnabar);
+  }
+  .ornament-divider::before,
+  .ornament-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--color-cinnabar);
+    opacity: 0.3;
+  }
+  .ornament-divider:not(:empty)::before {
+    margin-right: .5em;
+  }
+  .ornament-divider:not(:empty)::after {
+    margin-left: .5em;
+  }
+
+  .azbyka-content a {
+    color: var(--color-cinnabar);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .azbyka-content a:hover {
+    text-decoration: underline;
+  }
+
+  .azbyka-content p {
+    margin-bottom: 0.75rem;
+  }
+
+  .azbyka-content b, .azbyka-content strong {
+    color: var(--color-cinnabar);
+    font-weight: 600;
+  }
+
+  /* Custom Animations for Home Page Buttons */
+  @keyframes border-beam {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes glow-pulse {
+    0%, 100% { opacity: 0.3; transform: scale(1); box-shadow: 0 0 0px rgba(234, 179, 8, 0); }
+    50% { opacity: 0.8; transform: scale(1.05); box-shadow: 0 0 20px rgba(234, 179, 8, 0.5); }
+  }
+
+  @keyframes border-beam-once {
+    0% { transform: rotate(0deg); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: rotate(360deg); opacity: 0; }
+  }
+
+  .animate-border-beam {
+    animation: border-beam 2s linear infinite;
+  }
+
+  .animate-border-beam-once {
+    animation: border-beam-once 1.5s ease-in-out forwards;
+  }
+
+  .animate-glow-pulse {
+    animation: glow-pulse 2s ease-in-out infinite;
+  }
+
+  .sparkle-border-mask {
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    padding: 4px;
+  }
+}
