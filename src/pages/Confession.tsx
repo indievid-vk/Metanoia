@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp, Plus, Check, Trash2, X, Minimize2, ArrowUp } fr
 import { useSinsStore, Passion, SinSeverity } from '../store';
 import { PASSIONS, MOCK_SINS } from '../data/mock';
 import { BackToTopButton } from '../components/BackToTopButton';
+import { getAssetPath } from '../utils';
 
 export default function Confession() {
   const { selectedSins, sinNotes, customSins, toggleSin, updateNote, addCustomSin, deleteCustomSin, clearConfession } = useSinsStore();
@@ -305,8 +306,8 @@ export default function Confession() {
 
               <div className="flex flex-col items-center space-y-4">
                 {[
-                  { src: "/images/stadii_grexa.webp", alt: "Стадии греха 1" },
-                  { src: "/images/stadii_greha_2.webp", alt: "Стадии греха 2" }
+                  { src: getAssetPath("/images/stadii_grexa.webp"), alt: "Стадии греха 1" },
+                  { src: getAssetPath("/images/stadii_greha_2.webp"), alt: "Стадии греха 2" }
                 ].map((img, index) => (
                   <div key={index} className="relative w-full flex justify-center p-2">
                     <img 

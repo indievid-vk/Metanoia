@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import gospelCommandmentsData from '../data/commandments.json';
+import { getAssetPath } from '../utils';
 
 interface InteractiveButtonProps {
   onClick: () => void;
@@ -73,7 +74,7 @@ export default function Home() {
       {/* Full-screen background image */}
       <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden">
         <img 
-          src="/images/Fon_glav.webp" 
+          src={getAssetPath("/images/Fon_glav.webp")} 
           alt="" 
           className="w-full h-full object-cover opacity-20"
         />
@@ -139,7 +140,7 @@ export default function Home() {
         <div className="relative w-full h-full flex items-center justify-center z-20">
           <div className="relative" style={{ aspectRatio: '369/500', maxHeight: '100%', maxWidth: '100%' }}>
             <img 
-              src="/images/home-bg.webp" 
+              src={getAssetPath("/images/home-bg.webp")} 
               alt="Обложка Путь спасения" 
               className="w-full h-full object-contain block drop-shadow-2xl"
             />

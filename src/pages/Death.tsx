@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Maximize2, Minimize2, BookText, ChevronRight } from 'lucide-react';
+import { getAssetPath } from '../utils';
 
 export default function Death() {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -22,7 +23,7 @@ export default function Death() {
 
           <div className="mt-6 grid gap-4 max-w-xl mx-auto">
             <a 
-              href="/books/Слово о смерти.gen.epub"
+              href={getAssetPath("/books/Слово о смерти.gen.epub")}
               download="Слово о смерти.gen.epub"
               className="flex items-center gap-4 bg-[var(--color-cinnabar)] text-[var(--color-parchment)] p-4 rounded-xl shadow-lg hover:shadow-xl hover:brightness-110 transition-all font-kurale group text-left"
             >
@@ -34,7 +35,7 @@ export default function Death() {
               <ChevronRight className="group-hover:translate-x-1 transition-transform shrink-0" />
             </a>
             <a 
-              href="/books/Прибавление к _Слову о смерти_.gen.epub"
+              href={getAssetPath("/books/Прибавление к _Слову о смерти_.gen.epub")}
               download="Прибавление к _Слову о смерти_.gen.epub"
               className="flex items-center gap-4 bg-[var(--color-cinnabar)] text-[var(--color-parchment)] p-4 rounded-xl shadow-lg hover:shadow-xl hover:brightness-110 transition-all font-kurale group text-left"
             >
@@ -84,10 +85,9 @@ export default function Death() {
               <Maximize2 size={20} />
             </div>
             <img 
-              src="/images/mitarstva.webp" 
+              src={getAssetPath("/images/mitarstva.webp")} 
               alt="20 мытарств: путь души к Царствию Небесному" 
               className="w-full h-auto object-contain"
-              
             />
             <div className="bg-[var(--color-parchment)] p-3 text-sm text-center text-[var(--color-ink)]/80 border-t border-[var(--color-ink)]/10">
               20 мытарств: путь души к Царствию Небесному (нажмите для увеличения)
@@ -154,11 +154,10 @@ export default function Death() {
           </button>
           <div className="w-max min-w-full min-h-full p-4 sm:p-8 flex items-start justify-start">
             <img 
-              src="/images/mitarstva.webp" 
+              src={getAssetPath("/images/mitarstva.webp")} 
               alt="20 мытарств: путь души к Царствию Небесному (увеличено)" 
               className="max-w-none w-[200vw] sm:w-[150vw] md:w-auto h-auto"
               onClick={(e) => e.stopPropagation()}
-              
             />
           </div>
         </div>

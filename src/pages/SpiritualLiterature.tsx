@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { BookText, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { getAssetPath } from '../utils';
 
 interface BookAccordionProps {
   title: string;
@@ -67,7 +68,7 @@ export default function SpiritualLiterature() {
           <BookAccordion 
             title="Близ есть, при дверех" 
             subtitle="Сергей Нилус"
-            downloadUrl="/books/Близ_есть_при_дверех_С.Нилус.fb2"
+            downloadUrl={getAssetPath("/books/Близ_есть_при_дверех_С.Нилус.fb2")}
             fileName="Близ_есть_при_дверех_С.Нилус.fb2"
           >
             <h4 className="font-kurale text-lg text-[var(--color-cinnabar)] mb-3">О книге «Близ есть, при дверех»</h4>
@@ -90,7 +91,7 @@ export default function SpiritualLiterature() {
           <BookAccordion 
             title="До и после: Апология книги Еноха" 
             subtitle="Митрополит Митрофан (Баданин)"
-            downloadUrl="/books/До_и_после.Апология_книги_Еноха.fb2"
+            downloadUrl={getAssetPath("/books/До_и_после.Апология_книги_Еноха.fb2")}
             fileName="До_и_после.Апология_книги_Еноха.fb2"
           >
             <h4 className="font-kurale text-lg text-[var(--color-cinnabar)] mb-3">Апология книги Еноха</h4>

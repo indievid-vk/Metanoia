@@ -1,5 +1,6 @@
 import React from 'react';
 import { BookText, ChevronRight } from 'lucide-react';
+import { getAssetPath } from '../utils';
 
 const BOOKS = [
   { id: 'matthew', title: 'Евангелие от Матфея', file: 'Толкование на Евангелие от Матфея.gen.epub' },
@@ -35,7 +36,7 @@ export default function Scripture() {
             {BOOKS.map((book) => (
               <a 
                 key={book.id}
-                href={`/books/${book.file}`}
+                href={getAssetPath(`/books/${book.file}`)}
                 download={book.file}
                 className="flex items-center gap-4 bg-[var(--color-cinnabar)] text-[var(--color-parchment)] p-4 rounded-xl shadow-lg hover:shadow-xl hover:brightness-110 transition-all font-kurale group text-left"
               >
@@ -57,7 +58,7 @@ export default function Scripture() {
           </h3>
           <div className="grid gap-4">
             <a 
-              href="/books/Толкование на Деяния святых Апостолов.gen.epub"
+              href={getAssetPath("/books/Толкование на Деяния святых Апостолов.gen.epub")}
               download="Толкование на Деяния святых Апостолов.gen.epub"
               className="flex items-center gap-4 bg-[var(--color-cinnabar)] text-[var(--color-parchment)] p-4 rounded-xl shadow-lg hover:shadow-xl hover:brightness-110 transition-all font-kurale group text-left"
             >
@@ -70,7 +71,7 @@ export default function Scripture() {
             </a>
 
             <a 
-              href="/books/Толкование на Псалмы.gen.epub"
+              href={getAssetPath("/books/Толкование на Псалмы.gen.epub")}
               download="Толкование на Псалмы.gen.epub"
               className="flex items-center gap-4 bg-[var(--color-cinnabar)] text-[var(--color-parchment)] p-4 rounded-xl shadow-lg hover:shadow-xl hover:brightness-110 transition-all font-kurale group text-left"
             >

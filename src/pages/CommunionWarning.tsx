@@ -1,5 +1,6 @@
 import React from 'react';
 import { BookOpen } from 'lucide-react';
+import { getAssetPath } from '../utils';
 
 export default function CommunionWarning() {
   return (
@@ -58,7 +59,7 @@ export default function CommunionWarning() {
 
       <div className="flex justify-center pt-4">
         <a 
-          href="/books/Слово в Великий четверток на литургии.gen.epub"
+          href={getAssetPath("/books/Слово в Великий четверток на литургии.gen.epub")}
           download="Слово в Великий четверток на литургии.gen.epub"
           className="flex items-center gap-3 bg-[var(--color-cinnabar)] text-[var(--color-parchment)] px-6 py-4 rounded-xl shadow-lg hover:shadow-xl hover:brightness-110 transition-all font-kurale group"
         >

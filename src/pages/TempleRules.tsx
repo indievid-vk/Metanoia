@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ArrowUp, Maximize2, Minimize2 } from 'lucide-react';
 import templeRulesData from '../data/templeRules.json';
 import { BackToTopButton } from '../components/BackToTopButton';
+import { getAssetPath } from '../utils';
 
 export default function TempleRules() {
   const [activeSection, setActiveSection] = useState<string>('');
@@ -133,7 +134,7 @@ export default function TempleRules() {
                         <Maximize2 size={20} />
                       </div>
                       <img 
-                        src="/images/Hram.webp" 
+                        src={getAssetPath("/images/Hram.webp")} 
                         alt="Схема устройства православного храма" 
                         className="w-full h-auto object-contain"
                       />
@@ -152,7 +153,7 @@ export default function TempleRules() {
                         </button>
                         <div className="w-max min-w-full min-h-full p-4 sm:p-8 flex items-start justify-start">
                           <img 
-                            src="/images/Hram.webp" 
+                            src={getAssetPath("/images/Hram.webp")} 
                             alt="Схема устройства православного храма (увеличено)" 
                             className="max-w-none w-[200vw] sm:w-[150vw] md:w-auto h-auto"
                             onClick={(e) => e.stopPropagation()}

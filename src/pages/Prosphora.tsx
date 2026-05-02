@@ -1,5 +1,6 @@
 import React from 'react';
 import { Info, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { getAssetPath } from '../utils';
 
 export default function Prosphora() {
   return (
@@ -39,15 +40,15 @@ export default function Prosphora() {
           <section className="space-y-4">
             <h2 className="font-kurale text-2xl text-[var(--color-cinnabar)]">Служебные и поминальные просфоры</h2>
             <div className="flex flex-col sm:flex-row gap-4 mb-4">
-              <img src="/images/Prosfora_collage.webp" alt="Виды просфор" className="sm:w-1/2 w-full rounded-lg object-cover shadow-sm border border-[var(--color-ink)]/10 bg-white/50 p-1" />
-              <img src="/images/prosfori_proskomidiya1.webp" alt="Просфоры на проскомидии" className="sm:w-1/2 w-full rounded-lg object-cover shadow-sm border border-[var(--color-ink)]/10 bg-white/50 p-1" />
+              <img src={getAssetPath("/images/Prosfora_collage.webp")} alt="Виды просфор" className="sm:w-1/2 w-full rounded-lg object-cover shadow-sm border border-[var(--color-ink)]/10 bg-white/50 p-1" />
+              <img src={getAssetPath("/images/prosfori_proskomidiya1.webp")} alt="Просфоры на проскомидии" className="sm:w-1/2 w-full rounded-lg object-cover shadow-sm border border-[var(--color-ink)]/10 bg-white/50 p-1" />
             </div>
             <div className="font-serif leading-relaxed space-y-4 bg-white/40 p-5 rounded-lg border border-[var(--color-cinnabar)]/10">
               <p>Для совершения Божественной литургии (на Проскомидии) священником используются <strong>пять особых больших служебных просфор</strong>:</p>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 <div className="flex gap-4 items-start bg-white/60 p-3 rounded-md border border-[var(--color-ink)]/5">
-                  <img src="/images/Prosfora_Agnechnaya.webp" alt="Агничная" className="w-20 h-20 rounded object-cover border border-[var(--color-ink)]/10 shrink-0" />
+                  <img src={getAssetPath("/images/Prosfora_Agnechnaya.webp")} alt="Агничная" className="w-20 h-20 rounded object-cover border border-[var(--color-ink)]/10 shrink-0" />
                   <div>
                     <h4 className="font-bold text-[var(--color-cinnabar)]">Агничная</h4>
                     <p className="text-sm">Самая большая просфора с крестом. Из ее центра вырезается кубическая часть — Святой Агнец.</p>
@@ -55,7 +56,7 @@ export default function Prosphora() {
                 </div>
 
                 <div className="flex gap-4 items-start bg-white/60 p-3 rounded-md border border-[var(--color-ink)]/5">
-                  <img src="/images/Prosfora_Bogorodichnaya.webp" alt="Богородичная" className="w-20 h-20 rounded object-cover border border-[var(--color-ink)]/10 shrink-0" />
+                  <img src={getAssetPath("/images/Prosfora_Bogorodichnaya.webp")} alt="Богородичная" className="w-20 h-20 rounded object-cover border border-[var(--color-ink)]/10 shrink-0" />
                   <div>
                     <h4 className="font-bold text-[var(--color-cinnabar)]">Богородичная</h4>
                     <p className="text-sm">С печатью МАРИЯ или образом Божией Матери. Из нее вынимается частица в честь Пресвятой Богородицы.</p>
@@ -63,7 +64,7 @@ export default function Prosphora() {
                 </div>
 
                 <div className="flex gap-4 items-start bg-white/60 p-3 rounded-md border border-[var(--color-ink)]/5">
-                  <img src="/images/Prosfora_9.webp" alt="Девятичинная" className="w-20 h-20 rounded object-cover border border-[var(--color-ink)]/10 shrink-0" />
+                  <img src={getAssetPath("/images/Prosfora_9.webp")} alt="Девятичинная" className="w-20 h-20 rounded object-cover border border-[var(--color-ink)]/10 shrink-0" />
                   <div>
                     <h4 className="font-bold text-[var(--color-cinnabar)]">Девятичинная</h4>
                     <p className="text-sm">Посвящена всем святым. Из нее вынимается 9 частиц в честь девяти чинов святых.</p>
@@ -71,7 +72,7 @@ export default function Prosphora() {
                 </div>
 
                 <div className="flex gap-4 items-start bg-white/60 p-3 rounded-md border border-[var(--color-ink)]/5">
-                  <img src="/images/Prosfora_Zdravie.webp" alt="Заздравная" className="w-20 h-20 rounded object-cover border border-[var(--color-ink)]/10 shrink-0" />
+                  <img src={getAssetPath("/images/Prosfora_Zdravie.webp")} alt="Заздравная" className="w-20 h-20 rounded object-cover border border-[var(--color-ink)]/10 shrink-0" />
                   <div>
                     <h4 className="font-bold text-[var(--color-cinnabar)]">Заздравная</h4>
                     <p className="text-sm">Из нее вынимаются две частицы за всех участников Литургии и всех живых.</p>
@@ -79,7 +80,7 @@ export default function Prosphora() {
                 </div>
 
                 <div className="flex gap-4 items-start bg-white/60 p-3 rounded-md border border-[var(--color-ink)]/5">
-                  <img src="/images/Prosfora_Upokoenie.webp" alt="Заупокойная" className="w-20 h-20 rounded object-cover border border-[var(--color-ink)]/10 shrink-0" />
+                  <img src={getAssetPath("/images/Prosfora_Upokoenie.webp")} alt="Заупокойная" className="w-20 h-20 rounded object-cover border border-[var(--color-ink)]/10 shrink-0" />
                   <div>
                     <h4 className="font-bold text-[var(--color-cinnabar)]">Заупокойная</h4>
                     <p className="text-sm">Из нее вынимается частица за всех усопших православных христиан.</p>
@@ -87,7 +88,7 @@ export default function Prosphora() {
                 </div>
 
                 <div className="flex gap-4 items-start bg-white/60 p-3 rounded-md border border-[var(--color-cinnabar)]/20 shadow-sm">
-                  <img src="/images/Prosfora_malaya.webp" alt="Малая просфора" className="w-20 h-20 rounded object-cover border border-[var(--color-ink)]/10 shrink-0" />
+                  <img src={getAssetPath("/images/Prosfora_malaya.webp")} alt="Малая просфора" className="w-20 h-20 rounded object-cover border border-[var(--color-ink)]/10 shrink-0" />
                   <div>
                     <h4 className="font-bold text-[var(--color-cinnabar)]">Малая (поминальная)</h4>
                     <p className="text-sm">Раздается верующим. Частицы из нее вынимаются при поминовении имен о здравии или упокоении.</p>
@@ -107,7 +108,7 @@ export default function Prosphora() {
             </h2>
             <div className="font-serif leading-relaxed space-y-4">
               <div className="sm:float-right sm:w-1/3 sm:ml-6 mb-4">
-                <img src="/images/Antidor_min.webp" alt="Антидор" className="w-full rounded-lg object-cover shadow-sm border border-[var(--color-ink)]/10 bg-white/50 p-1" />
+                <img src={getAssetPath("/images/Antidor_min.webp")} alt="Антидор" className="w-full rounded-lg object-cover shadow-sm border border-[var(--color-ink)]/10 bg-white/50 p-1" />
               </div>
               <p>
                 <strong>Антидо́р</strong> (греч. ἀντίδωρον — «вместо дара») — это остатки главной Агничной просфоры, из которой был вырезан Агнец для Причастия. Поскольку эта просфора участвовала в важнейшем тайнодействии, она исполнена особой Божией благодати.
@@ -125,7 +126,7 @@ export default function Prosphora() {
             </h2>
             <div className="font-serif leading-relaxed space-y-4">
               <div className="sm:float-right sm:w-1/3 sm:ml-6 mb-4">
-                <img src="/images/Artos.webp" alt="Артос" className="w-full rounded-lg object-cover shadow-sm border border-[var(--color-ink)]/10 bg-white/50 p-1" />
+                <img src={getAssetPath("/images/Artos.webp")} alt="Артос" className="w-full rounded-lg object-cover shadow-sm border border-[var(--color-ink)]/10 bg-white/50 p-1" />
               </div>
               <p>
                 <strong>А́ртос</strong> (греч. «квасной хлеб») — особый всецелый хлеб, освящаемый в день Святой Пасхи. В русской традиции это большая высокая просфора цилиндрической формы с изображением Креста или Воскресения Христова. Артос символизирует Самого Христа — Хлеб Вечной Жизни.
