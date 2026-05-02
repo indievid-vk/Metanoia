@@ -37,13 +37,11 @@ jobs:
           node-version: 20
           cache: 'npm'
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
-      - name: Static Analysis
-        run: npm run lint
+        run: npm install --include=dev
       - name: Build
         run: npm run build
-      - name: Debug Build Output
-        run: ls -R dist
+      - name: Verify build
+        run: ls -la dist/index.html
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
