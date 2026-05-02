@@ -59,14 +59,14 @@ export default function CommunionWarning() {
 
       <div className="flex justify-center pt-4">
         <a 
-          href={getAssetPath("/books/Слово в Великий четверток на литургии.gen.epub")}
-          download="Слово в Великий четверток на литургии.gen.epub"
+          href={getAssetPath("/books/Аскетическая проповедь.gen.epub")}
+          download="Аскетическая проповедь.gen.epub"
           className="flex items-center gap-3 bg-[var(--color-cinnabar)] text-[var(--color-parchment)] px-6 py-4 rounded-xl shadow-lg hover:shadow-xl hover:brightness-110 transition-all font-kurale group"
         >
           <BookOpen className="group-hover:scale-110 transition-transform" />
           <div className="text-left">
             <div className="text-xs opacity-80 font-sans uppercase tracking-wider">Полный текст</div>
-            <div className="text-lg leading-tight">Слово в Великий четверток (читать)</div>
+            <div className="text-lg leading-tight">Аскетическая проповедь (читать)</div>
           </div>
         </a>
       </div>

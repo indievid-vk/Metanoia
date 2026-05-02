@@ -51,7 +51,7 @@ export default function Prosphora() {
                   <img src={getAssetPath("/images/Prosfora_Agnechnaya.webp")} alt="Агничная" className="w-20 h-20 rounded object-cover border border-[var(--color-ink)]/10 shrink-0" />
                   <div>
                     <h4 className="font-bold text-[var(--color-cinnabar)]">Агничная</h4>
-                    <p className="text-sm">Самая большая просфора с крестом. Из ее центра вырезается кубическая часть — Святой Агнец.</p>
+                    <p className="text-sm">Самая большая просфора with крестом. Из ее центра вырезается кубическая часть — Святой Агнец.</p>
                   </div>
                 </div>
 
