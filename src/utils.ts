@@ -3,8 +3,10 @@ export const getAssetPath = (path: string) => {
   if (!path) return '';
   if (path.startsWith('http') || path.startsWith('data:')) return path;
   
-  const baseUrl = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  // Force trailing slash and handle production repo name
+  const isProd = import.meta.env.PROD;
+  const baseUrl = isProd ? '/metanoia/' : '/';
   
-  return `${baseUrl}${cleanPath}`;
+  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+  return baseUrl + cleanPath;
 };

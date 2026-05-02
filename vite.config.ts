@@ -6,8 +6,12 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
+  const isProd = mode === 'production';
+  const base = isProd ? '/metanoia/' : '/';
+
   return {
-    base: mode === 'production' ? '/metanoia/' : '/',
+    base,
+    publicDir: 'public',
     plugins: [
       react(), 
       tailwindcss(),
