@@ -1,0 +1,10 @@
+# Handle binary files correctly - prevent Git from corrupting them
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.epub binary
+*.fb2 binary
+*.woff2 binary
+*.pdf binary

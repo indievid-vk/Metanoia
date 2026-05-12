@@ -1,0 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Kurale&family=Lora:ital,wght@0,400;0,700;1,400&family=Ruslan+Display&family=Inter:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-parchment: #F2EAD3; /* Насыщенный цвет пергамента из скриншота */
+  --color-cinnabar: #B22222; /* Классическая церковная киноварь */
+  --color-ink: #2C1B10; /* Глубокий коричнево-черный */
+  --color-gold: #d4af37;
+  
+  --font-kurale: "Kurale", serif;
+  --font-lora: "Lora", serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Lora", "Kurale", serif;
+  --font-izhitsa: var(--font-sans);
+}
+
+@layer base {
+  * {
+    font-weight: normal !important;
+    font-synthesis: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  html, body, #root {
+    height: 100dvh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+  
+  body {
+    background-color: var(--color-parchment);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    background-image: url('/pattern-subtle.png');
+    background-repeat: repeat;
+    background-size: 200px 200px;
+    background-blend-mode: multiply;
+  }
+}
+
+/* Стилизация буквицы для текстов молитв */
+.prayer-text::first-letter {
+  float: left;
+  font-family: var(--font-serif);
+  font-size: 3.5rem;
+  line-height: 0.8;
+  padding-top: 4px;
+  padding-right: 8px;
+  color: var(--color-cinnabar);
+}
+
+.sparkle-border-mask {
+  -webkit-mask-image: radial-gradient(transparent 65%, black 66%);
+  mask-image: radial-gradient(transparent 65%, black 66%);
+}
