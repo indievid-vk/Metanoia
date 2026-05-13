@@ -115,7 +115,7 @@ export default function PrayerViewer() {
                 className="cursor-pointer transition-colors"
                 onClick={() => toggleItem(index)}
               >
-                <div className="font-izhitsa text-xl leading-snug text-[var(--color-ink)] text-justify">
+                <div className="font-izhitsa text-xl leading-snug text-[var(--color-ink)] text-justify whitespace-pre-wrap">
                   {(item.slavonic?.split('') || []).map((char, i) => {
                     if (i === 0) {
                       return <span key={i} className="text-4xl text-[var(--color-cinnabar)] align-baseline leading-none mr-0.5">{char}</span>;
@@ -133,7 +133,7 @@ export default function PrayerViewer() {
               {isExpanded && (
                 <div className="pt-4 animate-in fade-in duration-300">
                   <span className="font-izhitsa text-sm uppercase tracking-widest block mb-2 text-[var(--color-cinnabar)] opacity-80 text-center">Перевод</span>
-                  <p className="font-izhitsa text-lg leading-snug text-[var(--color-ink)] italic opacity-90 text-justify">
+                  <p className="font-izhitsa text-lg leading-snug text-[var(--color-ink)] italic opacity-90 text-justify whitespace-pre-wrap">
                     {item.russian}
                   </p>
                 </div>
