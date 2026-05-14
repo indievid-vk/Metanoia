@@ -61,6 +61,16 @@ export default function PrayerBook() {
             Последование ко Святому Причащению и благодарственные молитвы.
           </p>
         </button>
+        <button 
+          onClick={() => navigate('/prayer-book/various')}
+          className="bg-[var(--color-parchment)] border border-[var(--color-cinnabar)]/30 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow text-left group relative overflow-hidden w-full block"
+        >
+          <div className="absolute top-0 right-0 w-16 h-16 bg-[var(--color-cinnabar)]/5 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-150"></div>
+          <h3 className="font-izhitsa text-xl text-[var(--color-ink)] mb-2">Молитвы на разные случаи жизни</h3>
+          <p className="text-sm text-[var(--color-ink)]/70 leading-relaxed">
+            Молитвы о болящих, молитвы о детях и другие прошения.
+          </p>
+        </button>
       </div>
     </div>
   );

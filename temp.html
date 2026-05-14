@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ru-RU" prefix="og: https://ogp.me/ns#" class="">
+<head>
+		<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="google" content="notranslate">
+	<!-- Favicons -->
+	<link rel="icon" type="image/svg+xml" href="https://azbyka.ru/molitvoslov/wp-content/themes/azbyka-molitvoslov/assets/images/favicons/favicon.svg?ver=5">
+	<link rel="icon" type="image/ico" href="https://azbyka.ru/molitvoslov/wp-content/themes/azbyka-molitvoslov/assets/images/favicons/favicon.ico?ver=5">
+	<link rel="apple-touch-icon" sizes="57x57" href="https://azbyka.ru/molitvoslov/wp-content/themes/azbyka-molitvoslov/assets/images/favicons/apple-icon-57x57.png?ver=5">
+	<link rel="apple-touch-icon" sizes="60x60" href="https://azbyka.ru/molitvoslov/wp-content/themes/azbyka-molitvoslov/assets/images/favicons/apple-icon-60x60.png?ver=5">
+	<link rel="apple-touch-icon" sizes="72x72" href="https://azbyka.ru/molitvoslov/wp-content/themes/azbyka-molitvoslov/assets/images/favicons/apple-icon-72x72.png?ver=5">
+	<link rel="apple-touch-icon" sizes="76x76" href="https://azbyka.ru/molitvoslov/wp-content/themes/azbyka-molitvoslov/assets/images/favicons/apple-icon-76x76.png?ver=5">
+	<link rel="apple-touch-icon" sizes="114x114" href="https://azbyka.ru/molitvoslov/wp-content/themes/azbyka-molitvoslov/assets/images/favicons/apple-icon-114x114.png?ver=5">
+	<link rel="apple-touch-icon" sizes="120x120" href="https://azbyka.ru/molitvoslov/wp-content/themes/azbyka-molitvoslov/assets/images/favicons/apple-icon-120x120.png?ver=5">
+	<link rel="apple-touch-icon" sizes="144x144" href="https://azbyka.ru/molitvoslov/wp-content/themes/azbyka-molitvoslov/assets/images/favicons/apple-icon-144x144.png?ver=5">
+	<link rel="apple-touch-icon" sizes="152x152" href="https://azbyka.ru/molitvoslov/wp-content/themes/azbyka-molitvoslov/assets/images/favicons/apple-icon-152x152.png?ver=5">
+	<link rel="apple-touch-icon" sizes="180x180" href="https://azbyka.ru/molitvoslov/wp-content/themes/azbyka-molitvoslov/assets/images/favicons/apple-icon-180x180.png?ver=5">
+	<link rel="icon" type="image/png" sizes="192x192"  href="https://azbyka.ru/molitvoslov/wp-content/themes/azbyka-molitvoslov/assets/images/favicons/android-icon-192x192.png?ver=5">
+	<link rel="icon" type="image/png" sizes="32x32" href="https://azbyka.ru/molitvoslov/wp-content/themes/azbyka-molitvoslov/assets/images/favicons/favicon-32x32.png?ver=5">
+	<link rel="icon" type="image/png" sizes="96x96" href="https://azbyka.ru/molitvoslov/wp-content/themes/azbyka-molitvoslov/assets/images/favicons/favicon-96x96.png?ver=5">
+	<link rel="icon" type="image/png" sizes="16x16" href="https://azbyka.ru/molitvoslov/wp-content/themes/azbyka-molitvoslov/assets/images/favicons/favicon-16x16.png?ver=5">
+	<link rel="manifest" href="https://azbyka.ru/molitvoslov/wp-content/themes/azbyka-molitvoslov/assets/images/favicons/manifest.json?ver=5">
+	<meta name="msapplication-TileColor" content="#da532c">
+	<meta name="msapplication-TileImage" content="https://azbyka.ru/molitvoslov/wp-content/themes/azbyka-molitvoslov/assets/images/favicons/ms-icon-144x144.png?ver=5">
+	<meta name="theme-color" content="#f1e9d6">
+	
+	<link rel="alternate" type="application/rss+xml" title="Молитвослов RSS Feed" href="https://azbyka.ru/molitvoslov/feed/rss">
+	<link rel="alternate" type="application/atom+xml" title="Молитвослов Atom Feed" href="https://azbyka.ru/molitvoslov/feed/atom">
+	<link rel="pingback" href="https://azbyka.ru/molitvoslov/xmlrpc.php">
+		<script id="az_settings_js">
+		var AZ = window.AZ || {};
+		AZ.theme_path = 'https://azbyka.ru/molitvoslov/wp-content/themes/azbyka-molitvoslov';
+		AZ.ajax_path = 'https://azbyka.ru/molitvoslov/wp-admin/admin-ajax.php';
+		AZ.post_id = '438';
+		AZ.logged_in = false;
+		AZ.sso_logged_in = !!localStorage.getItem('az_sso_email');
+		AZ.tooltip_selector = '.az-tip, abbr, [data-tip-text]';
+					localStorage.setItem('az_sso_reflink', location.href);
+				/*
+		if(localStorage.getItem('az_sso_email') && !AZ.logged_in){
+			let tries = parseInt(localStorage.getItem('login_refresh_tries'));
+			if(isNaN(tries)) tries = 0;
+			if(tries < 2){
+				tries++;
+				localStorage.setItem('login_refresh_tries', tries);
+				location.reload();
+			}else
+				console.log('tried to login too much');
+		}else{
+			localStorage.removeItem('login_refresh_tries');
+		}
+		*/
+		
+		AZ.project = 'molitvoslov';
+		AZ.settingVars = { "theme" : 0, "body-bg": 0, "side-bg" : 0, "widget-bg" : 0, "text-color" : 0, "link-color" : 0, "accent-color" : 0, "backdrop-color":0, "font-base-size" : 0, "text-font" : 0, "title-font" : 0, "text-align" : 0, "pagination-autoload" : 0 }; //0 - cross-site; 1 - local
+		AZ.sessionToggles = ["sidebar-hide"];
+		AZ.settings = {};
+		
+		AZ.nameSetting = name => 'az_' + (AZ.settingVars[name] ? AZ.project + '_' : '' ) + name;
+		AZ.getSetting = name => localStorage.getItem(AZ.nameSetting(name));
+		AZ.setSetting = (name, val) => {localStorage.setItem(AZ.nameSetting(name), val); AZ.applySettings();};
+		
+		AZ.applySettings = ()=>{
+			let docStyle = '', docClasses = document.documentElement.classList;
+
+			if(!AZ.settings.length){
+				docClasses.remove('sidebar-show');
+				docClasses.remove('sidebar-hide');
+			}
+
+			let gf_loaded = false;
+
+			for(let name in AZ.settingVars){
+				let val = AZ.getSetting(name);
+				if(val && val !== 'undefined'){
+					//google fonts
+					if (name.includes('-font') && !val.includes(',')) {
+						let head = document.getElementsByTagName('head')[0];
+						if (!gf_loaded) {
+							let pre_lnk = document.createElement('link');
+							pre_lnk.rel = 'preconnect';
+							pre_lnk.href = 'https://fonts.gstatic.com';
+							head.appendChild(pre_lnk);
+							gf_loaded = true;
+							console.log(pre_lnk);
+						}
+						let link = document.createElement('link');
+						link.href = 'https://fonts.googleapis.com/css2?family=' + val.replace(' ', '+') + ':wght@400;700&display=swap';
+						link.rel = 'stylesheet';
+						link.type = 'text/css';
+						head.appendChild(link);
+						console.log(link);
+					}
+
+					AZ.settings[name] = val;
+					docStyle+='--'+name+':'+ val+';';
+					
+					if(name === 'theme')	//todo: other?
+						document.documentElement.setAttribute('data-'+name.replace('--',''), val);
+				}
+			}
+			
+			for(let name of AZ.sessionToggles){
+				if(sessionStorage.getItem(name) === 'true')
+					document.documentElement.classList.add(name);
+			}
+
+			document.documentElement.style.cssText = docStyle;
+		};
+
+		AZ.applySettings();
+	</script>
+	
+<!-- SEO от Rank Math - https://rankmath.com/ -->
+<title>Молитвы о России - Молитвослов</title>
+<meta name="description" content="Молитвы Господу, Пресвятой Богородице и святым о России."/>
+<meta name="robots" content="follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large"/>
+<link rel="canonical" href="https://azbyka.ru/molitvoslov/molitvy-o-rossii.html" />
+<meta property="og:locale" content="ru_RU" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Молитвы о России - Молитвослов" />
+<meta property="og:description" content="Молитвы Господу, Пресвятой Богородице и святым о России." />
+<meta property="og:url" content="https://azbyka.ru/molitvoslov/molitvy-o-rossii.html" />
+<meta property="og:site_name" content="Молитвослов" />
+<meta property="og:updated_time" content="2026-04-20T11:49:06+04:00" />
+<meta property="og:image" content="https://azbyka.ru/molitvoslov/wp-content/uploads/2014/05/f0d6f5cc51ae8ab57d5d320be7735b75-byzantine-icons-byzantine-art.jpg" />
+<meta property="og:image:secure_url" content="https://azbyka.ru/molitvoslov/wp-content/uploads/2014/05/f0d6f5cc51ae8ab57d5d320be7735b75-byzantine-icons-byzantine-art.jpg" />
+<meta property="og:image:width" content="400" />
+<meta property="og:image:height" content="513" />
+<meta property="og:image:alt" content="Господь Иисус Христос" />
+<meta property="og:image:type" content="image/jpeg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Молитвы о России - Молитвослов" />
+<meta name="twitter:description" content="Молитвы Господу, Пресвятой Богородице и святым о России." />
+<meta name="twitter:image" content="https://azbyka.ru/molitvoslov/wp-content/uploads/2014/05/f0d6f5cc51ae8ab57d5d320be7735b75-byzantine-icons-byzantine-art.jpg" />
+<meta name="twitter:label1" content="Автор" />
+<meta name="twitter:data1" content="DmitryNel" />
+<meta name="twitter:label2" content="Время чтения" />
+<meta name="twitter:data2" content="15 минут" />
+<script type="application/ld+json" class="rank-math-schema">{"@context":"https://schema.org","@graph":[{"@type":["Library","Organization"],"@id":"https://azbyka.ru/molitvoslov/#organization","name":"\u041c\u043e\u043b\u0438\u0442\u0432\u043e\u0441\u043b\u043e\u0432","url":"https://azbyka.ru/molitvoslov","logo":{"@type":"ImageObject","@id":"https://azbyka.ru/molitvoslov/#logo","url":"https://azbyka.ru/molitvoslov/wp-content/uploads/2021/06/og-image.png","contentUrl":"https://azbyka.ru/molitvoslov/wp-content/uploads/2021/06/og-image.png","caption":"\u041c\u043e\u043b\u0438\u0442\u0432\u043e\u0441\u043b\u043e\u0432","inLanguage":"ru-RU","width":"160","height":"160"},"openingHours":["Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday 09:00-17:00"],"image":{"@id":"https://azbyka.ru/molitvoslov/#logo"}},{"@type":"WebSite","@id":"https://azbyka.ru/molitvoslov/#website","url":"https://azbyka.ru/molitvoslov","name":"\u041c\u043e\u043b\u0438\u0442\u0432\u043e\u0441\u043b\u043e\u0432","publisher":{"@id":"https://azbyka.ru/molitvoslov/#organization"},"inLanguage":"ru-RU"},{"@type":"ImageObject","@id":"https://azbyka.ru/molitvoslov/wp-content/uploads/2014/05/f0d6f5cc51ae8ab57d5d320be7735b75-byzantine-icons-byzantine-art-234x300.jpg","url":"https://azbyka.ru/molitvoslov/wp-content/uploads/2014/05/f0d6f5cc51ae8ab57d5d320be7735b75-byzantine-icons-byzantine-art-234x300.jpg","width":"200","height":"200","inLanguage":"ru-RU"},{"@type":"WebPage","@id":"https://azbyka.ru/molitvoslov/molitvy-o-rossii.html#webpage","url":"https://azbyka.ru/molitvoslov/molitvy-o-rossii.html","name":"\u041c\u043e\u043b\u0438\u0442\u0432\u044b \u043e \u0420\u043e\u0441\u0441\u0438\u0438 - \u041c\u043e\u043b\u0438\u0442\u0432\u043e\u0441\u043b\u043e\u0432","datePublished":"2014-05-26T19:25:38+04:00","dateModified":"2026-04-20T11:49:06+04:00","isPartOf":{"@id":"https://azbyka.ru/molitvoslov/#website"},"primaryImageOfPage":{"@id":"https://azbyka.ru/molitvoslov/wp-content/uploads/2014/05/f0d6f5cc51ae8ab57d5d320be7735b75-byzantine-icons-byzantine-art-234x300.jpg"},"inLanguage":"ru-RU"},{"@type":"Article","headline":"\u041c\u043e\u043b\u0438\u0442\u0432\u044b \u043e \u0420\u043e\u0441\u0441\u0438\u0438 - \u041c\u043e\u043b\u0438\u0442\u0432\u043e\u0441\u043b\u043e\u0432","datePublished":"2014-05-26T19:25:38+04:00","dateModified":"2026-04-20T11:49:06+04:00","articleSection":"\u041c\u043e\u043b\u0438\u0442\u0432\u044b \u043e \u043c\u0438\u0440\u0435","publisher":{"@id":"https://azbyka.ru/molitvoslov/#organization"},"description":"\u041c\u043e\u043b\u0438\u0442\u0432\u044b \u0413\u043e\u0441\u043f\u043e\u0434\u0443, \u041f\u0440\u0435\u0441\u0432\u044f\u0442\u043e\u0439 \u0411\u043e\u0433\u043e\u0440\u043e\u0434\u0438\u0446\u0435 \u0438 \u0441\u0432\u044f\u0442\u044b\u043c \u043e \u0420\u043e\u0441\u0441\u0438\u0438.","name":"\u041c\u043e\u043b\u0438\u0442\u0432\u044b \u043e \u0420\u043e\u0441\u0441\u0438\u0438 - \u041c\u043e\u043b\u0438\u0442\u0432\u043e\u0441\u043b\u043e\u0432","@id":"https://azbyka.ru/molitvoslov/molitvy-o-rossii.html#richSnippet","isPartOf":{"@id":"https://azbyka.ru/molitvoslov/molitvy-o-rossii.html#webpage"},"image":{"@id":"https://azbyka.ru/molitvoslov/wp-content/uploads/2014/05/f0d6f5cc51ae8ab57d5d320be7735b75-byzantine-icons-byzantine-art-234x300.jpg"},"inLanguage":"ru-RU","mainEntityOfPage":{"@id":"https://azbyka.ru/molitvoslov/molitvy-o-rossii.html#webpage"}}]}</script>
+<!-- /Rank Math WordPress SEO плагин -->
+
+<link rel='dns-prefetch' href='//azbyka.ru' />
+
+<link rel="alternate" type="application/rss+xml" title="Молитвослов &raquo; Лента" href="https://azbyka.ru/molitvoslov/feed" />
+<link rel="alternate" type="application/rss+xml" title="Молитвослов &raquo; Лента комментариев" href="https://azbyka.ru/molitvoslov/comments/feed" />
+<link rel="alternate" type="application/rss+xml" title="Молитвослов &raquo; Лента комментариев к &laquo;Молитвы о России&raquo;" href="https://azbyka.ru/molitvoslov/molitvy-o-rossii.html/feed" />
+<link rel="alternate" title="oEmbed (JSON)" type="application/json+oembed" href="https://azbyka.ru/molitvoslov/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fazbyka.ru%2Fmolitvoslov%2Fmolitvy-o-rossii.html" />
+<link rel="alternate" title="oEmbed (XML)" type="text/xml+oembed" href="https://azbyka.ru/molitvoslov/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fazbyka.ru%2Fmolitvoslov%2Fmolitvy-o-rossii.html&#038;format=xml" />
+<style id='wp-img-auto-sizes-contain-inline-css' type='text/css'>
+img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
+/*# sourceURL=wp-img-auto-sizes-contain-inline-css */
+</style>
+<style id='classic-theme-styles-inline-css' type='text/css'>
+/*! This file is auto-generated */
+.wp-block-button__link{color:#fff;background-color:#32373c;border-radius:9999px;box-shadow:none;text-decoration:none;padding:calc(.667em + 2px) calc(1.333em + 2px);font-size:1.125em}.wp-block-file__button{background:#32373c;color:#fff;text-decoration:none}
+/*# sourceURL=/wp-includes/css/classic-themes.min.css */
+</style>
+<style id='global-styles-inline-css' type='text/css'>
+:root{--wp--preset--aspect-ratio--square: 1;--wp--preset--aspect-ratio--4-3: 4/3;--wp--preset--aspect-ratio--3-4: 3/4;--wp--preset--aspect-ratio--3-2: 3/2;--wp--preset--aspect-ratio--2-3: 2/3;--wp--preset--aspect-ratio--16-9: 16/9;--wp--preset--aspect-ratio--9-16: 9/16;--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: #abb8c3;--wp--preset--color--white: #ffffff;--wp--preset--color--pale-pink: #f78da7;--wp--preset--color--vivid-red: #cf2e2e;--wp--preset--color--luminous-vivid-orange: #ff6900;--wp--preset--color--luminous-vivid-amber: #fcb900;--wp--preset--color--light-green-cyan: #7bdcb5;--wp--preset--color--vivid-green-cyan: #00d084;--wp--preset--color--pale-cyan-blue: #8ed1fc;--wp--preset--color--vivid-cyan-blue: #0693e3;--wp--preset--color--vivid-purple: #9b51e0;--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple: linear-gradient(135deg,rgb(6,147,227) 0%,rgb(155,81,224) 100%);--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan: linear-gradient(135deg,rgb(122,220,180) 0%,rgb(0,208,130) 100%);--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange: linear-gradient(135deg,rgb(252,185,0) 0%,rgb(255,105,0) 100%);--wp--preset--gradient--luminous-vivid-orange-to-vivid-red: linear-gradient(135deg,rgb(255,105,0) 0%,rgb(207,46,46) 100%);--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray: linear-gradient(135deg,rgb(238,238,238) 0%,rgb(169,184,195) 100%);--wp--preset--gradient--cool-to-warm-spectrum: linear-gradient(135deg,rgb(74,234,220) 0%,rgb(151,120,209) 20%,rgb(207,42,186) 40%,rgb(238,44,130) 60%,rgb(251,105,98) 80%,rgb(254,248,76) 100%);--wp--preset--gradient--blush-light-purple: linear-gradient(135deg,rgb(255,206,236) 0%,rgb(152,150,240) 100%);--wp--preset--gradient--blush-bordeaux: linear-gradient(135deg,rgb(254,205,165) 0%,rgb(254,45,45) 50%,rgb(107,0,62) 100%);--wp--preset--gradient--luminous-dusk: linear-gradient(135deg,rgb(255,203,112) 0%,rgb(199,81,192) 50%,rgb(65,88,208) 100%);--wp--preset--gradient--pale-ocean: linear-gradient(135deg,rgb(255,245,203) 0%,rgb(182,227,212) 50%,rgb(51,167,181) 100%);--wp--preset--gradient--electric-grass: linear-gradient(135deg,rgb(202,248,128) 0%,rgb(113,206,126) 100%);--wp--preset--gradient--midnight: linear-gradient(135deg,rgb(2,3,129) 0%,rgb(40,116,252) 100%);--wp--preset--font-size--small: 13px;--wp--preset--font-size--medium: 20px;--wp--preset--font-size--large: 36px;--wp--preset--font-size--x-large: 42px;--wp--preset--spacing--20: 0.44rem;--wp--preset--spacing--30: 0.67rem;--wp--preset--spacing--40: 1rem;--wp--preset--spacing--50: 1.5rem;--wp--preset--spacing--60: 2.25rem;--wp--preset--spacing--70: 3.38rem;--wp--preset--spacing--80: 5.06rem;--wp--preset--shadow--natural: 6px 6px 9px rgba(0, 0, 0, 0.2);--wp--preset--shadow--deep: 12px 12px 50px rgba(0, 0, 0, 0.4);--wp--preset--shadow--sharp: 6px 6px 0px rgba(0, 0, 0, 0.2);--wp--preset--shadow--outlined: 6px 6px 0px -3px rgb(255, 255, 255), 6px 6px rgb(0, 0, 0);--wp--preset--shadow--crisp: 6px 6px 0px rgb(0, 0, 0);}:where(.is-layout-flex){gap: 0.5em;}:where(.is-layout-grid){gap: 0.5em;}body .is-layout-flex{display: flex;}.is-layout-flex{flex-wrap: wrap;align-items: center;}.is-layout-flex > :is(*, div){margin: 0;}body .is-layout-grid{display: grid;}.is-layout-grid > :is(*, div){margin: 0;}:where(.wp-block-columns.is-layout-flex){gap: 2em;}:where(.wp-block-columns.is-layout-grid){gap: 2em;}:where(.wp-block-post-template.is-layout-flex){gap: 1.25em;}:where(.wp-block-post-template.is-layout-grid){gap: 1.25em;}.has-black-color{color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-color{color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-color{color: var(--wp--preset--color--white) !important;}.has-pale-pink-color{color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-color{color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-color{color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-color{color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-color{color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-color{color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-color{color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-color{color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-color{color: var(--wp--preset--color--vivid-purple) !important;}.has-black-background-color{background-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-background-color{background-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-background-color{background-color: var(--wp--preset--color--white) !important;}.has-pale-pink-background-color{background-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-background-color{background-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-background-color{background-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-background-color{background-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-background-color{background-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-background-color{background-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-background-color{background-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-background-color{background-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-background-color{background-color: var(--wp--preset--color--vivid-purple) !important;}.has-black-border-color{border-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-border-color{border-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-border-color{border-color: var(--wp--preset--color--white) !important;}.has-pale-pink-border-color{border-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-border-color{border-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-border-color{border-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-border-color{border-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-border-color{border-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-border-color{border-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-border-color{border-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-border-color{border-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-border-color{border-color: var(--wp--preset--color--vivid-purple) !important;}.has-vivid-cyan-blue-to-vivid-purple-gradient-background{background: var(--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple) !important;}.has-light-green-cyan-to-vivid-green-cyan-gradient-background{background: var(--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan) !important;}.has-luminous-vivid-amber-to-luminous-vivid-orange-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange) !important;}.has-luminous-vivid-orange-to-vivid-red-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-orange-to-vivid-red) !important;}.has-very-light-gray-to-cyan-bluish-gray-gradient-background{background: var(--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray) !important;}.has-cool-to-warm-spectrum-gradient-background{background: var(--wp--preset--gradient--cool-to-warm-spectrum) !important;}.has-blush-light-purple-gradient-background{background: var(--wp--preset--gradient--blush-light-purple) !important;}.has-blush-bordeaux-gradient-background{background: var(--wp--preset--gradient--blush-bordeaux) !important;}.has-luminous-dusk-gradient-background{background: var(--wp--preset--gradient--luminous-dusk) !important;}.has-pale-ocean-gradient-background{background: var(--wp--preset--gradient--pale-ocean) !important;}.has-electric-grass-gradient-background{background: var(--wp--preset--gradient--electric-grass) !important;}.has-midnight-gradient-background{background: var(--wp--preset--gradient--midnight) !important;}.has-small-font-size{font-size: var(--wp--preset--font-size--small) !important;}.has-medium-font-size{font-size: var(--wp--preset--font-size--medium) !important;}.has-large-font-size{font-size: var(--wp--preset--font-size--large) !important;}.has-x-large-font-size{font-size: var(--wp--preset--font-size--x-large) !important;}
+/*# sourceURL=global-styles-inline-css */
+</style>
+
+
+			<link data-minify="1" rel='preload' as='style' href='https://azbyka.ru/molitvoslov/wp-content/cache/min/1/molitvoslov/wp-content/plugins/Bg-Personal/css/myBooks.css?ver=1778657580'  media='all' />
+			<link data-minify="1" rel='stylesheet' id='myBooks'  href='https://azbyka.ru/molitvoslov/wp-content/cache/min/1/molitvoslov/wp-content/plugins/Bg-Personal/css/myBooks.css?ver=1778657580'  media='all' />
+			
+			<link data-minify="1" rel='preload' as='style' href='https://azbyka.ru/molitvoslov/wp-content/cache/min/1/molitvoslov/wp-content/plugins/az-calendar-widget/css/styles.css?ver=1778657580'  media='all' />
+			<link data-minify="1" rel='stylesheet' id='bg_calendar_widget_styles'  href='https://azbyka.ru/molitvoslov/wp-content/cache/min/1/molitvoslov/wp-content/plugins/az-calendar-widget/css/styles.css?ver=1778657580'  media='all' />
+			
+			<link data-minify="1" rel='preload' as='style' href='https://azbyka.ru/molitvoslov/wp-content/cache/min/1/molitvoslov/wp-content/plugins/bg-forreaders/css/style.css?ver=1778657580'  media='all' />
+			<link data-minify="1" rel='stylesheet' id='bg_forreaders_styles'  href='https://azbyka.ru/molitvoslov/wp-content/cache/min/1/molitvoslov/wp-content/plugins/bg-forreaders/css/style.css?ver=1778657580'  media='all' />
+			<style id='bg_forreaders_styles-inline-css' type='text/css'>
+
+div.bg_forreaders {height: 52.8px;
+	font-size: 0em;
+}
+.bg_forreaders div a {
+	padding: 0px 41.4px 52.8px 0px;
+	margin: 0px 6px 0px 0px;
+}
+.bg_forreaders .pdf {
+	background: url(https://azbyka.ru/molitvoslov/wp-content/uploads/bg_forreaders/document-pdf.svg) no-repeat 50% 50%;
+	background-size: contain;
+}
+.bg_forreaders .epub {
+	background: url(https://azbyka.ru/molitvoslov/wp-content/uploads/bg_forreaders/document-epub.svg) no-repeat 50% 50%;
+	background-size: contain;
+}
+
+.bg_forreaders .mobi{
+	background: url(https://azbyka.ru/molitvoslov/wp-content/uploads/bg_forreaders/document-mobi.svg) no-repeat 50% 50%;
+	background-size: contain;
+}
+.bg_forreaders .fb2 {
+	background: url(https://azbyka.ru/molitvoslov/wp-content/uploads/bg_forreaders/document-fb2.svg) no-repeat 50% 50%;
+	background-size: contain;
+}				  
+	
+/*# sourceURL=bg_forreaders_styles-inline-css */
+</style>
+
+			<link data-minify="1" rel='preload' as='style' href='https://azbyka.ru/molitvoslov/wp-content/cache/min/1/molitvoslov/wp-content/plugins/bz_inline_audio/inline-audio.css?ver=1778657580'  media='all' />
+			<link data-minify="1" rel='stylesheet' id='inline-audio'  href='https://azbyka.ru/molitvoslov/wp-content/cache/min/1/molitvoslov/wp-content/plugins/bz_inline_audio/inline-audio.css?ver=1778657580'  media='all' />
+			
+			<link data-minify="1" rel='preload' as='style' href='https://azbyka.ru/molitvoslov/wp-content/cache/min/1/molitvoslov/wp-content/themes/azbyka/assets/css/styles.css?ver=1778657580'  media='all' />
+			<link data-minify="1" rel='stylesheet' id='azbyka-styles'  href='https://azbyka.ru/molitvoslov/wp-content/cache/min/1/molitvoslov/wp-content/themes/azbyka/assets/css/styles.css?ver=1778657580'  media='all' />
+			
+			<link data-minify="1" rel='preload' as='style' href='https://azbyka.ru/molitvoslov/wp-content/cache/min/1/molitvoslov/wp-content/themes/azbyka-molitvoslov/style.css?ver=1778657580'  media='all' />
+			<link data-minify="1" rel='stylesheet' id='azbyka-style'  href='https://azbyka.ru/molitvoslov/wp-content/cache/min/1/molitvoslov/wp-content/themes/azbyka-molitvoslov/style.css?ver=1778657580'  media='all' />
+			
+			<link data-minify="1" rel='preload' as='style' href='https://azbyka.ru/molitvoslov/wp-content/cache/min/1/molitvoslov/wp-content/themes/azbyka/assets/css/singular.css?ver=1778657580'  media='all' />
+			<link data-minify="1" rel='stylesheet' id='az-singular'  href='https://azbyka.ru/molitvoslov/wp-content/cache/min/1/molitvoslov/wp-content/themes/azbyka/assets/css/singular.css?ver=1778657580'  media='all' />
+			
+			<link data-minify="1" rel='preload' as='style' href='https://azbyka.ru/molitvoslov/wp-content/cache/min/1/molitvoslov/wp-content/themes/azbyka/assets/css/top-menu.css?ver=1778657580'  media='all' />
+			<link data-minify="1" rel='stylesheet' id='top-menu'  href='https://azbyka.ru/molitvoslov/wp-content/cache/min/1/molitvoslov/wp-content/themes/azbyka/assets/css/top-menu.css?ver=1778657580'  media='all' />
+			
+			<link data-minify="1" rel='preload' as='style' href='https://azbyka.ru/molitvoslov/wp-content/cache/min/1/molitvoslov/wp-content/themes/azbyka/assets/css/link-pics.css?ver=1778657580'  media='all' />
+			<link data-minify="1" rel='stylesheet' id='az-link-pics'  href='https://azbyka.ru/molitvoslov/wp-content/cache/min/1/molitvoslov/wp-content/themes/azbyka/assets/css/link-pics.css?ver=1778657580'  media='all' />
+			
+			<link data-minify="1" rel='preload' as='style' href='https://azbyka.ru/molitvoslov/wp-content/cache/min/1/molitvoslov/wp-content/themes/azbyka/inc/youtube-optimizer/youtube.optimizer.css?ver=1778657580'  media='all' />
+			<link data-minify="1" rel='stylesheet' id='youtube-optimizer'  href='https://azbyka.ru/molitvoslov/wp-content/cache/min/1/molitvoslov/wp-content/themes/azbyka/inc/youtube-optimizer/youtube.optimizer.css?ver=1778657580'  media='all' />
+			<script data-minify="1"  src="https://azbyka.ru/molitvoslov/wp-content/cache/min/1/molitvoslov/wp-content/themes/azbyka/assets/js/vendor/azjeycuery.js?ver=1778657580" id="jquery-js"></script>
+<script data-minify="1"  defer="defer" src="https://azbyka.ru/molitvoslov/wp-content/cache/min/1/molitvoslov/wp-content/themes/azbyka/inc/youtube-optimizer/youtube.optimizer.js?ver=1778657580" id="youtube-optimizer-js"></script>
+<link rel="https://api.w.org/" href="https://azbyka.ru/molitvoslov/wp-json/" /><link rel="alternate" title="JSON" type="application/json" href="https://azbyka.ru/molitvoslov/wp-json/wp/v2/posts/438" /><link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://azbyka.ru/molitvoslov/xmlrpc.php?rsd" />
+<link rel='shortlink' href='https://azbyka.ru/molitvoslov/?p=438' />
+		<script>
+			jQuery($=>{
+				let imgs = $('.main-page-content p img:not(.no-move)');
+				if(window.innerWidth < 921 || imgs.length > 1)
+					return;
+				
+				$(document).ready(e=>{
+					let icon = $('#post_icon, .icon_fixed').eq(0);
+					if(!icon.length && imgs.length){
+						icon = imgs.eq(0).closest('p');
+					}
+					if(icon.length){
+						let container = icon.addClass('moving-icon-wrap');
+						let iconTop = container.offset().top - 100;
+						$(document).scroll(e=>{
+							container.toggleClass('active', window.scrollY > 200);
+						});
+						
+						let close = $('<div class="fa fa-caret-up btn-close">');
+						close.click(e=>{icon.slideToggle()});
+						container.append(close);
+					}
+				});
+			});
+		</script>
+		<style>
+			.moving-icon-wrap{
+				display:block;
+				width:fit-content;
+				margin:auto;
+				
+				position: sticky;
+				top: 50px;
+				transition: transform .6s ease;
+			}
+			.moving-icon-wrap a{
+				display:block;
+				width:max-content;
+				margin:auto;
+			}
+			.moving-icon-wrap.active{
+				transform: translateX(calc(-35rem - 50%));
+			}
+			.moving-icon-wrap .btn-close{
+				opacity:0;
+				position:absolute;
+				font-size:1.5rem;
+				padding:2px;
+				background:#fff;
+			}
+			.moving-icon-wrap.active .btn-close{
+				opacity:1;
+			}
+		</style>
+					<style>
+				.clickable{
+					cursor:pointer;
+				}
+				.img-wrap{
+					position: relative;
+					display: inline-block;
+					height: 100%;
+				}
+				.img-wrap .button-wrap{
+					position: absolute;
+					top: 1em;
+					right: 1em;
+					opacity: 0;
+					transform: translateX(10px);
+					pointer-events: none;
+					transition: opacity .3s ease, transform .3s ease;
+				}
+				.img-wrap .button-wrap .button{
+					display: block;
+					background: var(--body-bg);
+					border: 0;
+					box-shadow: 0 2px 10px -5px #3a3a3a3a;
+				}
+				.img-wrap .button-wrap .button,
+				.img-wrap .button-wrap .button .fa{
+					color: var(--accent-color);
+				}
+				.img-wrap .button-wrap .button+.button{
+					margin-top: 1em;
+				}
+				.img-wrap:hover .button-wrap{
+					opacity: 1;
+					transform: none;
+					pointer-events: all;
+				}
+				.bz-lightbox{
+					position:fixed;
+					top: 0;
+					left: 0;
+					width: 100%;
+					height: 100%;
+					z-index:10;
+					margin:0;
+					background-color:#0007;
+					display:flex;
+					align-items:center;
+					justify-content:center;
+					cursor:pointer;
+					z-index: 10000;
+				}
+				.bz-lightbox img{
+					max-height:90vh;
+					cursor: zoom-in;
+				}
+				.bz-lightbox.fullscreen{
+					overflow-y: auto;
+					display: block;
+				}
+				.bz-lightbox.fullscreen img{
+					object-fit: cover;
+					max-height: unset;
+					width: 100%;
+					cursor: zoom-out;
+				}
+				.panzoom{
+					object-fit: none!important;
+				}
+				html.locked{
+					overflow: hidden;
+				}
+			</style>
+			<script>
+			jQuery(document).ready($=>{
+				let allImages = $('.main-page-content img:not(.avatar)').not('.video-preview img');
+				let hasMouse = window.matchMedia('(hover:hover)').matches && window.innerWidth > 520;
+				let full_img_href = {};
+				let doc = $('html');
+				let containerWidth = $('.main-area-content').width() || window.innerWidth;
+				let currentImg;
+				
+				allImages.each((i,el)=>{
+					//Получаем src полной версии
+					let src = el.dataset['lazySrc'] || el.dataset['src'] || el.src;
+					let p = $(el).parent();
+					if(p.is('a')){
+						let href = p.attr('href');
+						if(!href.match(/\.(jpg|png|gif|webp|tiff|svg)$/i))
+							return;
+					
+						full_img_href[src] = href;
+						p.click(e=>e.preventDefault());
+					}else{
+						full_img_href[src] = src.replace(/\-\d{3,4}.\d{3,4}\.(\w{3,4})$/, '.$1');
+					}
+					
+					if('full_img_share_download' in AZ && AZ.full_img_share_download){
+					
+						//Кнопки скачать/поделиться
+						$(el).on('mouseover touch', async function(e){
+							let parent = $(this).closest(':not(img,span,a)');
+							if(!parent.is('.img-wrap')){
+								parent.addClass('img-wrap');
+								let btnWrap = $('<div class="button-wrap"><i class="button fa fa-share-alt btn-share" onclick="navigator.share({url:\''+full_img_href[src]+'\'});return false"></i><a class="button" href="'+full_img_href[src]+'" download><i class="fa fa-download btn-download"></i></a></div>');
+								parent.append(btnWrap);
+							}
+						});
+					
+					}
+					
+					
+					//console.log(el, 'img parent is', p);
+					el.classList.add('clickable');
+					el.addEventListener('click', function (e){
+						//console.log('click on img wrap', this.src, full_img_href[this.src]);
+						e.preventDefault();
+						if(!hasMouse) return; //Откл. lightbox на мобилах.
+
+						currentImg = this;
+						doc.addClass('locked');
+						
+						let box = $('<figure class="bz-lightbox"><img src = "'+full_img_href[this.src]+'"/></figure>');
+						box.hide();
+						$('body').append(box);
+						box.fadeIn(400);
+						
+												
+						box.click(e=>{
+							let $img = $(e.target).closest('img');
+							if(hasMouse && $img.length && $img.width() != $(currentImg).attr('width')){
+								box.toggleClass('fullscreen');
+							}else{
+								doc.removeClass('locked');
+								box.fadeOut(300, ()=>{
+									box.remove()
+								});
+							}
+						});
+					});
+				});
+				//console.log('full_img_href:',full_img_href);
+			})
+			</script>
+			
+	<script type="text/javascript">
+	    var templateURI = 'https://azbyka.ru/molitvoslov/wp-content/themes/azbyka';
+	</script>
+<meta name="generator" content="WP Rocket 3.21.3" data-wpr-features="wpr_minify_js wpr_minify_css" /></head>
+
+<body class="wp-singular post-template-default single single-post postid-438 single-format-standard wp-theme-azbyka wp-child-theme-azbyka-molitvoslov sidebar-hide sidebar-toggle" id="main-body">
+	
+	<noscript><div><img src="https://mc.yandex.ru/watch/5565880" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+	<!-- Mobile Top menu -->
+		<div class="main-nav-list">
+			<ul>
+			<li><span id="main-nav-0" data-target="#nav-box"><img src="https://azbyka.ru/wp-content/themes/azbyka-av/assets/images/favicons/favicon.svg" loading="lazy"></span></li><li><a id="main-nav-1" href="https://azbyka.ru/molitvoslov"><i class="fa fa-bars" aria-hidden="true"></i></a></li><li><span id="main-nav-3" data-target="#widgets"><i class="fa fa-info-circle" aria-hidden="true"></i></span></li><li><span id="main-nav-2" data-target="#header_search"><i class="fa fa-search" aria-hidden="true"></i></span></li><li><a id="main-nav-6" href="https://azbyka.ru/molitvoslov/personal"><i class="fa fa-user user-only" aria-hidden="true"></i><i class="fa fa-sign-in guest-only" aria-hidden="true"></i></a></li>			</ul>
+		</div>
+		<!-- End of Mobile Top menu -->
+			
+	<nav id="nav-box" class="top-panel">
+		<div class=main-box>
+			<div class="pre-header-nav m-show">Разделы портала «Азбука&nbsp;веры»</div>
+			<ul id="main-nav" class="nav">
+			<li class="menu-item"><a  href='https://azbyka.ru/'><img class="nav-logo" src="https://azbyka.ru/wp-content/themes/azbyka-av/assets/images/favicons/favicon.svg" loading="lazy"><span class="nav-home-label"> Главная</span></a></li><li class="menu-item menu-item-has-children"><span  class='link'>Гид <i class="fa fa-angle-down"></i></span><ul class="sub-menu"><li class="menu-item"><a  href='https://azbyka.ru/gid'><i class="fa fa-question-circle-o" aria-hidden="true"></i> Гид по порталу</a></li><li class="menu-item"><a  href='https://azbyka.ru/drevo-sajta'><i class="fa fa-sitemap" aria-hidden="true"></i> Древо портала</a></li><li class="menu-item"><a  href='https://azbyka.ru/s-chego-nachat'><i class="fa fa-user-plus" aria-hidden="true"></i> С чего начать</a></li><li class="menu-item"><a  href='https://t.me/AzbykaruBot'><i class="fa fa-search" aria-hidden="true"></i> TG бот</a></li></ul></li><li class="menu-item menu-item-has-children"><span  class='link'>Библиотеки <i class="fa fa-angle-down"></i></span><ul class="sub-menu"><li class="menu-item"><a  href='https://azbyka.ru/biblia/'><i class="fa fa-book" aria-hidden="true"></i> Библия</a></li><li class="menu-item"><a  href='https://azbyka.ru/otechnik/'><i class="fa fa-files-o" aria-hidden="true"></i> «Отечник»</a></li><li class="menu-item"><a  href='https://azbyka.ru/fiction/'><i class="fa fa-copyright" aria-hidden="true"></i> Художественная литература</a></li><li class="menu-item"><a  href='https://azbyka.ru/pravo/'><i class="fa fa-balance-scale" aria-hidden="true"></i> Церковное право</a></li><li class="menu-item"><a  href='https://azbyka.ru/dictionary'><i class="fa fa-graduation-cap" aria-hidden="true"></i> Энциклопедия</a></li></ul></li><li class="menu-item menu-item-has-children"><span  class='link'>Календарь <i class="fa fa-angle-down"></i></span><ul class="sub-menu"><li class="menu-item"><a  href='https://azbyka.ru/days/'><i class="fa fa-calendar" aria-hidden="true"></i> Церковный календарь</a></li><li class="menu-item"><a  href='https://azbyka.ru/days/p-audio-calendar'><i class="fa fa-headphones" aria-hidden="true"></i> Аудиокалендарь</a></li><li class="menu-item m-hide"><a  href='https://azbyka.ru/extension'><i class="fa fa-chrome" aria-hidden="true"></i> Расширение Chrome</a></li></ul></li><li class="menu-item menu-item-has-children"><span  class='link'>Молитва <i class="fa fa-angle-down"></i></span><ul class="sub-menu"><li class="menu-item"><a  href='https://azbyka.ru/palomnik/'><i class="fa fa-globe" aria-hidden="true"></i> Азбука паломника</a></li><li class="menu-item"><a  href='https://azbyka.ru/kliros/'><i class="fa fa-music" aria-hidden="true"></i> Азбука певческая</a></li><li class="menu-item"><a  href='https://azbyka.ru/worships/'><i class="fa fa-file-text" aria-hidden="true"></i> Богослужение сегодня</a></li><li class="menu-item"><a  href='https://azbyka.ru/chaso-slov/'><i class="fa fa-clock-o" aria-hidden="true"></i> Молимся по часам</a></li><li class="menu-item"><a  href='https://azbyka.ru/bogosluzhenie/'><i class="fa fa-bell" aria-hidden="true"></i> Переводы Богослужений</a></li><li class="menu-item"><a  href='https://azbyka.ru/psalms/'><i class="fa fa-group" aria-hidden="true"></i> Читаем Псалтирь</a></li></ul></li><li class="menu-item menu-item-has-children"><span  class='link'>Медиа <i class="fa fa-angle-down"></i></span><ul class="sub-menu"><li class="menu-item"><a  href='https://azbyka.ru/news'><i class="fa fa-newspaper-o" aria-hidden="true"></i> Азбука новостей</a></li><li class="menu-item"><a  href='https://azbyka.ru/foto/'><i class="fa fa-camera-retro" aria-hidden="true"></i> Азбука фото</a></li><li class="menu-item"><a  href='https://azbyka.ru/audio/'><i class="fa fa-volume-up" aria-hidden="true"></i> Аудио</a></li><li class="menu-item"><a  href='https://azbyka.ru/video/'><i class="fa fa-video-camera" aria-hidden="true"></i> Видео</a></li><li class="menu-item"><a  href='https://azbyka.ru/bozhestvennaja-liturgija'><i class="fa fa-bell" aria-hidden="true"></i> Литургия</a></li><li class="menu-item"><a  href='https://azbyka.ru/audio/radio.html'><i class="fa fa-volume-up" aria-hidden="true"></i> Радио</a></li><li class="menu-item"><a  href='https://azbyka.ru/bogosluzhenie-online'><i class="fa fa-video-camera" aria-hidden="true"></i> Трансляция из храма</a></li><li class="menu-item"><a  href='https://azbyka.ru/parkhomenko/foto/'><i class="fa fa-camera" aria-hidden="true"></i> Фоторассказы</a></li><li class="menu-item"><a  href='https://azbyka.ru/life/'><i class="fa fa-road" aria-hidden="true"></i> Христианская жизнь</a></li><li class="menu-item"><a  href='https://azbyka.ru/telegram-kanaly'><i class="fa fa-telegram" aria-hidden="true"></i> TG-каналы</a></li></ul></li><li class="menu-item menu-item-has-children"><span  class='link'>Проверь себя <i class="fa fa-angle-down"></i></span><ul class="sub-menu"><li class="menu-item"><a  href='https://azbyka.ru/quiz/'><i class="fa fa-code-fork" aria-hidden="true"></i> Квизы</a></li><li class="menu-item"><a  href='https://azbyka.ru/crosswords/'><i class="fa fa-pencil" aria-hidden="true"></i> Кроссворды</a></li><li class="menu-item"><a  href='https://azbyka.ru/test/'><i class="fa fa-check-square-o" aria-hidden="true"></i> Тесты</a></li><li class="menu-item"><a  href='https://azbyka.ru/viktorina/'><i class="fa fa-image" aria-hidden="true"></i> Фотовикторины</a></li><li class="menu-item"><a  href='https://azbyka.ru/games/'><i class="fa fa-gamepad" aria-hidden="true"></i> Игры</a></li><li class="menu-item"><a  href='https://azbyka.ru/memo/'><i class="fa fa-refresh" aria-hidden="true"></i> Учим Писания</a></li></ul></li><li class="menu-item menu-item-has-children"><span  class='link'>Тематическое <i class="fa fa-angle-down"></i></span><ul class="sub-menu"><li class="menu-item"><a  href='https://azbyka.ru/death/'><i class="fa fa-cloud-upload" aria-hidden="true"></i> Азбука бессмертия</a></li><li class="menu-item"><a  href='https://azbyka.ru/art/'><i class="fa fa-paint-brush" aria-hidden="true"></i> Азбука искусства</a></li><li class="menu-item"><a  href='https://azbyka.ru/apokalipsis/'><i class="fa fa-font" aria-hidden="true"></i> Апокалипсис</a></li><li class="menu-item"><a  href='https://azbyka.ru/vopros/'><i class="fa fa-question-circle" aria-hidden="true"></i> Вопросы и ответы</a></li><li class="menu-item"><a  href='https://azbyka.ru/ikona/'><i class="fa fa-plus-square" aria-hidden="true"></i> Иконы</a></li><li class="menu-item"><a  href='https://azbyka.ru/katehizacija/'><i class="fa fa-bullhorn" aria-hidden="true"></i> Катехизация</a></li><li class="menu-item"><a  href='https://azbyka.ru/way/'><i class="fa fa-location-arrow" aria-hidden="true"></i> Мой путь к Богу</a></li><li class="menu-item"><a  href='https://azbyka.ru/opros/'><i class="fa fa-bar-chart" aria-hidden="true"></i> Опросы</a></li><li class="menu-item"><a  href='https://azbyka.ru/shemy/'><i class="fa fa-table" aria-hidden="true"></i> Пособия</a></li><li class="menu-item"><a  href='https://azbyka.ru/propovedi/'><i class="fa fa-pencil" aria-hidden="true"></i> Проповеди</a></li><li class="menu-item"><a  href='https://azbyka.ru/sueverie/'><i class="fa fa-street-view" aria-hidden="true"></i> Суевериям.нет</a></li><li class="menu-item"><a  href='https://azbyka.ru/forum/'><i class="fa fa-comments-o" aria-hidden="true"></i> Форум</a></li><li class="menu-item"><a  href='https://azbyka.ru/quotes'><i class="fa fa-bookmark" aria-hidden="true"></i> Цитаты Св. отцов</a></li><li class="menu-item"><a  href='https://azbyka.ru/chinaorthodox/'><i class="fa fa-handshake-o" aria-hidden="true"></i> 东正教信仰入门</a></li><li class="menu-item"><a  href='https://azbyka.ru/japanorthodox/'><i class="fa fa-circle" aria-hidden="true"></i> 正教の本</a></li></ul></li><li class="menu-item menu-item-has-children"><span  class='link'>Семья и здоровье <i class="fa fa-angle-down"></i></span><ul class="sub-menu"><li class="menu-item"><a  href='https://azbyka.ru/znakomstva/'><i class="fa fa-link" aria-hidden="true"></i> Азбука верности</a></li><li class="menu-item"><a  href='https://azbyka.ru/deti/'><i class="fa fa-child" aria-hidden="true"></i> Азбука воспитания</a></li><li class="menu-item"><a  href='https://azbyka.ru/zdorovie/'><i class="fa fa-medkit" aria-hidden="true"></i> Азбука здоровья</a></li><li class="menu-item"><a  href='https://azbyka.ru/recept/'><i class="fa fa-cutlery" aria-hidden="true"></i> Азбука рецептов</a></li><li class="menu-item"><a  href='https://azbyka.ru/garden/'><i class="fa fa-envira" aria-hidden="true"></i> Азбука садовода</a></li><li class="menu-item"><a  href='https://azbyka.ru/semya/'><i class="fa fa-home" aria-hidden="true"></i> Азбука супружества</a></li></ul></li>			</ul>
+		</div>
+	</nav>
+
+<!-- Header -->
+<div class="main-box">
+	<header class="header" id="header"> 
+		<div class="header-top">
+			<div class="header-breadcrumbs"><ul class="breadcrumbs" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop='itemListElement' itemscope itemtype='https://schema.org/ListItem'>
+				<a itemprop='item' href='https://azbyka.ru/' title='Азбука веры'>
+					<span itemprop='name'>Азбука веры</span>
+				</a>
+				<meta itemprop='position' content='1'>
+			</li><li itemprop='itemListElement' itemscope itemtype='https://schema.org/ListItem'>
+				<a itemprop='item' href='https://azbyka.ru/molitvoslov/' title='Молитвослов'>
+					<span itemprop='name' content='🙏 Молитвослов'>Молитвослов</span>
+				</a>
+				<meta itemprop='position' content='2'>
+			</li><li itemprop='itemListElement' itemscope itemtype='https://schema.org/ListItem'>
+				<a itemprop='item' href='https://azbyka.ru/molitvoslov/1/molitvy-o-mire' title='Молитвы о мире'>
+					<span itemprop='name'>Молитвы о мире</span>
+				</a>
+				<meta itemprop='position' content='3'>
+			</li></ul></div>		<!-- Вход в личный кабинет, если установлен плагин Profile Builder --> 
+						<div class="header-login m-hide">
+				<a href="https://azbyka.ru/molitvoslov/personal" rel="nofollow" title="Войти в личный кабинет" class=user-only title="Личное"><i class="fa fa-user" aria-hidden="true"></i></a>
+				<a href="//azbyka.ru/auth" rel="nofollow" title="Войти в личный кабинет" class=guest-only>Вход <i class="fa fa-sign-in"></i></a>
+			</div>
+						<!-- End ¬ход в личный кабинет -->
+	<!-- Settings -->
+<!--noindex-->
+<div class="settings" id="settings" data-nosnippet>
+<a class="settings-button btn-settings" id="settings-button" title="Настройки">
+		<i class="fa fa-gear"></i>
+	</a>
+</div>
+<!--/noindex-->
+<!-- End Settings -->
+<div class="header-search" id="header_search">	
+	<form id="labnol" action="https://azbyka.ru/molitvoslov/yandex_search" method="get" target="_self" accept-charset="utf-8" class="search-form">
+		<input type="hidden" name="searchid" value="2286585">
+		<input type="hidden" name="l10n" value="ru">
+		<input type="hidden" name="reqenc" value="">
+		<input type="search" name="text" id="transcript" value="" class="search-form-field">
+		<div class="speech start-dictation"><i class="fa fa-microphone"></i></div>
+		<button type="submit" class="search-form-button"><i class="fa fa-search"></i></button>
+	</form>
+	</div>		</div>
+		<div class="header-main header-wrap"> 	
+			<div class="logo"><div class="main-title"><a href="https://azbyka.ru/molitvoslov/" title="Молитвослов">Молитвослов</a></div><p class="header-subtitle">православные молитвы</p></div><a class="button header-help-btn" href="//azbyka.ru/kak-pomoch">Пожертвовать</a>		</div>
+
+		
+	</header>
+</div>
+<!-- End Header -->
+<!-- Main area -->
+<div class="main-box">
+	<main class="main-area" id="main-area">
+				<!-- Content -->
+		<section class="main-area-content">
+			
+				<!-- Article -->
+<article class="article article-single" id="post-438">
+	<header class="article-single-header">
+		
+		<div class="article-single-info">
+						<ul class="article-categories article-loop-categories">
+																							<li class="category"><a href="https://azbyka.ru/molitvoslov/1/molitvy-o-mire" title="Категория: Молитвы о мире">Молитвы о мире</a></li>
+												</ul>
+					<h1>Молитвы о России</h1>				<div class="my-book loading" data-post_id="438" data-page="1" data-paragraph="0" data-my_book="0">
+		<a href="https://azbyka.ru/auth" class="register-link guest-only" title="Вход и регистрация"><i class="fa fa-heart-o"></i></a>
+		<span class="bg_favorite user-only"><i class="fa fa-heart-o"></i></span>
+		<span class="bg_response"></span>
+	</div>		</div>
+	</header>
+
+	<div class="article-single-content main-page-content">
+		<div class="bg_forreaders"><div><a class="pdf" href="https://azbyka.ru/molitvoslov/wp-content/uploads/bg_forreaders/molitvy-o-rossii_438.pdf" title="Скачать &#171;Молитвы о России&#187; в формате PDF" download></a></div><div><a class="epub" href="https://azbyka.ru/molitvoslov/wp-content/uploads/bg_forreaders/molitvy-o-rossii_438.epub" title="Скачать &#171;Молитвы о России&#187; в формате ePub" download></a></div></div><br><ul>
+<li><a href="#n1">Молитва ко Господу о спасении России</a></li>
+<li><a href="#n2">Молитва ко Господу о России</a></li>
+<li><a href="#n3">Молитва ко Господу об Отечестве исп. Николая (Могилевского)</a></li>
+<li><a href="#n4">Молитва по соглашению о спасении России</a></li>
+<li><a href="#n6">Покаянная молитва ко Господу во дни смуты</a></li>
+<li><a href="#n7">Молитва ко Пресвятой Богородице о России</a></li>
+<li><a href="#n8">Святителю Тихону, патриарху Московскому</a></li>
+<li><a href="#n9">Святым новомученикам и исповедникам Российским</a></li>
+</ul>
+<div class="decor-box"></div>
+<h3><a id="n1"></a>Молитва ко <a href="http://azbyka.ru/gospod">Господу</a> о спасении России<span class="thin"><a id="_ftnaref1" href="#_ftna1">1</a></span></h3>
+<div id="post_icon"><a href="https://azbyka.ru/molitvoslov/wp-content/uploads/2014/05/f0d6f5cc51ae8ab57d5d320be7735b75-byzantine-icons-byzantine-art.jpg"><img fetchpriority="high" decoding="async" class="aligncenter size-medium wp-image-7075" src="https://azbyka.ru/molitvoslov/wp-content/uploads/2014/05/f0d6f5cc51ae8ab57d5d320be7735b75-byzantine-icons-byzantine-art-234x300.jpg" alt="Господь Иисус Христос" width="234" height="300" title="Молитвы о России" srcset="https://azbyka.ru/molitvoslov/wp-content/uploads/2014/05/f0d6f5cc51ae8ab57d5d320be7735b75-byzantine-icons-byzantine-art-234x300.jpg 234w, https://azbyka.ru/molitvoslov/wp-content/uploads/2014/05/f0d6f5cc51ae8ab57d5d320be7735b75-byzantine-icons-byzantine-art.jpg 400w" sizes="(max-width: 234px) 100vw, 234px" /></a></di

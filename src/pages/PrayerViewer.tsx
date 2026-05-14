@@ -19,7 +19,11 @@ const TITLES: Record<string, string> = {
   'canon-theotokos': 'Канон молебный ко Пресвятой Богородице',
   'canon-guardian-angel': 'Канон Ангелу-Хранителю',
   'communion-prayers': 'Последование ко Святому Причащению',
-  'thanksgiving': 'Благодарственные молитвы по Святом Причащении'
+  'thanksgiving': 'Благодарственные молитвы по Святом Причащении',
+  'sick': 'Молитвы о болящих',
+  'children': 'Молитвы о детях',
+  'theotokos-various': 'Молитвы ко Пресвятой Богородице',
+  'homeland': 'Молитвы за Отечество'
 };
 
 export default function PrayerViewer() {
@@ -68,35 +72,37 @@ export default function PrayerViewer() {
         <DecorativeDivider className="mt-4" />
         
         {easterIndex !== -1 && (
-          <div className="flex justify-center gap-3 mt-6">
-            <button
-              onClick={() => setViewMode('normal')}
-              className={`flex-1 max-w-[200px] py-3 rounded-lg font-izhitsa shadow-sm transition-all ${
-                viewMode === 'normal'
-                  ? 'bg-[var(--color-cinnabar)] text-[var(--color-parchment)] shadow-inner'
-                  : 'bg-[var(--color-parchment)] text-[var(--color-ink)] hover:bg-black/5 border border-[var(--color-ink)]/10'
-              }`}
-            >
-              Обычное правило
-            </button>
-            <button
-              onClick={() => setViewMode('easter')}
-              className={`flex-1 max-w-[200px] py-3 rounded-lg font-izhitsa shadow-sm transition-all ${
-                viewMode === 'easter'
-                  ? 'bg-[var(--color-cinnabar)] text-[var(--color-parchment)] shadow-inner'
-                  : 'bg-[var(--color-parchment)] text-[var(--color-ink)] hover:bg-black/5 border border-[var(--color-ink)]/10'
-              }`}
-            >
-              Пасхальные часы
-            </button>
-          </div>
+          <>
+            <div className="flex justify-center gap-3 mt-6">
+              <button
+                onClick={() => setViewMode('normal')}
+                className={`flex-1 max-w-[200px] py-3 rounded-lg font-izhitsa shadow-sm transition-all ${
+                  viewMode === 'normal'
+                    ? 'bg-[var(--color-cinnabar)] text-[var(--color-parchment)] shadow-inner'
+                    : 'bg-[var(--color-parchment)] text-[var(--color-ink)] hover:bg-black/5 border border-[var(--color-ink)]/10'
+                }`}
+              >
+                Обычное правило
+              </button>
+              <button
+                onClick={() => setViewMode('easter')}
+                className={`flex-1 max-w-[200px] py-3 rounded-lg font-izhitsa shadow-sm transition-all ${
+                  viewMode === 'easter'
+                    ? 'bg-[var(--color-cinnabar)] text-[var(--color-parchment)] shadow-inner'
+                    : 'bg-[var(--color-parchment)] text-[var(--color-ink)] hover:bg-black/5 border border-[var(--color-ink)]/10'
+                }`}
+              >
+                Пасхальные часы
+              </button>
+            </div>
+            <DecorativeDivider className="mt-6" />
+          </>
         )}
-        <DecorativeDivider className="mt-6" />
       </div>
 
       <div className="space-y-6">
         {prayers.map((item, index) => {
-          if (item.type === 'header' || !item.russian) {
+          if (item.type === 'header') {
             return (
               <div key={index} className="text-center my-10 relative">
                 <div className="absolute inset-x-0 top-1/2 h-px bg-[var(--color-cinnabar)]/10 -z-10" />
@@ -112,8 +118,8 @@ export default function PrayerViewer() {
           return (
             <div key={index} className="group pb-8">
               <div 
-                className="cursor-pointer transition-colors"
-                onClick={() => toggleItem(index)}
+                className={`transition-colors ${item.russian ? 'cursor-pointer' : ''}`}
+                onClick={() => item.russian && toggleItem(index)}
               >
                 <div className="font-izhitsa text-xl leading-snug text-[var(--color-ink)] text-justify whitespace-pre-wrap">
                   {(item.slavonic?.split('') || []).map((char, i) => {
@@ -123,14 +129,16 @@ export default function PrayerViewer() {
                     return char;
                   })}
                 </div>
-                <div className="flex items-center justify-center mt-6 gap-2 text-[var(--color-cinnabar)] opacity-30 group-hover:opacity-100 transition-opacity">
-                   <div className="h-px w-12 bg-current" />
-                   {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                   <div className="h-px w-12 bg-current" />
-                </div>
+                {item.russian && (
+                  <div className="flex items-center justify-center mt-6 gap-2 text-[var(--color-cinnabar)] opacity-30 group-hover:opacity-100 transition-opacity">
+                     <div className="h-px w-12 bg-current" />
+                     {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                     <div className="h-px w-12 bg-current" />
+                  </div>
+                )}
               </div>
               
-              {isExpanded && (
+              {isExpanded && item.russian && (
                 <div className="pt-4 animate-in fade-in duration-300">
                   <span className="font-izhitsa text-sm uppercase tracking-widest block mb-2 text-[var(--color-cinnabar)] opacity-80 text-center">Перевод</span>
                   <p className="font-izhitsa text-lg leading-snug text-[var(--color-ink)] italic opacity-90 text-justify whitespace-pre-wrap">

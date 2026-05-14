@@ -15,6 +15,7 @@ import MyConfession from './pages/MyConfession';
 import PrayerBook from './pages/PrayerBook';
 import PrayerViewer from './pages/PrayerViewer';
 import CommunionPrayers from './pages/CommunionPrayers';
+import VariousPrayers from './pages/VariousPrayers';
 import CommunionWarning from './pages/CommunionWarning';
 import Prosphora from './pages/Prosphora';
 import Calendar from './pages/Calendar';
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="prayer-book/communion/warning" element={<CommunionWarning />} />
           <Route path="prayer-book/communion/:id" element={<PrayerViewer />} />
           <Route path="prayer-book/communion" element={<CommunionPrayers />} />
+          <Route path="prayer-book/various" element={<VariousPrayers />} />
           <Route path="prayer-book/:id" element={<PrayerViewer />} />
           <Route path="prayer-book" element={<PrayerBook />} />
           <Route path="calendar" element={<Calendar />} />
