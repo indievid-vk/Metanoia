@@ -14,8 +14,10 @@ export default function About() {
         
         <div className="prose prose-sm text-[var(--color-ink)]/80 leading-relaxed font-serif">
           <p>
-            Этот «Духовный дневник» создан как вспомогательное средство для тех, кто стремится к глубокому покаянию и жизни по Евангелию. 
-            Приложение объединяет в себе молитвенник, календарь, библиотеку святоотеческих трудов и инструмент для подготовки к Исповеди.
+            Приложение Помощь кающимся - это практический помощник для православных христиан, стремящихся к покаянному образу жизни по Евангелию.
+          </p>
+          <p>
+            Приложение объединяет в себе огласительные беседы для правильного понимания православной веры, библиотеку святоотеческих трудов для ежедневного чтения, молитвослов, календарь, дневник кающегося с примерами грехов по 8 страстям для подготовки к Исповеди, борьбы со страстями.
           </p>
         </div>
       </div>
@@ -28,7 +30,7 @@ export default function About() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="bg-green-50/50 p-4 rounded-xl border border-green-100">
-            <h4 className="font-bold text-xs uppercase tracking-wider text-green-700 mb-2">Преимущества (Плюсы)</h4>
+            <h4 className="font-bold text-xs uppercase tracking-wider text-green-700 mb-2">Преимущества</h4>
             <ul className="text-xs space-y-1.5 text-green-800/80 list-disc pl-4">
               <li>Офлайн-доступ: работает без интернета после загрузки.</li>
               <li>Не занимает много места в памяти устройства.</li>
@@ -38,7 +40,7 @@ export default function About() {
           </div>
 
           <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-100">
-            <h4 className="font-bold text-xs uppercase tracking-wider text-amber-700 mb-2">Ограничения (Минусы)</h4>
+            <h4 className="font-bold text-xs uppercase tracking-wider text-amber-700 mb-2">Ограничения</h4>
             <ul className="text-xs space-y-1.5 text-amber-800/80 list-disc pl-4">
               <li>Зависимость от возможностей браузера.</li>
             </ul>
@@ -61,7 +63,6 @@ export default function About() {
               <Heart size={14} className="text-[var(--color-cinnabar)]" />
               <span>Создано нейрокомандой <strong>Индивид СтуИИя</strong></span>
             </div>
-            <span className="text-[var(--color-ink)]/30 text-[10px]">с молитвой и любовью</span>
           </div>
         </div>
       </div>
