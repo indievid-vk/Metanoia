@@ -15,7 +15,7 @@ export default function UpdatePopup() {
     updateServiceWorker: (reload?: boolean) => { if(reload) window.location.reload(); },
   };
 
-  const CURRENT_VERSION = '1.0.9'; // Increment to force popup
+  const CURRENT_VERSION = '1.1.2'; // Increment to force popup
   const [show, setShow] = useState(false);
   const [type, setType] = useState<'update' | 'offline' | 'new-version'>('update');
 
@@ -23,11 +23,8 @@ export default function UpdatePopup() {
     // Knowledge Base Section 6: Version-based check
     const storedVersion = localStorage.getItem('appVersion');
     
-    if (!storedVersion) {
-      // First visit after revision - silently save
-      localStorage.setItem('appVersion', CURRENT_VERSION);
-    } else if (storedVersion !== CURRENT_VERSION) {
-      // App updated!
+    // If version mismatch or not set, show the updated window
+    if (storedVersion !== CURRENT_VERSION) {
       setType('new-version');
       setShow(true);
       (window as any).pwaPopupActive = true;
