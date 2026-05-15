@@ -17,24 +17,35 @@ export default function UpdatePopup() {
     if (needUpdate) {
       setType('update');
       setShow(true);
+      (window as any).pwaPopupActive = true;
     } else if (offlineReady) {
       setType('offline');
       // Show offline ready for a few seconds
       setShow(true);
-      const timer = setTimeout(() => setShow(false), 5000);
+      (window as any).pwaPopupActive = true;
+      const timer = setTimeout(() => {
+        setShow(false);
+        (window as any).pwaPopupActive = false;
+        window.dispatchEvent(new CustomEvent('pwa-popup-closed'));
+      }, 5000);
       return () => clearTimeout(timer);
+    } else {
+      (window as any).pwaPopupActive = false;
     }
   }, [needUpdate, offlineReady]);
 
   const handleUpdate = () => {
     updateServiceWorker(true);
     setShow(false);
+    (window as any).pwaPopupActive = false;
   };
 
   const closePopup = () => {
     setShow(false);
     setOfflineReady(false);
     setNeedUpdate(false);
+    (window as any).pwaPopupActive = false;
+    window.dispatchEvent(new CustomEvent('pwa-popup-closed'));
   };
 
   return (

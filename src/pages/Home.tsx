@@ -72,16 +72,29 @@ export default function Home() {
   const [commandmentGroups, setCommandmentGroups] = useState<any[][]>([]);
 
   useEffect(() => {
-    try {
-      // Show beatitudes popup on every new session (app open)
-      const hasSeen = sessionStorage.getItem('beatitudesSeen');
-      if (!hasSeen) {
-        setShowPopup(true);
-        sessionStorage.setItem('beatitudesSeen', 'true');
+    const showBeatitudes = () => {
+      try {
+        const hasSeen = sessionStorage.getItem('beatitudesSeen');
+        if (!hasSeen) {
+          setShowPopup(true);
+          sessionStorage.setItem('beatitudesSeen', 'true');
+        }
+      } catch (e) {
+        console.warn('SessionStorage access failed:', e);
       }
-    } catch (e) {
-      console.warn('SessionStorage access failed:', e);
-    }
+    };
+
+    const checkAndShow = () => {
+      // Check both global flag and if needUpdate/offlineReady would be true
+      if ((window as any).pwaPopupActive) {
+        window.addEventListener('pwa-popup-closed', showBeatitudes, { once: true });
+      } else {
+        showBeatitudes();
+      }
+    };
+
+    // Small delay to allow PWA check to initialize
+    const timer = setTimeout(checkAndShow, 1200);
 
     // Process commandments into groups of 3 individual verses/quotes
     const gospelCommandmentsInput = Array.isArray(gospelCommandmentsData) 
@@ -93,7 +106,7 @@ export default function Home() {
       if (section.content && section.content.trim()) {
         const verses = section.content.split('\n\n')
           .map((v: string) => v.trim())
-          .filter((v: string) => v.length > 5); // Filter out very short strings or artifacts
+          .filter((v: string) => v.length > 5); 
         
         verses.forEach((verse: string) => {
           flattened.push({
@@ -123,6 +136,11 @@ export default function Home() {
         setCurrentGroupIdx(0);
       }
     }
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('pwa-popup-closed', showBeatitudes);
+    };
   }, []);
 
   const currentGroup = commandmentGroups[currentGroupIdx] || [];

@@ -16,12 +16,9 @@ export default function PrayerBook() {
         <div className="flex flex-col gap-2">
           <button 
             onClick={() => navigate('/prayer-book/morning')}
-            className="bg-[var(--color-parchment)] border border-[var(--color-cinnabar)]/30 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow text-left group relative overflow-hidden w-full block border-l-4 border-l-[var(--color-cinnabar)]"
+            className="bg-[var(--color-parchment)] border border-[var(--color-cinnabar)]/30 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow text-left group relative overflow-hidden w-full block"
           >
-            <div className="absolute top-2 right-2">
-              <div className="bg-[var(--color-cinnabar)]/10 text-[var(--color-cinnabar)] text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-wider shadow-sm">Книга</div>
-            </div>
-            <div className="absolute top-0 right-0 w-20 h-20 bg-[var(--color-cinnabar)]/5 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+            <div className="absolute top-0 right-0 w-16 h-16 bg-[var(--color-cinnabar)]/5 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-150"></div>
             <h3 className="font-izhitsa text-xl text-[var(--color-ink)] mb-2 group-hover:text-[var(--color-cinnabar)] transition-colors">Молитвы утренние</h3>
             <p className="text-sm text-[var(--color-ink)]/70 leading-relaxed">
               Молитвенное правило, читаемое после пробуждения.
@@ -38,12 +35,9 @@ export default function PrayerBook() {
         <div className="flex flex-col gap-2">
           <button 
             onClick={() => navigate('/prayer-book/evening')}
-            className="bg-[var(--color-parchment)] border border-[var(--color-cinnabar)]/30 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow text-left group relative overflow-hidden w-full block border-l-4 border-l-[var(--color-cinnabar)]"
+            className="bg-[var(--color-parchment)] border border-[var(--color-cinnabar)]/30 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow text-left group relative overflow-hidden w-full block"
           >
-            <div className="absolute top-2 right-2">
-              <div className="bg-[var(--color-cinnabar)]/10 text-[var(--color-cinnabar)] text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-wider shadow-sm">Книга</div>
-            </div>
-            <div className="absolute top-0 right-0 w-20 h-20 bg-[var(--color-cinnabar)]/5 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+            <div className="absolute top-0 right-0 w-16 h-16 bg-[var(--color-cinnabar)]/5 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-150"></div>
             <h3 className="font-izhitsa text-xl text-[var(--color-ink)] mb-2 group-hover:text-[var(--color-cinnabar)] transition-colors">Молитвы на сон грядущим</h3>
             <p className="text-sm text-[var(--color-ink)]/70 leading-relaxed">
               Вечернее молитвенное правило перед отходом ко сну.
@@ -72,12 +66,9 @@ export default function PrayerBook() {
         </button>
         <button 
           onClick={() => navigate('/prayer-book/various')}
-          className="bg-[var(--color-parchment)] border border-[var(--color-cinnabar)]/30 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow text-left group relative overflow-hidden w-full block border-l-4 border-l-[var(--color-cinnabar)]"
+          className="bg-[var(--color-parchment)] border border-[var(--color-cinnabar)]/30 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow text-left group relative overflow-hidden w-full block"
         >
-          <div className="absolute top-2 right-2">
-            <div className="bg-[var(--color-cinnabar)]/10 text-[var(--color-cinnabar)] text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-wider shadow-sm">Книга</div>
-          </div>
-          <div className="absolute top-0 right-0 w-20 h-20 bg-[var(--color-cinnabar)]/5 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+          <div className="absolute top-0 right-0 w-16 h-16 bg-[var(--color-cinnabar)]/5 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-150"></div>
           <h3 className="font-izhitsa text-xl text-[var(--color-ink)] mb-2 group-hover:text-[var(--color-cinnabar)] transition-colors">Молитвы на разные случаи жизни</h3>
           <p className="text-sm text-[var(--color-ink)]/70 leading-relaxed">
             Молитвы о болящих, молитвы о детях и другие прошения.
