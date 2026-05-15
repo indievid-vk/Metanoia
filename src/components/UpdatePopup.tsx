@@ -22,33 +22,36 @@ export default function UpdatePopup() {
     // Signal that PWA check is in progress
     if (!(window as any).pwaPopupActive) {
       (window as any).pwaPopupActive = true;
-      // If after 3 seconds neither update nor offline ready is true, clear the flag
+      // If after 5 seconds neither update nor offline ready is true, clear the flag
       const initialTimer = setTimeout(() => {
         if (!needUpdate && !offlineReady) {
           (window as any).pwaPopupActive = false;
           window.dispatchEvent(new CustomEvent('pwa-popup-closed'));
         }
-      }, 3000);
+      }, 5000);
       return () => clearTimeout(initialTimer);
     }
   }, []);
 
   useEffect(() => {
-    if (needUpdate) {
-      setType('update');
+    if (needUpdate || offlineReady) {
+      if (needUpdate) {
+        setType('update');
+      } else {
+        setType('offline');
+      }
       setShow(true);
       (window as any).pwaPopupActive = true;
-    } else if (offlineReady) {
-      setType('offline');
-      // Show offline ready for a few seconds
-      setShow(true);
-      (window as any).pwaPopupActive = true;
-      const timer = setTimeout(() => {
-        setShow(false);
-        (window as any).pwaPopupActive = false;
-        window.dispatchEvent(new CustomEvent('pwa-popup-closed'));
-      }, 5000);
-      return () => clearTimeout(timer);
+      
+      if (offlineReady && !needUpdate) {
+        // Show offline ready for a few seconds then hide and unlock Beatitudes
+        const timer = setTimeout(() => {
+          setShow(false);
+          (window as any).pwaPopupActive = false;
+          window.dispatchEvent(new CustomEvent('pwa-popup-closed'));
+        }, 5000);
+        return () => clearTimeout(timer);
+      }
     }
   }, [needUpdate, offlineReady]);
 
