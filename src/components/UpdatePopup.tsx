@@ -15,7 +15,7 @@ export default function UpdatePopup() {
     updateServiceWorker: (reload?: boolean) => { if(reload) window.location.reload(); },
   };
 
-  const CURRENT_VERSION = '1.1.3'; // Increment to force popup
+  const CURRENT_VERSION = '1.1.5'; // Increment to force popup
   const [show, setShow] = useState(false);
   const [type, setType] = useState<'update' | 'offline' | 'new-version'>('update');
 
@@ -94,44 +94,56 @@ export default function UpdatePopup() {
   return (
     <AnimatePresence>
       {show && (
-        <motion.div
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 100, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 200, damping: 25 }}
-          className="fixed bottom-6 left-4 right-4 z-[200] flex justify-center pointer-events-none"
-        >
-          <div className="bg-white/90 backdrop-blur-xl w-full max-w-[420px] rounded-[2.5rem] p-7 shadow-[0_30px_70px_rgba(0,0,0,0.3)] border border-white/30 pointer-events-auto flex items-center gap-5 relative">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+            onClick={closePopup}
+          />
+          
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            transition={{ type: "spring", stiffness: 250, damping: 25 }}
+            className="relative bg-white/95 backdrop-blur-xl w-full max-w-[360px] rounded-[3rem] p-8 pb-10 shadow-[0_30px_70px_rgba(0,0,0,0.3)] border border-white/40 flex flex-col items-center text-center gap-6"
+          >
             <button
               onClick={closePopup}
-              className="absolute top-4 right-4 text-[var(--color-ink)]/20 hover:text-[var(--color-cinnabar)] transition-colors p-1"
+              className="absolute top-6 right-6 text-[var(--color-ink)]/20 hover:text-[var(--color-cinnabar)] transition-colors p-1"
             >
               <X size={20} />
             </button>
             
-            <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center shrink-0 ${type === 'update' || type === 'new-version' ? 'bg-[var(--color-cinnabar)]/10 text-[var(--color-cinnabar)]' : 'bg-green-100 text-green-600'}`}>
-              {type === 'update' || type === 'new-version' ? <RefreshCcw size={32} className={type === 'update' ? "animate-spin-slow" : ""} /> : <CheckCircle size={32} />}
+            <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center shrink-0 mt-2 ${type === 'update' || type === 'new-version' ? 'bg-[var(--color-cinnabar)]/10 text-[var(--color-cinnabar)]' : 'bg-green-100 text-green-600'}`}>
+              {type === 'update' || type === 'new-version' ? <RefreshCcw size={36} className={type === 'update' ? "animate-spin-slow" : ""} /> : <CheckCircle size={36} />}
             </div>
             
-            <div className="flex-1">
-              <h4 className="font-izhitsa text-xl text-[var(--color-ink)] leading-tight">
-                {type === 'update' ? 'Доступно обновление' : type === 'new-version' ? 'Приложение стало удобнее' : 'Готово к работе офлайн'}
+            <div className="space-y-3">
+              <h4 className="font-izhitsa text-2xl text-[var(--color-ink)] leading-tight px-4">
+                {type === 'update' ? 'Приложение обновилось!' : type === 'new-version' ? 'Приложение стало удобнее' : 'Готово к работе офлайн'}
               </h4>
-              <p className="text-sm text-[var(--color-ink)]/60 font-sans mt-1">
-                {type === 'update' ? 'Обновите для получения новых статей и функций' : type === 'new-version' ? `Обновление системы: версия ${CURRENT_VERSION}` : 'Приложение сохранено для доступа без интернета'}
+              <p className="text-sm text-[var(--color-ink)]/60 font-sans leading-relaxed px-2">
+                {type === 'update' 
+                  ? 'Мы подготовили новые статьи и исправили ошибки. Обновите приложение для доступа.' 
+                  : type === 'new-version' 
+                    ? 'Мы добавили новые функции и улучшили работу. Ознакомьтесь с изменениями в разделе «О приложении».' 
+                    : 'Приложение сохранено в памяти вашего устройства для доступа без интернета.'}
               </p>
             </div>
             
             {(type === 'update' || type === 'new-version') && (
               <button
                 onClick={handleUpdate}
-                className="bg-[var(--color-cinnabar)] text-white px-6 py-3 rounded-2xl font-izhitsa text-base shadow-lg active:scale-95 transition-all whitespace-nowrap"
+                className="w-full bg-[var(--color-cinnabar)] text-white px-6 py-4 rounded-2xl font-izhitsa text-lg shadow-lg active:scale-[0.98] transition-all mt-2"
               >
-                {type === 'update' ? 'Обновить' : 'Понятно'}
+                {type === 'update' ? 'Обновить сейчас' : 'Понятно'}
               </button>
             )}
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       )}
     </AnimatePresence>
   );
