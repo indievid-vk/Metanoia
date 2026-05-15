@@ -62,13 +62,19 @@ export default function Layout() {
 
       {!isHome && (
         <div className="absolute bottom-4 w-full pointer-events-none z-30 flex justify-center px-4">
-          <nav className="pointer-events-auto bg-transparent border border-[var(--color-cinnabar)]/10 text-[var(--color-ink)]/70 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.1)] flex justify-center items-end gap-1 px-3 pt-2 pb-3 w-full max-w-[340px] rounded-[2.5rem] transition-colors duration-500">
-            <NavButton to="/gospel-life" current={location.pathname} imgSrc={getAssetPath("/icons/icon_Evandelie.webp")} label="Евангелие" onClick={() => navigate('/gospel-life')} />
-            <NavButton to="/temple" current={location.pathname} imgSrc={getAssetPath("/icons/icon_Hram.webp")} label="В Храм" onClick={() => navigate('/temple')} />
-            <NavButton to="/" current={location.pathname} imgSrc={getAssetPath("/icons/icon_Home.webp")} label="Главная" onClick={() => navigate('/')} isCentral />
-            <NavButton to="/prayer-book" current={location.pathname} imgSrc={getAssetPath("/icons/icon_Molitva.webp")} label="Молитва" onClick={() => navigate('/prayer-book')} />
-            <NavButton to="/calendar" current={location.pathname} imgSrc={getAssetPath("/icons/icon_calendar.webp")} label="Календарь" onClick={() => navigate('/calendar')} />
-          </nav>
+          <div className="pointer-events-auto relative p-[6px] w-full max-w-[350px] rounded-[3rem] bg-gradient-to-br from-[#e0b069] via-[#8c6222] to-[#3a270f] shadow-[0_10px_40px_rgba(0,0,0,0.4),inset_0_2px_4px_rgba(255,255,255,0.5),inset_0_-2px_4px_rgba(0,0,0,0.5)]">
+            {/* Inner Antique Gold Bevel */}
+            <div className="absolute inset-[4px] rounded-[2.8rem] border-[2px] border-[#ffd58e]/30 pointer-events-none" />
+            <div className="absolute inset-[6px] rounded-[2.7rem] border border-[#2b1b0b]/60 pointer-events-none mix-blend-multiply" />
+            
+            <nav className="relative bg-[var(--color-parchment)]/85 text-[var(--color-ink)]/70 backdrop-blur-md shadow-[inset_0_4px_15px_rgba(0,0,0,0.3)] flex justify-center items-end gap-1 px-3 pt-2 pb-3 w-full rounded-[2.6rem] transition-colors duration-500 overflow-hidden">
+              <NavButton to="/gospel-life" current={location.pathname} imgSrc={getAssetPath("/icons/icon_Evandelie.webp")} label="Евангелие" onClick={() => navigate('/gospel-life')} />
+              <NavButton to="/temple" current={location.pathname} imgSrc={getAssetPath("/icons/icon_Hram.webp")} label="В Храм" onClick={() => navigate('/temple')} />
+              <NavButton to="/" current={location.pathname} imgSrc={getAssetPath("/icons/icon_Home.webp")} label="Главная" onClick={() => navigate('/')} isCentral />
+              <NavButton to="/prayer-book" current={location.pathname} imgSrc={getAssetPath("/icons/icon_Molitva.webp")} label="Молитва" onClick={() => navigate('/prayer-book')} />
+              <NavButton to="/calendar" current={location.pathname} imgSrc={getAssetPath("/icons/icon_calendar.webp")} label="Календарь" onClick={() => navigate('/calendar')} />
+            </nav>
+          </div>
         </div>
       )}
       <InstallPrompt />
@@ -87,6 +93,7 @@ function getPageTitle(path: string) {
   if (path.startsWith('/calendar')) return 'Календарь';
   if (path.startsWith('/gospel-life/catechesis/questions')) return 'Контрольные вопросы';
   if (path.startsWith('/gospel-life/catechesis')) return 'Оглашение';
+  if (path.startsWith('/gospel-life/repentance-help')) return 'В помощь кающимся';
   if (path.startsWith('/gospel-life')) return 'Жизнь по Евангелию';
   if (path.startsWith('/my-confession')) return 'Моя исповедь';
   if (path === '/angels') return 'Мир Ангелов';

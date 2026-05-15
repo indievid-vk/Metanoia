@@ -19,6 +19,17 @@ export default function Gospel() {
         </button>
 
         <button 
+          onClick={() => navigate('/gospel-life/repentance-help')}
+          className="bg-[var(--color-parchment)] border border-[var(--color-cinnabar)]/30 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow text-left group relative overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 w-16 h-16 bg-[var(--color-cinnabar)]/5 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-150"></div>
+          <h3 className="font-izhitsa text-xl text-[var(--color-ink)] mb-2">В помощь кающимся</h3>
+          <p className="text-sm text-[var(--color-ink)]/70 leading-relaxed">
+            Практическое руководство святителя Игнатия для подготовки к Таинству Исповеди.
+          </p>
+        </button>
+
+        <button 
           onClick={() => navigate('/gospel-life/scripture')}
           className="bg-[var(--color-parchment)] border border-[var(--color-cinnabar)]/30 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow text-left group relative overflow-hidden"
         >

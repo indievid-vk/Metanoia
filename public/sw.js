@@ -1,4 +1,4 @@
-const cacheName = 'metanoia-v1';
+const cacheName = 'metanoia-v2';
 const urlsToCache = [
   './',
   'index.html',
@@ -32,17 +32,45 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
+
+  // For HTML navigation requests, go Network First, fallback to cache
+  if (event.request.mode === 'navigate' || event.request.headers.get('accept').includes('text/html')) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          const responseToCache = response.clone();
+          caches.open(cacheName).then(cache => {
+            cache.put(event.request, responseToCache);
+          });
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request).then(response => {
+            return response || caches.match('./') || caches.match('index.html');
+          });
+        })
+    );
+    return;
+  }
+
+  // For everything else, go Cache First
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request).catch(() => {
-          // Fallback to offline page usually, but here we fallback to index.html for SPA routing
-          if (event.request.mode === 'navigate') {
-            return caches.match('./');
+        if (response) return response;
+        
+        return fetch(event.request).then(networkResponse => {
+          if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+            return networkResponse;
           }
+          const responseToCache = networkResponse.clone();
+          caches.open(cacheName).then(cache => {
+            if(event.request.url.startsWith('http')) {
+              cache.put(event.request, responseToCache);
+            }
+          });
+          return networkResponse;
         });
       })
   );

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, CheckCircle } from 'lucide-react';
 
-const CURRENT_VERSION = '1.0.1'; // Update this string to trigger the popup for users
+const CURRENT_VERSION = '1.0.2'; // Update this string to trigger the popup for users
 
 export default function UpdatePopup() {
   const [show, setShow] = useState(false);

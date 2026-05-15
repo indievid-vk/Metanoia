@@ -112,118 +112,110 @@ export default function InstallPrompt() {
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ y: 100, opacity: 0 }}
+        initial={{ y: "100%", opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 100, opacity: 0 }}
+        exit={{ y: "100%", opacity: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className="fixed bottom-0 left-0 right-0 z-[100] p-4 pointer-events-none flex justify-center"
       >
-        <div className="w-full max-w-md bg-[var(--color-parchment)] border-t-4 border-[var(--color-cinnabar)] rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.2)] pointer-events-auto relative overflow-hidden pb-8 pt-4 px-6 ring-1 ring-[var(--color-ink)]/5">
-          {/* Handle bar for bottom sheet look */}
-          <div className="w-12 h-1 bg-[var(--color-ink)]/10 rounded-full mx-auto mb-6" />
-          
+        <div className="w-full max-w-sm bg-white/95 backdrop-blur-md border border-[var(--color-cinnabar)]/20 rounded-[2rem] shadow-2xl pointer-events-auto relative pb-6 pt-5 px-6">
           <button 
             onClick={closePrompt}
-            className="absolute top-4 right-4 p-2 text-[var(--color-ink)]/30 hover:text-[var(--color-cinnabar)] transition-colors"
+            className="absolute top-4 right-4 p-2 text-[var(--color-ink)]/30 hover:text-[var(--color-cinnabar)] transition-colors rounded-full"
           >
             <X size={20} />
           </button>
 
-          <div className="flex flex-col items-center text-center gap-5">
+          <div className="flex flex-col items-center text-center gap-4 mt-2">
             <div className="relative">
               <motion.div 
-                animate={{ 
-                  scale: [1, 1.05, 1],
-                }}
-                transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-                className="w-20 h-20 bg-[var(--color-cinnabar)] rounded-3xl flex items-center justify-center shadow-[0_12px_24px_rgba(195,59,59,0.3)] border-2 border-white/20"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                className="w-16 h-16 bg-gradient-to-tr from-[var(--color-cinnabar)] to-[#d44d4d] rounded-2xl flex items-center justify-center shadow-lg border border-white/20"
               >
-                <Download className="text-white" size={40} />
+                <Download className="text-white" size={28} />
               </motion.div>
-              {/* Badge */}
-              <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-amber-400 rounded-full border-4 border-[var(--color-parchment)] flex items-center justify-center shadow-sm">
-                <PlusSquare size={14} className="text-white fill-current" />
-              </div>
             </div>
             
             <div className="space-y-1">
-              <h3 className="font-izhitsa text-3xl text-[var(--color-cinnabar)]">
+              <h3 className="font-izhitsa text-2xl text-[var(--color-cinnabar)]">
                 Помощь кающимся
               </h3>
-              <p className="text-xs text-[var(--color-ink)]/50 font-izhitsa tracking-[0.2em] uppercase">
+              <p className="text-[10px] text-[var(--color-ink)]/50 font-izhitsa tracking-[0.2em] uppercase">
                 Духовный дневник
               </p>
             </div>
 
             {platform === 'ios' ? (
-              <div className="space-y-5 w-full">
-                <p className="text-[16px] text-[var(--color-ink)] leading-relaxed italic opacity-80 px-4">
-                  «Добавьте на главный экран для быстрого доступа к дневнику»
+              <div className="space-y-4 w-full">
+                <p className="text-sm text-[var(--color-ink)]/70 leading-relaxed px-2">
+                  Добавьте на экран «Домой» для быстрого доступа и работы без сети
                 </p>
-                <div className="flex flex-col gap-4 bg-black/[0.02] p-5 rounded-2xl border border-[var(--color-ink)]/5 text-sm text-[var(--color-ink)]">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 flex items-center justify-center bg-white rounded-xl shadow-sm border border-gray-100 shrink-0">
-                      <Share size={20} className="text-blue-500" />
+                <div className="flex flex-col gap-3 bg-[var(--color-ink)]/[0.03] p-4 rounded-2xl text-xs text-[var(--color-ink)]/80">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm shrink-0">
+                      <Share size={16} className="text-blue-500" />
                     </div>
-                    <span className="text-left">Нажмите «Поделиться» в нижней панели Safari</span>
+                    <span className="text-left font-medium">Нажмите «Поделиться» внизу</span>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 flex items-center justify-center bg-white rounded-xl shadow-sm border border-gray-100 shrink-0">
-                      <PlusSquare size={20} />
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm shrink-0">
+                      <PlusSquare size={16} className="text-[var(--color-ink)]/70" />
                     </div>
-                    <span className="text-left">Выберите «На экран "Домой"»</span>
+                    <span className="text-left font-medium">Выберите «На экран "Домой"»</span>
                   </div>
                 </div>
                 <button 
                   onClick={closePrompt}
-                  className="text-[var(--color-cinnabar)] font-izhitsa text-sm underline underline-offset-4 opacity-60 flex items-center justify-center gap-2"
+                  className="text-[var(--color-cinnabar)] font-izhitsa text-sm underline underline-offset-4 opacity-60 flex items-center justify-center gap-2 pt-2"
                 >
-                  Понятно
+                  Скрыть
                 </button>
               </div>
             ) : deferredPrompt ? (
-              <div className="space-y-6 w-full">
-                <p className="text-[16px] text-[var(--color-ink)] leading-relaxed italic opacity-80">
-                  Установите приложение для работы без интернета и быстрого доступа.
+              <div className="space-y-5 w-full">
+                <p className="text-sm text-[var(--color-ink)]/70 leading-relaxed px-2">
+                  Установите приложение для работы без интернета.
                 </p>
                 <motion.button
                   whileTap={{ scale: 0.96 }}
                   onClick={handleInstallClick}
                   disabled={isInstalling}
-                  className="w-full py-5 bg-[var(--color-cinnabar)] text-white rounded-2xl font-izhitsa text-xl shadow-[0_15px_30px_rgba(195,59,59,0.3)] active:brightness-90 transition-all flex items-center justify-center gap-3 relative overflow-hidden"
+                  className="w-full py-4 bg-gradient-to-r from-[var(--color-cinnabar)] to-[#c34a4a] text-white rounded-xl font-izhitsa text-lg shadow-md hover:shadow-lg active:brightness-90 transition-all flex items-center justify-center gap-2"
                 >
                   {isInstalling ? (
-                    <Loader2 size={24} className="animate-spin" />
+                    <Loader2 size={20} className="animate-spin" />
                   ) : (
-                    <Download size={24} />
+                    <Download size={20} />
                   )}
-                  <span>{isInstalling ? 'Подготовка...' : 'Установить'}</span>
+                  <span>{isInstalling ? 'Установка...' : 'Установить'}</span>
                 </motion.button>
               </div>
             ) : (
-              <div className="space-y-5 w-full">
-                <p className="text-[16px] text-[var(--color-ink)] leading-relaxed italic opacity-80">
-                  Для установки используйте инструменты вашего браузера.
+              <div className="space-y-4 w-full">
+                <p className="text-sm text-[var(--color-ink)]/70 leading-relaxed px-2">
+                  Для установки используйте меню вашего браузера.
                 </p>
-                <div className="flex flex-col gap-4 bg-black/[0.02] p-5 rounded-2xl border border-[var(--color-ink)]/5 text-sm text-[var(--color-ink)]">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 flex items-center justify-center bg-white rounded-xl shadow-sm border border-gray-100 shrink-0">
-                      <MoreVertical size={20} />
+                <div className="flex flex-col gap-3 bg-[var(--color-ink)]/[0.03] p-4 rounded-2xl text-xs text-[var(--color-ink)]/80">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm shrink-0">
+                      <MoreVertical size={16} className="text-[var(--color-ink)]/70" />
                     </div>
-                    <span className="text-left">Нажмите на три точки (меню)</span>
+                    <span className="text-left font-medium">Нажмите на три точки (меню)</span>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 flex items-center justify-center bg-white rounded-xl shadow-sm border border-gray-100 shrink-0">
-                      <PlusSquare size={20} />
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm shrink-0">
+                      <PlusSquare size={16} className="text-[var(--color-ink)]/70" />
                     </div>
-                    <span className="text-left">Выберите «Установить приложение»</span>
+                    <span className="text-left font-medium">Выберите «Установить приложение»</span>
                   </div>
                 </div>
                 <motion.button
                   whileTap={{ scale: 0.98 }}
                   onClick={closePrompt}
-                  className="w-full py-4 border-2 border-[var(--color-cinnabar)]/10 text-[var(--color-cinnabar)] rounded-2xl font-izhitsa text-lg hover:bg-[var(--color-cinnabar)]/5 transition-colors"
+                  className="w-full py-3 bg-[var(--color-ink)]/[0.03] text-[var(--color-ink)]/70 rounded-xl font-izhitsa text-base hover:bg-[var(--color-ink)]/[0.06] transition-colors"
                 >
-                  Понятно
+                  Скрыть
                 </motion.button>
               </div>
             )}

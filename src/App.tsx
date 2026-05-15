@@ -29,6 +29,7 @@ import Liturgy from './pages/Liturgy';
 import Death from './pages/Death';
 import SpiritualLiterature from './pages/SpiritualLiterature';
 import Angels from './pages/Angels';
+import RepentanceHelp from './pages/RepentanceHelp';
 
 export default function App() {
   return (
@@ -53,6 +54,7 @@ export default function App() {
           <Route path="gospel-life" element={<Gospel />} />
           <Route path="gospel-life/catechesis" element={<Catechesis />} />
           <Route path="gospel-life/catechesis/questions" element={<CatechesisQuestions />} />
+          <Route path="gospel-life/repentance-help" element={<RepentanceHelp />} />
           <Route path="gospel-life/commandments" element={<Commandments />} />
           <Route path="gospel-life/treby" element={<Treby />} />
           <Route path="gospel-life/scripture" element={<Scripture />} />
