@@ -20,10 +20,13 @@ export default function Temple() {
 
         <button 
           onClick={() => navigate('/temple/liturgy')}
-          className="bg-[var(--color-parchment)] border border-[var(--color-cinnabar)]/30 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow text-left group relative overflow-hidden"
+          className="bg-[var(--color-parchment)] border border-[var(--color-cinnabar)]/30 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow text-left group relative overflow-hidden border-l-4 border-l-[var(--color-cinnabar)]"
         >
-          <div className="absolute top-0 right-0 w-16 h-16 bg-[var(--color-cinnabar)]/5 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-150"></div>
-          <h3 className="font-izhitsa text-xl text-[var(--color-ink)] mb-2">Литургия</h3>
+          <div className="absolute top-2 right-2">
+            <div className="bg-[var(--color-cinnabar)]/10 text-[var(--color-cinnabar)] text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-wider shadow-sm">Книга</div>
+          </div>
+          <div className="absolute top-0 right-0 w-20 h-20 bg-[var(--color-cinnabar)]/5 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+          <h3 className="font-izhitsa text-xl text-[var(--color-ink)] mb-2 group-hover:text-[var(--color-cinnabar)] transition-colors">Литургия</h3>
           <p className="text-sm text-[var(--color-ink)]/70 leading-relaxed">
             Последование Божественной Литургии свт. Иоанна Златоуста и свт. Василия Великого с переводом.
           </p>
@@ -31,10 +34,13 @@ export default function Temple() {
 
         <button 
           onClick={() => navigate('/temple/rules')}
-          className="bg-[var(--color-parchment)] border border-[var(--color-cinnabar)]/30 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow text-left group relative overflow-hidden"
+          className="bg-[var(--color-parchment)] border border-[var(--color-cinnabar)]/30 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow text-left group relative overflow-hidden border-l-4 border-l-[var(--color-cinnabar)]"
         >
-          <div className="absolute top-0 right-0 w-16 h-16 bg-[var(--color-cinnabar)]/5 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-150"></div>
-          <h3 className="font-izhitsa text-xl text-[var(--color-ink)] mb-2">Правила поведения в Храме</h3>
+          <div className="absolute top-2 right-2">
+            <div className="bg-[var(--color-cinnabar)]/10 text-[var(--color-cinnabar)] text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-wider shadow-sm">Книга</div>
+          </div>
+          <div className="absolute top-0 right-0 w-20 h-20 bg-[var(--color-cinnabar)]/5 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+          <h3 className="font-izhitsa text-xl text-[var(--color-ink)] mb-2 group-hover:text-[var(--color-cinnabar)] transition-colors">Правила поведения в Храме</h3>
           <p className="text-sm text-[var(--color-ink)]/70 leading-relaxed">
             Тексты о благочестии в Храме, как правильно стоять, креститься и прикладываться к иконам.
           </p>
