@@ -23,7 +23,8 @@ const TITLES: Record<string, string> = {
   'sick': 'Молитвы о болящих',
   'children': 'Молитвы о детях',
   'theotokos-various': 'Молитвы ко Пресвятой Богородице',
-  'homeland': 'Молитвы за Отечество'
+  'homeland': 'Молитвы за Отечество',
+  'spiritual-warfare': 'Молитвы на брань духовную'
 };
 
 export default function PrayerViewer() {

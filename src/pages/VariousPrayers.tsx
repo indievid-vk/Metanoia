@@ -41,6 +41,13 @@ export default function VariousPrayers() {
           <span className="font-izhitsa text-lg text-[var(--color-ink)] block mb-1">Молитвы за Отечество</span>
           <span className="text-sm text-[var(--color-ink)]/70">О спасении России и афонская молитва</span>
         </button>
+        <button 
+          onClick={() => navigate('/prayer-book/spiritual-warfare')}
+          className="bg-[var(--color-parchment)] border border-[var(--color-ink)]/20 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow text-left"
+        >
+          <span className="font-izhitsa text-lg text-[var(--color-ink)] block mb-1">Молитвы на брань духовную</span>
+          <span className="text-sm text-[var(--color-ink)]/70">При искушениях и помыслах, Псалом 90</span>
+        </button>
       </div>
     </div>
   );
