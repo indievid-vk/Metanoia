@@ -56,6 +56,7 @@ const rootAssetsPlugin = () => {
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
+    base: mode === 'production' ? '/Metanoia/' : '/',
     plugins: [react(), tailwindcss(), rootAssetsPlugin()],
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
