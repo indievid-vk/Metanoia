@@ -12,32 +12,49 @@ export default function UpdatePopup() {
   } = useRegisterSW() || {
     offlineReady: [false, () => {}],
     needUpdate: [false, () => {}],
-    updateServiceWorker: () => {},
+    updateServiceWorker: (reload?: boolean) => { if(reload) window.location.reload(); },
   };
 
+  const CURRENT_VERSION = '1.0.9'; // Increment to force popup
   const [show, setShow] = useState(false);
-  const [type, setType] = useState<'update' | 'offline'>('update');
+  const [type, setType] = useState<'update' | 'offline' | 'new-version'>('update');
+
+  useEffect(() => {
+    // Knowledge Base Section 6: Version-based check
+    const storedVersion = localStorage.getItem('appVersion');
+    
+    if (!storedVersion) {
+      // First visit after revision - silently save
+      localStorage.setItem('appVersion', CURRENT_VERSION);
+    } else if (storedVersion !== CURRENT_VERSION) {
+      // App updated!
+      setType('new-version');
+      setShow(true);
+      (window as any).pwaPopupActive = true;
+    }
+  }, []);
 
   useEffect(() => {
     // Signal that PWA check is in progress
-    if (!(window as any).pwaPopupActive) {
+    if (!(window as any).pwaPopupActive && !show) {
       (window as any).pwaPopupActive = true;
-      // If after 5 seconds neither update nor offline ready is true, clear the flag
+      
+      // If after 3 seconds nothing is shown, clear the flag
       const initialTimer = setTimeout(() => {
-        if (!needUpdate && !offlineReady) {
+        if (!show && !needUpdate && !offlineReady) {
           (window as any).pwaPopupActive = false;
           window.dispatchEvent(new CustomEvent('pwa-popup-closed'));
         }
-      }, 5000);
+      }, 3000);
       return () => clearTimeout(initialTimer);
     }
-  }, []);
+  }, [show, needUpdate, offlineReady]);
 
   useEffect(() => {
     if (needUpdate || offlineReady) {
       if (needUpdate) {
         setType('update');
-      } else {
+      } else if (offlineReady) {
         setType('offline');
       }
       setShow(true);
@@ -56,12 +73,20 @@ export default function UpdatePopup() {
   }, [needUpdate, offlineReady]);
 
   const handleUpdate = () => {
-    updateServiceWorker(true);
+    if (type === 'update') {
+      updateServiceWorker(true);
+    } else if (type === 'new-version') {
+      localStorage.setItem('appVersion', CURRENT_VERSION);
+    }
     setShow(false);
     (window as any).pwaPopupActive = false;
+    window.dispatchEvent(new CustomEvent('pwa-popup-closed'));
   };
 
   const closePopup = () => {
+    if (type === 'new-version') {
+      localStorage.setItem('appVersion', CURRENT_VERSION);
+    }
     setShow(false);
     setOfflineReady(false);
     setNeedUpdate(false);
@@ -87,25 +112,25 @@ export default function UpdatePopup() {
               <X size={16} />
             </button>
             
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${type === 'update' ? 'bg-[var(--color-cinnabar)]/10 text-[var(--color-cinnabar)]' : 'bg-green-100 text-green-600'}`}>
-              {type === 'update' ? <RefreshCcw size={24} className="animate-spin-slow" /> : <CheckCircle size={24} />}
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${type === 'update' || type === 'new-version' ? 'bg-[var(--color-cinnabar)]/10 text-[var(--color-cinnabar)]' : 'bg-green-100 text-green-600'}`}>
+              {type === 'update' || type === 'new-version' ? <RefreshCcw size={24} className={type === 'update' ? "animate-spin-slow" : ""} /> : <CheckCircle size={24} />}
             </div>
             
             <div className="flex-1 pr-4">
               <h4 className="font-izhitsa text-lg text-[var(--color-ink)] leading-tight">
-                {type === 'update' ? 'Доступно обновление' : 'Готово к работе офлайн'}
+                {type === 'update' ? 'Доступно обновление' : type === 'new-version' ? 'Система обновлена' : 'Готово к работе офлайн'}
               </h4>
               <p className="text-xs text-[var(--color-ink)]/60 font-sans mt-0.5">
-                {type === 'update' ? 'Обновите для получения новых статей и функций' : 'Приложение сохранено для доступа без интернета'}
+                {type === 'update' ? 'Обновите для получения новых статей и функций' : type === 'new-version' ? `Вы перешли на версию ${CURRENT_VERSION}` : 'Приложение сохранено для доступа без интернета'}
               </p>
             </div>
             
-            {type === 'update' && (
+            {(type === 'update' || type === 'new-version') && (
               <button
                 onClick={handleUpdate}
                 className="bg-[var(--color-cinnabar)] text-white px-4 py-2 rounded-xl font-izhitsa text-sm shadow-md active:scale-95 transition-all"
               >
-                Обновить
+                {type === 'update' ? 'Обновить' : 'Отлично'}
               </button>
             )}
           </div>
