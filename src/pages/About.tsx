@@ -52,7 +52,7 @@ export default function About() {
         <h2 className="font-izhitsa text-2xl text-[var(--color-cinnabar)] mb-4">Обратная связь</h2>
         <div className="flex flex-col gap-3 max-w-xs mx-auto">
           <a
-            href="mailto:indievid.krd@gmail.com"
+            href="mailto:indievid_studiio@mail.ru"
             className="flex items-center justify-center gap-2 py-3 bg-[var(--color-ink)]/[0.03] rounded-xl hover:bg-[var(--color-ink)]/[0.06] transition-colors text-[var(--color-ink)]/70 font-medium"
           >
             <Mail size={18} />
