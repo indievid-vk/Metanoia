@@ -30,6 +30,7 @@ import Death from './pages/Death';
 import SpiritualLiterature from './pages/SpiritualLiterature';
 import Angels from './pages/Angels';
 import RepentanceHelp from './pages/RepentanceHelp';
+import About from './pages/About';
 
 export default function App() {
   return (
@@ -61,6 +62,7 @@ export default function App() {
           <Route path="gospel-life/death" element={<Death />} />
           <Route path="gospel-life/literature" element={<SpiritualLiterature />} />
           <Route path="gospel-life/angels" element={<Angels />} />
+          <Route path="about" element={<About />} />
         </Route>
       </Routes>
     </HashRouter>

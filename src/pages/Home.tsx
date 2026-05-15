@@ -93,8 +93,8 @@ export default function Home() {
       }
     };
 
-    // Small delay to allow PWA check to initialize
-    const timer = setTimeout(checkAndShow, 1200);
+    // Wait longer to allow PWA check to initialize and signal its presence
+    const timer = setTimeout(checkAndShow, 2000);
 
     // Process commandments into groups of 3 individual verses/quotes
     const gospelCommandmentsInput = Array.isArray(gospelCommandmentsData) 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { ChevronLeft, Loader2 } from 'lucide-react';
+import { ChevronLeft, Loader2, Info } from 'lucide-react';
 import { getAssetPath } from '../utils';
 import { COMMANDMENTS } from '../data/mock';
 import InstallPrompt from './InstallPrompt';
@@ -23,6 +23,7 @@ export default function Layout() {
 
   return (
     <>
+      <UpdatePopup />
       <div className={`h-full flex flex-col max-w-md mx-auto bg-[var(--color-parchment)] shadow-2xl relative overflow-hidden`}>
         {/* Header */}
         <header className="shrink-0 relative z-10 bg-[var(--color-parchment)]">
@@ -40,7 +41,13 @@ export default function Layout() {
           <h1 className={`font-izhitsa text-[var(--color-cinnabar)] flex-1 text-center transition-colors z-20 ${isHome ? 'text-3xl uppercase tracking-widest leading-tight drop-shadow-sm' : 'text-2xl'}`}>
             {getPageTitle(location.pathname)}
           </h1>
-          <div className="w-8" /> {/* Spacer for centering */}
+          <button 
+            onClick={() => navigate('/about')}
+            className={`p-1 rounded-full hover:bg-black/5 transition-colors text-[var(--color-cinnabar)] ${location.pathname === '/about' ? 'opacity-0 pointer-events-none' : ''}`}
+            title="О приложении"
+          >
+            <Info size={24} />
+          </button>
         </div>
       </header>
 
@@ -71,7 +78,6 @@ export default function Layout() {
         </div>
       )}
       <InstallPrompt />
-      <UpdatePopup />
       <ToastContainer />
     </div>
     </>
@@ -92,6 +98,7 @@ function getPageTitle(path: string) {
   if (path === '/angels') return 'Мир Ангелов';
   if (path === '/scripture') return 'Писание';
   if (path === '/spiritual-literature') return 'Библиотека';
+  if (path === '/about') return 'О приложении';
   return 'Помощь кающимся';
 }
 

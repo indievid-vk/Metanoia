@@ -5,13 +5,33 @@ import { X, CheckCircle, RefreshCcw } from 'lucide-react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 export default function UpdatePopup() {
-  const swResult = useRegisterSW();
-  const [offlineReady, setOfflineReady] = swResult?.offlineReady || [false, () => {}];
-  const [needUpdate, setNeedUpdate] = swResult?.needUpdate || [false, () => {}];
-  const updateServiceWorker = swResult?.updateServiceWorker;
+  const {
+    offlineReady: [offlineReady, setOfflineReady] = [false, () => {}],
+    needUpdate: [needUpdate, setNeedUpdate] = [false, () => {}],
+    updateServiceWorker,
+  } = useRegisterSW() || {
+    offlineReady: [false, () => {}],
+    needUpdate: [false, () => {}],
+    updateServiceWorker: () => {},
+  };
 
   const [show, setShow] = useState(false);
   const [type, setType] = useState<'update' | 'offline'>('update');
+
+  useEffect(() => {
+    // Signal that PWA check is in progress
+    if (!(window as any).pwaPopupActive) {
+      (window as any).pwaPopupActive = true;
+      // If after 3 seconds neither update nor offline ready is true, clear the flag
+      const initialTimer = setTimeout(() => {
+        if (!needUpdate && !offlineReady) {
+          (window as any).pwaPopupActive = false;
+          window.dispatchEvent(new CustomEvent('pwa-popup-closed'));
+        }
+      }, 3000);
+      return () => clearTimeout(initialTimer);
+    }
+  }, []);
 
   useEffect(() => {
     if (needUpdate) {
@@ -29,8 +49,6 @@ export default function UpdatePopup() {
         window.dispatchEvent(new CustomEvent('pwa-popup-closed'));
       }, 5000);
       return () => clearTimeout(timer);
-    } else {
-      (window as any).pwaPopupActive = false;
     }
   }, [needUpdate, offlineReady]);
 
