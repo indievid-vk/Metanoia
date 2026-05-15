@@ -101,33 +101,33 @@ export default function UpdatePopup() {
           transition={{ type: "spring", stiffness: 200, damping: 25 }}
           className="fixed bottom-6 left-4 right-4 z-[200] flex justify-center pointer-events-none"
         >
-          <div className="bg-white/90 backdrop-blur-xl w-full max-w-sm rounded-[2rem] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-white/20 pointer-events-auto flex items-center gap-4 relative">
+          <div className="bg-white/90 backdrop-blur-xl w-full max-w-[420px] rounded-[2.5rem] p-7 shadow-[0_30px_70px_rgba(0,0,0,0.3)] border border-white/30 pointer-events-auto flex items-center gap-5 relative">
             <button
               onClick={closePopup}
-              className="absolute top-3 right-3 text-[var(--color-ink)]/20 hover:text-[var(--color-cinnabar)] transition-colors"
+              className="absolute top-4 right-4 text-[var(--color-ink)]/20 hover:text-[var(--color-cinnabar)] transition-colors p-1"
             >
-              <X size={16} />
+              <X size={20} />
             </button>
             
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${type === 'update' || type === 'new-version' ? 'bg-[var(--color-cinnabar)]/10 text-[var(--color-cinnabar)]' : 'bg-green-100 text-green-600'}`}>
-              {type === 'update' || type === 'new-version' ? <RefreshCcw size={24} className={type === 'update' ? "animate-spin-slow" : ""} /> : <CheckCircle size={24} />}
+            <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center shrink-0 ${type === 'update' || type === 'new-version' ? 'bg-[var(--color-cinnabar)]/10 text-[var(--color-cinnabar)]' : 'bg-green-100 text-green-600'}`}>
+              {type === 'update' || type === 'new-version' ? <RefreshCcw size={32} className={type === 'update' ? "animate-spin-slow" : ""} /> : <CheckCircle size={32} />}
             </div>
             
-            <div className="flex-1 pr-4">
-              <h4 className="font-izhitsa text-lg text-[var(--color-ink)] leading-tight">
-                {type === 'update' ? 'Доступно обновление' : type === 'new-version' ? 'Система обновлена' : 'Готово к работе офлайн'}
+            <div className="flex-1">
+              <h4 className="font-izhitsa text-xl text-[var(--color-ink)] leading-tight">
+                {type === 'update' ? 'Доступно обновление' : type === 'new-version' ? 'Приложение стало удобнее' : 'Готово к работе офлайн'}
               </h4>
-              <p className="text-xs text-[var(--color-ink)]/60 font-sans mt-0.5">
-                {type === 'update' ? 'Обновите для получения новых статей и функций' : type === 'new-version' ? `Вы перешли на версию ${CURRENT_VERSION}` : 'Приложение сохранено для доступа без интернета'}
+              <p className="text-sm text-[var(--color-ink)]/60 font-sans mt-1">
+                {type === 'update' ? 'Обновите для получения новых статей и функций' : type === 'new-version' ? `Обновление системы: версия ${CURRENT_VERSION}` : 'Приложение сохранено для доступа без интернета'}
               </p>
             </div>
             
             {(type === 'update' || type === 'new-version') && (
               <button
                 onClick={handleUpdate}
-                className="bg-[var(--color-cinnabar)] text-white px-4 py-2 rounded-xl font-izhitsa text-sm shadow-md active:scale-95 transition-all"
+                className="bg-[var(--color-cinnabar)] text-white px-6 py-3 rounded-2xl font-izhitsa text-base shadow-lg active:scale-95 transition-all whitespace-nowrap"
               >
-                {type === 'update' ? 'Обновить' : 'Отлично'}
+                {type === 'update' ? 'Обновить' : 'Понятно'}
               </button>
             )}
           </div>
