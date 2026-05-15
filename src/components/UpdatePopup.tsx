@@ -1,84 +1,85 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, CheckCircle } from 'lucide-react';
-
-const CURRENT_VERSION = '1.0.2'; // Update this string to trigger the popup for users
+import { X, CheckCircle, RefreshCcw } from 'lucide-react';
+// @ts-ignore - Virtual module from vite-plugin-pwa
+import { useRegisterSW } from 'virtual:pwa-register/react';
 
 export default function UpdatePopup() {
+  const {
+    offlineReady: [offlineReady, setOfflineReady],
+    needUpdate: [needUpdate, setNeedUpdate],
+    updateServiceWorker,
+  } = useRegisterSW();
+
   const [show, setShow] = useState(false);
+  const [type, setType] = useState<'update' | 'offline'>('update');
 
   useEffect(() => {
-    try {
-      const savedVersion = localStorage.getItem('appVersion');
-      
-      if (!savedVersion) {
-        // First time installing after this feature is added.
-        // Don't show the popup immediately, just save the version.
-        localStorage.setItem('appVersion', CURRENT_VERSION);
-      } else if (savedVersion !== CURRENT_VERSION) {
-        // App has updated!
-        setShow(true);
-      }
-    } catch (e) {
-      console.warn('Storage access failed:', e);
+    if (needUpdate) {
+      setType('update');
+      setShow(true);
+    } else if (offlineReady) {
+      setType('offline');
+      // Show offline ready for a few seconds
+      setShow(true);
+      const timer = setTimeout(() => setShow(false), 5000);
+      return () => clearTimeout(timer);
     }
-  }, []);
+  }, [needUpdate, offlineReady]);
 
-  const handleClose = () => {
-    try {
-      localStorage.setItem('appVersion', CURRENT_VERSION);
-    } catch (e) {
-      console.warn('Storage write failed:', e);
-    }
+  const handleUpdate = () => {
+    updateServiceWorker(true);
     setShow(false);
   };
 
-  if (!show) return null;
+  const closePopup = () => {
+    setShow(false);
+    setOfflineReady(false);
+    setNeedUpdate(false);
+  };
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4 backdrop-blur-sm"
-      >
+      {show && (
         <motion.div
-          initial={{ scale: 0.9, y: 20, opacity: 0 }}
-          animate={{ scale: 1, y: 0, opacity: 1 }}
-          exit={{ scale: 0.9, y: 20, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="bg-[var(--color-parchment)] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl border-2 border-[var(--color-cinnabar)]/20 relative"
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 100, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 200, damping: 25 }}
+          className="fixed bottom-6 left-4 right-4 z-[200] flex justify-center pointer-events-none"
         >
-          <button
-            onClick={handleClose}
-            className="absolute top-4 right-4 text-[var(--color-ink)]/40 hover:text-[var(--color-cinnabar)] transition-colors"
-          >
-            <X size={20} />
-          </button>
-          
-          <div className="flex flex-col items-center text-center gap-4 py-2">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-2 ring-8 ring-green-50">
-              <CheckCircle size={32} />
+          <div className="bg-white/90 backdrop-blur-xl w-full max-w-sm rounded-[2rem] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-white/20 pointer-events-auto flex items-center gap-4 relative">
+            <button
+              onClick={closePopup}
+              className="absolute top-3 right-3 text-[var(--color-ink)]/20 hover:text-[var(--color-cinnabar)] transition-colors"
+            >
+              <X size={16} />
+            </button>
+            
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${type === 'update' ? 'bg-[var(--color-cinnabar)]/10 text-[var(--color-cinnabar)]' : 'bg-green-100 text-green-600'}`}>
+              {type === 'update' ? <RefreshCcw size={24} className="animate-spin-slow" /> : <CheckCircle size={24} />}
             </div>
             
-            <h3 className="font-izhitsa text-2xl text-[var(--color-cinnabar)]">
-              Обновление
-            </h3>
+            <div className="flex-1 pr-4">
+              <h4 className="font-izhitsa text-lg text-[var(--color-ink)] leading-tight">
+                {type === 'update' ? 'Доступно обновление' : 'Готово к работе офлайн'}
+              </h4>
+              <p className="text-xs text-[var(--color-ink)]/60 font-sans mt-0.5">
+                {type === 'update' ? 'Обновите для получения новых статей и функций' : 'Приложение сохранено для доступа без интернета'}
+              </p>
+            </div>
             
-            <p className="text-lg text-[var(--color-ink)] font-izhitsa">
-              Приложение обновилось,<br/>и стало удобнее!
-            </p>
-            
-            <button
-              onClick={handleClose}
-              className="mt-4 w-full py-3 bg-[var(--color-cinnabar)] text-white rounded-xl font-izhitsa text-lg shadow-lg hover:brightness-110 active:scale-95 transition-all"
-            >
-              Отлично
-            </button>
+            {type === 'update' && (
+              <button
+                onClick={handleUpdate}
+                className="bg-[var(--color-cinnabar)] text-white px-4 py-2 rounded-xl font-izhitsa text-sm shadow-md active:scale-95 transition-all"
+              >
+                Обновить
+              </button>
+            )}
           </div>
         </motion.div>
-      </motion.div>
+      )}
     </AnimatePresence>
   );
 }
