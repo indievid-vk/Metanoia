@@ -64,6 +64,9 @@ export default defineConfig(({mode}) => {
       rootAssetsPlugin(),
       VitePWA({
         registerType: 'prompt',
+        devOptions: {
+          enabled: true
+        },
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
         manifest: {
           name: 'Помощь кающимся',

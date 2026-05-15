@@ -5,11 +5,10 @@ import { X, CheckCircle, RefreshCcw } from 'lucide-react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 export default function UpdatePopup() {
-  const {
-    offlineReady: [offlineReady, setOfflineReady],
-    needUpdate: [needUpdate, setNeedUpdate],
-    updateServiceWorker,
-  } = useRegisterSW();
+  const swResult = useRegisterSW();
+  const [offlineReady, setOfflineReady] = swResult?.offlineReady || [false, () => {}];
+  const [needUpdate, setNeedUpdate] = swResult?.needUpdate || [false, () => {}];
+  const updateServiceWorker = swResult?.updateServiceWorker;
 
   const [show, setShow] = useState(false);
   const [type, setType] = useState<'update' | 'offline'>('update');
