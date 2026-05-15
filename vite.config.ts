@@ -92,8 +92,8 @@ export default defineConfig(({mode}) => {
           ]
         },
         workbox: {
-          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,epub,woff,woff2,ttf}'],
+          maximumFileSizeToCacheInBytes: 20 * 1024 * 1024,
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,epub,fb2,ttf,woff,woff2}'],
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -136,9 +136,9 @@ export default defineConfig(({mode}) => {
       },
     },
     server: {
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
-      hmr: process.env.DISABLE_HMR !== 'true',
+      host: '0.0.0.0',
+      port: 3000,
+      hmr: process.env.DISABLE_HMR === 'true' ? false : { overlay: false },
     },
   };
 });
