@@ -40,8 +40,6 @@ export default function About() {
           <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-100">
             <h4 className="font-bold text-xs uppercase tracking-wider text-amber-700 mb-2">Ограничения (Минусы)</h4>
             <ul className="text-xs space-y-1.5 text-amber-800/80 list-disc pl-4">
-              <li>Отсутствие в официальных магазинах (App Store / Play Market).</li>
-              <li>Ограниченный доступ к некоторым аппаратным функциям смартфона.</li>
               <li>Зависимость от возможностей браузера.</li>
             </ul>
           </div>
@@ -58,9 +56,12 @@ export default function About() {
             <Mail size={18} />
             <span>Написать разработчику</span>
           </a>
-          <div className="pt-4 flex items-center justify-center gap-2 text-[var(--color-ink)]/40 text-xs">
-            <Heart size={14} className="text-[var(--color-cinnabar)]" />
-            <span>Сделано с молитвой и любовью</span>
+          <div className="pt-4 flex flex-col items-center justify-center gap-1">
+            <div className="flex items-center gap-2 text-[var(--color-ink)]/40 text-xs">
+              <Heart size={14} className="text-[var(--color-cinnabar)]" />
+              <span>Создано нейрокомандой <strong>Индивид СтуИИя</strong></span>
+            </div>
+            <span className="text-[var(--color-ink)]/30 text-[10px]">с молитвой и любовью</span>
           </div>
         </div>
       </div>
