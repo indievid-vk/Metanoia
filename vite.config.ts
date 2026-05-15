@@ -57,17 +57,13 @@ const rootAssetsPlugin = () => {
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
-    base: './',
+    base: mode === 'production' ? '/Metanoia/' : '/',
     plugins: [
       react(), 
       tailwindcss(), 
       rootAssetsPlugin(),
       VitePWA({
         registerType: 'prompt',
-        devOptions: {
-          enabled: true,
-          type: 'module'
-        },
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
         manifest: {
           name: 'Помощь кающимся',
