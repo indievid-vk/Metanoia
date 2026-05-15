@@ -15,7 +15,7 @@ export default function UpdatePopup() {
     updateServiceWorker: (reload?: boolean) => { if(reload) window.location.reload(); },
   };
 
-  const CURRENT_VERSION = '1.1.2'; // Increment to force popup
+  const CURRENT_VERSION = '1.1.3'; // Increment to force popup
   const [show, setShow] = useState(false);
   const [type, setType] = useState<'update' | 'offline' | 'new-version'>('update');
 
