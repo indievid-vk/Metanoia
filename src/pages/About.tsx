@@ -61,7 +61,7 @@ export default function About() {
           <div className="pt-4 flex flex-col items-center justify-center gap-1">
             <div className="flex items-center gap-2 text-[var(--color-ink)]/40 text-xs">
               <Heart size={14} className="text-[var(--color-cinnabar)]" />
-              <span>Создано нейрокомандой <strong>Индивид СтуИИя</strong></span>
+              <span className="text-center leading-tight">Создано нейрокомандой<br /><strong>Индивид СтуИИя</strong></span>
             </div>
           </div>
         </div>
