@@ -24,7 +24,7 @@ export default function Layout() {
   return (
     <>
       <UpdatePopup />
-      <div className={`h-full flex flex-col max-w-md mx-auto bg-[var(--color-parchment)] shadow-2xl relative overflow-hidden`}>
+      <div className={`h-[100dvh] flex flex-col max-w-md mx-auto bg-[var(--color-parchment)] shadow-2xl relative overflow-hidden`}>
         {/* Header */}
         <header className="shrink-0 relative z-10 bg-[var(--color-parchment)]">
         <div className="flex items-center px-4 py-3">
@@ -54,14 +54,14 @@ export default function Layout() {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto relative flex flex-col">
           <div 
-            className={isHome ? "absolute inset-0" : "w-full p-4 pb-[100px]"}
+            className={isHome ? "absolute inset-0" : "w-full p-4 pb-[130px]"}
           >
             <Outlet />
           </div>
       </main>
 
       {!isHome && (
-        <div className="absolute bottom-4 w-full pointer-events-none z-30 flex justify-center px-4">
+        <div className="absolute bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] w-full pointer-events-none z-30 flex justify-center px-4">
           <div className="pointer-events-auto relative p-[6px] w-full max-w-[350px] rounded-[3rem] bg-gradient-to-br from-[#e0b069] via-[#8c6222] to-[#3a270f] shadow-[0_10px_40px_rgba(0,0,0,0.4),inset_0_2px_4px_rgba(255,255,255,0.5),inset_0_-2px_4px_rgba(0,0,0,0.5)]">
             {/* Inner Antique Gold Bevel */}
             <div className="absolute inset-[4px] rounded-[2.8rem] border-[2px] border-[#ffd58e]/30 pointer-events-none" />

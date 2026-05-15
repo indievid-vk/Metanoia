@@ -63,8 +63,7 @@ export default defineConfig(({mode}) => {
       tailwindcss(), 
       rootAssetsPlugin(),
       VitePWA({
-        registerType: 'autoUpdate',
-        injectRegister: 'auto',
+        registerType: 'prompt',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
         manifest: {
           name: 'Помощь кающимся',
