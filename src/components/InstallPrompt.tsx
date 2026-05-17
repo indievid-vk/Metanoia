@@ -10,20 +10,27 @@ export default function InstallPrompt() {
   const [isInstalling, setIsInstalling] = useState(false);
 
   useEffect(() => {
+    // Detect Platform
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const isIOS = /iphone|ipad|ipod/.test(userAgent) || 
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
+                  (navigator.userAgent.includes('Macintosh') && navigator.maxTouchPoints > 1);
+    const isAndroid = userAgent.includes('android');
+    
     // Check if app is already installed
     // @ts-ignore
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches 
       // @ts-ignore
       || window.navigator.standalone 
-      || document.referrer.includes('android-app://');
+      || document.referrer.includes('android-app://')
+      || window.location.search.includes('mode=standalone');
 
-    if (isStandalone) return;
+    // If it's already installed, we MUST NOT show the prompt
+    if (isStandalone) {
+      console.log('App is in standalone mode, skipping prompt');
+      return;
+    }
 
-    // Detect Platform
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    const isIOS = /iphone|ipad|ipod/.test(userAgent) && !userAgent.includes('macintosh');
-    const isAndroid = userAgent.includes('android');
-    
     setPlatform(isIOS ? 'ios' : isAndroid ? 'other' : 'other');
 
     // Listen for beforeinstallprompt (Android/Chrome)
@@ -32,7 +39,7 @@ export default function InstallPrompt() {
       e.preventDefault();
       setDeferredPrompt(e);
       
-      const hasPrompted = localStorage.getItem('androidPwaPrompted_v1.1');
+      const hasPrompted = localStorage.getItem('androidPwaPrompted_v1.3');
       if (!hasPrompted) {
         // Show after a delay if not prompted recently
         setTimeout(() => setShow(true), 3000);
@@ -43,28 +50,21 @@ export default function InstallPrompt() {
 
     // Fallback for Android help if no prompt event
     const checkTimer = setTimeout(() => {
-      if (isAndroid && !deferredPrompt && !localStorage.getItem('androidPwaPrompted_v1.1')) {
+      if (isAndroid && !deferredPrompt && !localStorage.getItem('androidPwaPrompted_v1.3')) {
         setShow(true);
       }
     }, 15000);
 
     // For iOS, we show it manually since there's no event
     if (isIOS) {
-      const hasPrompted = localStorage.getItem('iosPwaPrompted_v1.1');
+      const hasPrompted = localStorage.getItem('iosPwaPrompted_v1.3');
       // Show after a shorter delay to be more responsive
-      const delay = 3500;
+      const delay = 4500;
       
       const promptTimer = setTimeout(() => {
-        // Only show if not already in standalone mode and not suppressed by another popup
-        if (!hasPrompted && !(window as any).pwaPopupActive) {
+        // Aggressive: show even if pwaPopupActive is true for now to debug
+        if (!hasPrompted) {
           setShow(true);
-        } else if (!hasPrompted) {
-          // If update popup was active, wait for it to close
-          const handleClosed = () => {
-            setTimeout(() => setShow(true), 1000);
-            window.removeEventListener('pwa-popup-closed', handleClosed);
-          };
-          window.addEventListener('pwa-popup-closed', handleClosed);
         }
       }, delay);
       
@@ -101,7 +101,7 @@ export default function InstallPrompt() {
         toast.success('Приложение успешно установлено');
         setShow(false);
         setDeferredPrompt(null);
-        localStorage.setItem('androidPwaPrompted_v1.1', 'true');
+        localStorage.setItem('androidPwaPrompted_v1.3', 'true');
       } else {
         toast.info('Установка отложена');
       }
@@ -116,9 +116,9 @@ export default function InstallPrompt() {
   const closePrompt = () => {
     setShow(false);
     if (platform === 'ios') {
-      localStorage.setItem('iosPwaPrompted_v1.1', 'true');
+      localStorage.setItem('iosPwaPrompted_v1.3', 'true');
     } else {
-      localStorage.setItem('androidPwaPrompted_v1.1', 'true');
+      localStorage.setItem('androidPwaPrompted_v1.3', 'true');
     }
   };
 
