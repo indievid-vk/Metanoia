@@ -193,7 +193,7 @@ export default function Home() {
                 onClick={() => setShowPopup(false)}
                 className="w-full py-3 bg-gradient-to-r from-[var(--color-cinnabar)]/90 to-[var(--color-cinnabar)] text-white rounded-2xl font-izhitsa shadow-md hover:brightness-110 transition-all text-lg"
               >
-                Спаси Господи
+                На главную
               </button>
             </div>
           </div>

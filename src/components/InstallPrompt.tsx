@@ -32,7 +32,7 @@ export default function InstallPrompt() {
       e.preventDefault();
       setDeferredPrompt(e);
       
-      const hasPrompted = localStorage.getItem('androidPwaPrompted');
+      const hasPrompted = localStorage.getItem('androidPwaPrompted_v1.1');
       if (!hasPrompted) {
         // Show after a delay if not prompted recently
         setTimeout(() => setShow(true), 3000);
@@ -43,17 +43,32 @@ export default function InstallPrompt() {
 
     // Fallback for Android help if no prompt event
     const checkTimer = setTimeout(() => {
-      if (isAndroid && !deferredPrompt && !localStorage.getItem('androidPwaPrompted')) {
+      if (isAndroid && !deferredPrompt && !localStorage.getItem('androidPwaPrompted_v1.1')) {
         setShow(true);
       }
     }, 15000);
 
     // For iOS, we show it manually since there's no event
     if (isIOS) {
-      const hasPrompted = localStorage.getItem('iosPwaPrompted');
-      if (!hasPrompted) {
-        setTimeout(() => setShow(true), 6000);
-      }
+      const hasPrompted = localStorage.getItem('iosPwaPrompted_v1.1');
+      // Show after a shorter delay to be more responsive
+      const delay = 3500;
+      
+      const promptTimer = setTimeout(() => {
+        // Only show if not already in standalone mode and not suppressed by another popup
+        if (!hasPrompted && !(window as any).pwaPopupActive) {
+          setShow(true);
+        } else if (!hasPrompted) {
+          // If update popup was active, wait for it to close
+          const handleClosed = () => {
+            setTimeout(() => setShow(true), 1000);
+            window.removeEventListener('pwa-popup-closed', handleClosed);
+          };
+          window.addEventListener('pwa-popup-closed', handleClosed);
+        }
+      }, delay);
+      
+      return () => clearTimeout(promptTimer);
     }
 
     return () => {
@@ -86,7 +101,7 @@ export default function InstallPrompt() {
         toast.success('Приложение успешно установлено');
         setShow(false);
         setDeferredPrompt(null);
-        localStorage.setItem('androidPwaPrompted', 'true');
+        localStorage.setItem('androidPwaPrompted_v1.1', 'true');
       } else {
         toast.info('Установка отложена');
       }
@@ -101,9 +116,9 @@ export default function InstallPrompt() {
   const closePrompt = () => {
     setShow(false);
     if (platform === 'ios') {
-      localStorage.setItem('iosPwaPrompted', 'true');
+      localStorage.setItem('iosPwaPrompted_v1.1', 'true');
     } else {
-      localStorage.setItem('androidPwaPrompted', 'true');
+      localStorage.setItem('androidPwaPrompted_v1.1', 'true');
     }
   };
 
@@ -116,7 +131,7 @@ export default function InstallPrompt() {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: "100%", opacity: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="fixed bottom-0 left-0 right-0 z-[100] p-4 pointer-events-none flex justify-center"
+        className="fixed bottom-[env(safe-area-inset-bottom,0px)] left-0 right-0 z-[100] p-4 pb-12 pointer-events-none flex justify-center"
       >
         <div className="w-full max-w-[340px] bg-white/80 backdrop-blur-xl border border-white/40 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] pointer-events-auto relative pb-5 pt-4 px-5 overflow-hidden">
           {/* Decorative subtle gradient */}
