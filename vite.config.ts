@@ -68,7 +68,7 @@ export default defineConfig(({mode}) => {
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
         manifest: {
           name: 'Помощь кающимся',
-          short_name: 'Метанойя',
+          short_name: 'Помощь кающимся',
           description: 'Дневник для подготовки к исповеди и духовная литература',
           theme_color: '#C33B3B',
           background_color: '#F4EBD8',

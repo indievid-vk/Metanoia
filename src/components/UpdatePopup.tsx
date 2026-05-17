@@ -15,7 +15,7 @@ export default function UpdatePopup() {
     updateServiceWorker: (reload?: boolean) => { if(reload) window.location.reload(); },
   };
 
-  const CURRENT_VERSION = '1.1.5'; // Increment to force popup
+  const CURRENT_VERSION = '1.1.6'; // Increment to force popup
   const [show, setShow] = useState(false);
   const [type, setType] = useState<'update' | 'offline' | 'new-version'>('update');
 
@@ -23,11 +23,24 @@ export default function UpdatePopup() {
     // Knowledge Base Section 6: Version-based check
     const storedVersion = localStorage.getItem('appVersion');
     
-    // If version mismatch or not set, show the updated window
+    // Check if app is already installed
+    // @ts-ignore
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches 
+      // @ts-ignore
+      || window.navigator.standalone 
+      || document.referrer.includes('android-app://');
+
+    // If version mismatch or not set
     if (storedVersion !== CURRENT_VERSION) {
-      setType('new-version');
-      setShow(true);
-      (window as any).pwaPopupActive = true;
+      if (isStandalone) {
+        // App updated and it is installed!
+        setType('new-version');
+        setShow(true);
+        (window as any).pwaPopupActive = true;
+      } else {
+        // Just update version silently if not installed yet
+        localStorage.setItem('appVersion', CURRENT_VERSION);
+      }
     }
   }, []);
 
