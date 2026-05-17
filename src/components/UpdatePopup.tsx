@@ -24,10 +24,8 @@ export default function UpdatePopup() {
     const storedVersion = localStorage.getItem('appVersion');
     
     // Check if app is already installed
-    // @ts-ignore
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches 
-      // @ts-ignore
-      || window.navigator.standalone 
+      || (window.navigator as any).standalone 
       || document.referrer.includes('android-app://');
 
     // If version mismatch or not set
@@ -38,7 +36,7 @@ export default function UpdatePopup() {
         setShow(true);
         (window as any).pwaPopupActive = true;
       } else {
-        // Just update version silently if not installed yet
+        // Just update version silently if not installed yet to avoid overlap with InstallPrompt
         localStorage.setItem('appVersion', CURRENT_VERSION);
       }
     }
