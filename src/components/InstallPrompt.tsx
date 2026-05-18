@@ -15,8 +15,7 @@ export default function InstallPrompt() {
     // Detect Platform
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIOS = /iphone|ipad|ipod/.test(userAgent) || 
-                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
-                  (navigator.userAgent.includes('Macintosh') && navigator.maxTouchPoints > 1);
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const isAndroid = userAgent.includes('android');
     
     // Check if app is already installed
@@ -29,46 +28,32 @@ export default function InstallPrompt() {
 
     setIsStandalone(standalone);
 
-    if (standalone) {
-      console.log('App is in standalone mode, skipping prompt and FAB');
-      return;
-    }
+    if (standalone) return;
 
     setPlatform(isIOS ? 'ios' : isAndroid ? 'android' : 'other');
-
-    // Show FAB if not standalone
-    setShowFAB(!standalone);
+    setShowFAB(true);
 
     // Initial prompt logic
     const hasSeenInSession = sessionStorage.getItem('hasSeenWelcome_v1');
     const hasPromptedForever = localStorage.getItem('pwaPromptedForever_v1');
 
     if (!hasSeenInSession && !hasPromptedForever) {
-      // Delay prompt to avoid overlapping with system dialogs
-      const delay = isIOS ? 6000 : 20000; 
+      const delay = isIOS ? 3000 : 8000; 
       const timer = setTimeout(() => {
-        // On Android, only auto-show if we DON'T have a native prompt yet
-        // If we HAVE a native prompt, we let the browser handle it or wait for FAB
-        if (isAndroid && deferredPrompt) return;
-        
-        setShow(true);
-        sessionStorage.setItem('hasSeenWelcome_v1', 'true');
+        // Safe check for standalone again
+        if (!window.matchMedia('(display-mode: standalone)').matches) {
+          setShow(true);
+          sessionStorage.setItem('hasSeenWelcome_v1', 'true');
+        }
       }, delay);
       return () => clearTimeout(timer);
     }
 
     // Listen for beforeinstallprompt (Android/Chrome)
-    const handleBeforeInstallPrompt = (e: Event) => {
-      console.log('beforeinstallprompt event fired');
-      // We PREVENT default to show our custom FAB later, 
-      // but if the system popup is already showing (as per user feedback), 
-      // maybe we shouldn't prevent it or we should be more careful.
-      // However, to use deferredPrompt.prompt(), we MUST preventDefault().
+    const handleBeforeInstallPrompt = (e: any) => {
+      console.log('Capture beforeinstallprompt');
       e.preventDefault();
       setDeferredPrompt(e);
-      
-      // If we were about to show our own, maybe hide it if it overlaps
-      // Actually, if this event fires, it means the browser is ready.
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as any);
