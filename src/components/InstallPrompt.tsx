@@ -44,8 +44,13 @@ export default function InstallPrompt() {
     const hasPromptedForever = localStorage.getItem('pwaPromptedForever_v1');
 
     if (!hasSeenInSession && !hasPromptedForever) {
-      const delay = isIOS ? 3000 : 5000;
+      // Delay prompt to avoid overlapping with system dialogs
+      const delay = isIOS ? 6000 : 20000; 
       const timer = setTimeout(() => {
+        // On Android, only auto-show if we DON'T have a native prompt yet
+        // If we HAVE a native prompt, we let the browser handle it or wait for FAB
+        if (isAndroid && deferredPrompt) return;
+        
         setShow(true);
         sessionStorage.setItem('hasSeenWelcome_v1', 'true');
       }, delay);
@@ -55,14 +60,15 @@ export default function InstallPrompt() {
     // Listen for beforeinstallprompt (Android/Chrome)
     const handleBeforeInstallPrompt = (e: Event) => {
       console.log('beforeinstallprompt event fired');
+      // We PREVENT default to show our custom FAB later, 
+      // but if the system popup is already showing (as per user feedback), 
+      // maybe we shouldn't prevent it or we should be more careful.
+      // However, to use deferredPrompt.prompt(), we MUST preventDefault().
       e.preventDefault();
       setDeferredPrompt(e);
       
-      // If we haven't shown in this session, maybe show now
-      if (!sessionStorage.getItem('hasSeenWelcome_v1') && !localStorage.getItem('pwaPromptedForever_v1')) {
-        setShow(true);
-        sessionStorage.setItem('hasSeenWelcome_v1', 'true');
-      }
+      // If we were about to show our own, maybe hide it if it overlaps
+      // Actually, if this event fires, it means the browser is ready.
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as any);
@@ -85,11 +91,8 @@ export default function InstallPrompt() {
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) {
-      // If no prompt event on Android/Desktop, maybe it's iOS or just not supported
       if (platform === 'ios') {
         setShow(true);
-      } else {
-        toast.info('Используйте меню браузера для установки');
       }
       return;
     }
@@ -223,25 +226,36 @@ export default function InstallPrompt() {
                   </div>
                 ) : (
                   <div className="w-full space-y-4">
-                    <motion.button
-                      whileTap={{ scale: 0.96 }}
-                      onClick={handleInstallClick}
-                      disabled={isInstalling}
-                      className="w-full py-4 bg-[var(--color-cinnabar)] text-white rounded-2xl font-izhitsa text-lg shadow-[0_8px_20px_rgb(195,59,59,0.3)] hover:brightness-110 active:brightness-90 transition-all flex items-center justify-center gap-3"
-                    >
-                      {isInstalling ? (
-                        <Loader2 size={20} className="animate-spin" />
-                      ) : (
-                        <Smartphone size={20} />
-                      )}
-                      <span>{isInstalling ? 'Установка...' : 'Установить'}</span>
-                    </motion.button>
+                    {deferredPrompt ? (
+                      <motion.button
+                        whileTap={{ scale: 0.96 }}
+                        onClick={handleInstallClick}
+                        disabled={isInstalling}
+                        className="w-full py-4 bg-[var(--color-cinnabar)] text-white rounded-2xl font-izhitsa text-lg shadow-[0_8px_20px_rgb(195,59,59,0.3)] hover:brightness-110 active:brightness-90 transition-all flex items-center justify-center gap-3"
+                      >
+                        {isInstalling ? (
+                          <Loader2 size={20} className="animate-spin" />
+                        ) : (
+                          <Smartphone size={20} />
+                        )}
+                        <span>{isInstalling ? 'Установка...' : 'Установить'}</span>
+                      </motion.button>
+                    ) : (
+                      <div className="bg-black/[0.03] rounded-2xl p-4 text-left space-y-3">
+                        <p className="text-[10px] uppercase font-bold tracking-widest text-[var(--color-ink)]/40 px-1">
+                          Как установить:
+                        </p>
+                        <p className="text-[12px] text-[var(--color-ink)]/80 leading-relaxed px-1">
+                          Используйте меню настроек браузера и выберите <strong>«Установить приложение»</strong> или <strong>«Добавить на гл. экран»</strong>.
+                        </p>
+                      </div>
+                    )}
                     
                     <button
                       onClick={() => closePrompt(true)}
-                      className="text-[11px] font-bold text-[var(--color-ink)]/30 uppercase tracking-widest hover:text-[var(--color-cinnabar)]/60 transition-colors"
+                      className="w-full py-3.5 text-[var(--color-cinnabar)] font-sans font-bold text-xs uppercase tracking-widest opacity-80 hover:opacity-100 transition-all border-t border-black/5 mt-2"
                     >
-                      Больше не показывать
+                      Продолжить в браузере
                     </button>
                   </div>
                 )}
