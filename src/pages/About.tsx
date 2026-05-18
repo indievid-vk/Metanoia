@@ -19,6 +19,9 @@ export default function About() {
           <p>
             Приложение объединяет в себе огласительные беседы для правильного понимания православной веры, библиотеку святоотеческих трудов для ежедневного чтения, молитвослов, календарь, дневник кающегося с примерами грехов по 8 страстям для подготовки к Исповеди, борьбы со страстями.
           </p>
+          <p className="mt-4 pt-2 text-[10px] sm:text-xs opacity-60 italic">
+            В приложении использованы материалы сайтов <a href="https://uralzvon.site" target="_blank" rel="noopener noreferrer" className="underline hover:text-[var(--color-cinnabar)]">https://uralzvon.site</a> (© Масленников С.М.), <a href="https://azbyka.ru" target="_blank" rel="noopener noreferrer" className="underline hover:text-[var(--color-cinnabar)]">https://azbyka.ru</a>, проекта Аскетика для мирян <a href="https://rutube.ru/channel/24964080/" target="_blank" rel="noopener noreferrer" className="underline hover:text-[var(--color-cinnabar)]">https://rutube.ru/channel/24964080/</a> (© Масленников С.М.)
+          </p>
         </div>
       </div>
 
