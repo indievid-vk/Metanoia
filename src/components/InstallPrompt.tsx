@@ -38,25 +38,35 @@ export default function InstallPrompt() {
     const hasPromptedForever = localStorage.getItem('pwaPromptedForever_v1');
 
     if (!hasSeenInSession && !hasPromptedForever) {
-      const delay = isIOS ? 3500 : 2000; // Show sooner on Android to catch attention
-      const timer = setTimeout(() => {
-        // Safe check for standalone again
-        if (!window.matchMedia('(display-mode: standalone)').matches) {
+      // For iOS we show instructions by timeout because there's no event
+      if (isIOS) {
+        const timer = setTimeout(() => {
+          if (!window.matchMedia('(display-mode: standalone)').matches) {
+            setShow(true);
+            sessionStorage.setItem('hasSeenWelcome_v1', 'true');
+          }
+        }, 3500);
+        return () => clearTimeout(timer);
+      }
+      
+      // For Android/Other, we wait for the event to show the prompt with the button
+      // But we can also set a fallback timer if the event takes too long or isn't supported
+      const fallbackTimer = setTimeout(() => {
+        if (!window.matchMedia('(display-mode: standalone)').matches && !deferredPrompt) {
           setShow(true);
           sessionStorage.setItem('hasSeenWelcome_v1', 'true');
         }
-      }, delay);
-      return () => clearTimeout(timer);
+      }, 10000); // Wait longer for the event before showing manual fallback
+      return () => clearTimeout(fallbackTimer);
     }
 
     // Listen for beforeinstallprompt (Android/Chrome)
     const handleBeforeInstallPrompt = (e: any) => {
       console.log('Capture beforeinstallprompt');
-      // We prevent default to show our designer window first and control timing
       e.preventDefault();
       setDeferredPrompt(e);
       
-      // If we haven't shown yet in this session, show our custom prompt now that we have the event
+      // When event fires, if we haven't prompted yet, show our window WITH the button
       if (!sessionStorage.getItem('hasSeenWelcome_v1') && !localStorage.getItem('pwaPromptedForever_v1')) {
         setShow(true);
         sessionStorage.setItem('hasSeenWelcome_v1', 'true');
