@@ -74,7 +74,7 @@ export default function UpdatePopup() {
           setShow(false);
           (window as any).pwaPopupActive = false;
           window.dispatchEvent(new CustomEvent('pwa-popup-closed'));
-        }, 5000);
+        }, 3000);
         return () => clearTimeout(timer);
       }
     }

@@ -62,23 +62,14 @@ export default function InstallPrompt() {
             setShow(true);
             sessionStorage.setItem('hasSeenWelcome_v1', 'true');
           }
-        }, 2000);
+        }, 3000);
         return () => clearTimeout(timer);
       }
 
-      // If no prompt yet, wait up to 20s for the event before showing manual fallback
-      // This long wait ensures we don't annoy the user with manual instructions 
-      // when the browser is just about to fire the beforeinstallprompt event.
-      const fallbackTimer = setTimeout(() => {
-        if (!window.matchMedia('(display-mode: standalone)').matches && 
-            !deferredPrompt && 
-            !(window as any).deferredPrompt &&
-            !(window as any).pwaPopupActive) {
-          setShow(true);
-          sessionStorage.setItem('hasSeenWelcome_v1', 'true');
-        }
-      }, 20000); 
-      return () => clearTimeout(fallbackTimer);
+      // NO AUTOMATIC FALLBACK for manual instructions on Android.
+      // We only want to auto-show if we have the native prompt capability.
+      // If no native prompt event fires within 30s, we don't show anything automatically.
+      // The user can still use the FAB to see manual instructions if needed.
     }
 
     // Listen for custom event from index.html listener
@@ -88,15 +79,38 @@ export default function InstallPrompt() {
       setDeferredPrompt(event);
       
       // Auto-show if we haven't prompted yet and no other popup is active
+      // We check for isAndroid explicitly to ensure we want the button version
       if (!sessionStorage.getItem('hasSeenWelcome_v1') && 
           !localStorage.getItem('pwaPromptedForever_v1') && 
-          !(window as any).pwaPopupActive) {
+          !(window as any).pwaPopupActive &&
+          event) {
         setShow(true);
         sessionStorage.setItem('hasSeenWelcome_v1', 'true');
       }
     };
 
+    // Listen for coordination with other PWA popups
+    const handlePopupClosed = () => {
+      console.log('Another PWA popup closed, checking if we should show install prompt');
+      const promptEvent = (window as any).deferredPrompt;
+      const hasSeenInSession = sessionStorage.getItem('hasSeenWelcome_v1');
+      const hasPromptedForever = localStorage.getItem('pwaPromptedForever_v1');
+      
+      if (!hasSeenInSession && !hasPromptedForever && !(window as any).pwaPopupActive) {
+        // If we have a native prompt event, show it regardless of platform (Android/Desktop)
+        if (promptEvent) {
+          setDeferredPrompt(promptEvent);
+          setShow(true);
+          sessionStorage.setItem('hasSeenWelcome_v1', 'true');
+        } else if (platform === 'ios') {
+          setShow(true);
+          sessionStorage.setItem('hasSeenWelcome_v1', 'true');
+        }
+      }
+    };
+
     window.addEventListener('pwa-prompt-available', handlePromptAvailable);
+    window.addEventListener('pwa-popup-closed', handlePopupClosed);
 
     // Listen for beforeinstallprompt just in case (though global should catch it)
     const handleBeforeInstallPrompt = (e: any) => {
@@ -105,7 +119,9 @@ export default function InstallPrompt() {
       setDeferredPrompt(e);
       (window as any).deferredPrompt = e;
       
-      if (!sessionStorage.getItem('hasSeenWelcome_v1') && !localStorage.getItem('pwaPromptedForever_v1')) {
+      if (!sessionStorage.getItem('hasSeenWelcome_v1') && 
+          !localStorage.getItem('pwaPromptedForever_v1') && 
+          !(window as any).pwaPopupActive) {
         setShow(true);
         sessionStorage.setItem('hasSeenWelcome_v1', 'true');
       }
@@ -127,6 +143,7 @@ export default function InstallPrompt() {
 
     return () => {
       window.removeEventListener('pwa-prompt-available', handlePromptAvailable);
+      window.removeEventListener('pwa-popup-closed', handlePopupClosed);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as any);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
