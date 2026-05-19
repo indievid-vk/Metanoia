@@ -26,7 +26,7 @@ export default function About() {
       </div>
 
       <div className="bg-[var(--color-parchment)] border border-[var(--color-cinnabar)]/10 p-6 rounded-2xl shadow-sm space-y-4">
-        <h3 className="font-izhitsa text-xl text-[var(--color-cinnabar)]">Особенности приложение - технология PWA</h3>
+        <h3 className="font-izhitsa text-xl text-[var(--color-cinnabar)]">Технические особенности приложения - технология PWA</h3>
         <p className="text-sm text-[var(--color-ink)]/70 leading-relaxed font-serif">
           Приложение работает как PWA (Progressive Web App) — современная технология, которая позволяет устанавливать приложение не из магазина приложений, а просто по прямой ссылке. Оно живет прямо в вашем браузере, почти не занимая лишнего места. Все записи и фото хранятся только внутри памяти браузера. Это обеспечивает полную приватность без передачи информации в облачные хранилища..
         </p>
