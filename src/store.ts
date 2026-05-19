@@ -102,3 +102,30 @@ export function useSinsStore() {
     clearConfession
   };
 }
+
+export function useBookmarksStore() {
+  const [bookmarks, setBookmarks] = useLocalStorage<Record<string, string>>('p_bookmarks', {});
+
+  const setBookmark = (pageKey: string, elementId: string) => {
+    setBookmarks(prev => ({ ...prev, [pageKey]: elementId }));
+  };
+
+  const getBookmark = (pageKey: string) => {
+    return bookmarks[pageKey] || null;
+  };
+
+  const clearBookmark = (pageKey: string) => {
+    setBookmarks(prev => {
+      const next = { ...prev };
+      delete next[pageKey];
+      return next;
+    });
+  };
+
+  return {
+    bookmarks,
+    setBookmark,
+    getBookmark,
+    clearBookmark
+  };
+}

@@ -1,12 +1,34 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { Bookmark, BookMarked } from 'lucide-react';
 import commandmentsData from '../data/commandments.json';
 import { BackToTopButton } from '../components/BackToTopButton';
 import { DecorativeDivider } from '../components/DecorativeDivider';
+import { useBookmarksStore } from '../store';
 
 export default function Commandments() {
+  const { setBookmark, getBookmark } = useBookmarksStore();
+  const PAGE_KEY = 'commandments';
+  const currentBookmark = getBookmark(PAGE_KEY);
+  const [showContinue, setShowContinue] = useState(false);
+
+  useEffect(() => {
+    if (currentBookmark) {
+      const timer = setTimeout(() => setShowContinue(true), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [currentBookmark]);
+
   const commandments = Array.isArray(commandmentsData) 
     ? commandmentsData 
     : (commandmentsData as any).default || [];
+
+  const scrollToBookmark = () => {
+    const el = document.getElementById(currentBookmark || '');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+      setShowContinue(false);
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-12 px-4">
@@ -27,6 +49,18 @@ export default function Commandments() {
         </div>
 
         <div className="relative z-10">
+          {showContinue && (
+            <div className="mb-6 animate-in fade-in slide-in-from-top duration-500">
+              <button 
+                onClick={scrollToBookmark}
+                className="w-full flex items-center justify-center gap-3 bg-[var(--color-cinnabar)] text-white py-3 px-6 rounded-2xl shadow-lg hover:bg-[var(--color-cinnabar)]/90 transition-all font-izhitsa group"
+              >
+                <BookMarked className="group-hover:scale-110 transition-transform" />
+                Продолжить чтение с последней закладки
+              </button>
+            </div>
+          )}
+
           <div id="toc" className="bg-white/50 p-5 rounded-3xl border border-[var(--color-cinnabar)]/20 shadow-md mb-8 scroll-mt-20">
             <h4 className="font-izhitsa text-xl text-[var(--color-cinnabar)] mb-3 border-b border-[var(--color-cinnabar)]/10 pb-1 text-center italic">Оглавление (все материалы)</h4>
         <ul className="space-y-3 text-base text-[var(--color-ink)] font-izhitsa">
@@ -51,11 +85,21 @@ export default function Commandments() {
       <div className="space-y-8">
         {commandments.map((cmd, idx) => {
           const isMain = cmd.title.match(/^\d+\./) && !cmd.title.match(/^\d+\.\d+/);
+          const isBookmarked = currentBookmark === `cmd-${idx}`;
           return (
-          <div key={idx} id={`cmd-${idx}`} className={`bg-white/55 border border-[var(--color-ink)]/10 p-6 rounded-2xl shadow-sm scroll-mt-24 ${isMain ? 'mt-16 ring-1 ring-[var(--color-cinnabar)]/10' : ''}`}>
-            <h3 className={`font-izhitsa text-[var(--color-cinnabar)] mb-4 border-b border-[var(--color-cinnabar)]/20 pb-2 ${isMain ? 'text-2xl uppercase tracking-wide' : 'text-xl italic'}`}>
-              {cmd.title}
-            </h3>
+          <div key={idx} id={`cmd-${idx}`} className={`bg-white/55 border p-6 rounded-2xl shadow-sm scroll-mt-24 transition-all duration-500 ${isMain ? 'mt-16 ring-1 ring-[var(--color-cinnabar)]/10 border-[var(--color-ink)]/10' : 'border-[var(--color-ink)]/10'} ${isBookmarked ? 'ring-2 ring-[var(--color-cinnabar)] shadow-md translate-x-1' : ''}`}>
+            <div className="flex justify-between items-start mb-4 border-b border-[var(--color-cinnabar)]/20 pb-2">
+              <h3 className={`font-izhitsa text-[var(--color-cinnabar)] ${isMain ? 'text-2xl uppercase tracking-wide' : 'text-xl italic'}`}>
+                {cmd.title}
+              </h3>
+              <button
+                onClick={() => setBookmark(PAGE_KEY, `cmd-${idx}`)}
+                className={`p-2 rounded-full transition-all ${isBookmarked ? 'text-[var(--color-cinnabar)] bg-[var(--color-cinnabar)]/10 scale-110' : 'text-gray-400 hover:text-[var(--color-cinnabar)] hover:bg-[var(--color-cinnabar)]/5'}`}
+                title="Поставить закладку"
+              >
+                {isBookmarked ? <BookMarked size={20} /> : <Bookmark size={20} />}
+              </button>
+            </div>
             {cmd.content ? (
               <p className="text-[var(--color-ink)] leading-relaxed text-justify whitespace-pre-wrap font-izhitsa">
                 {cmd.content}

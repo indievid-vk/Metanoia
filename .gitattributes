@@ -4,7 +4,22 @@
 *.jpeg binary
 *.webp binary
 *.ico binary
+*.svg binary
+*.gif binary
+*.pdf binary
+
+# Fonts protection
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.otf binary
+
+# Books and Documents
 *.epub binary
 *.fb2 binary
-*.woff2 binary
-*.pdf binary
+*.mobi binary
+
+# Archives
+*.zip binary
+*.gz binary
