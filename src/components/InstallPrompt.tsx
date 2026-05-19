@@ -37,8 +37,8 @@ export default function InstallPrompt() {
     const hasSeenInSession = sessionStorage.getItem('hasSeenWelcome_v1');
     const hasPromptedForever = localStorage.getItem('pwaPromptedForever_v1');
 
-    if (isIOS && !hasSeenInSession && !hasPromptedForever) {
-      const delay = 3500; 
+    if (!hasSeenInSession && !hasPromptedForever) {
+      const delay = isIOS ? 3500 : 2000; // Show sooner on Android to catch attention
       const timer = setTimeout(() => {
         // Safe check for standalone again
         if (!window.matchMedia('(display-mode: standalone)').matches) {
@@ -52,8 +52,15 @@ export default function InstallPrompt() {
     // Listen for beforeinstallprompt (Android/Chrome)
     const handleBeforeInstallPrompt = (e: any) => {
       console.log('Capture beforeinstallprompt');
-      // Do NOT call e.preventDefault() to let the browser show its native prompt automatically
+      // We prevent default to show our designer window first and control timing
+      e.preventDefault();
       setDeferredPrompt(e);
+      
+      // If we haven't shown yet in this session, show our custom prompt now that we have the event
+      if (!sessionStorage.getItem('hasSeenWelcome_v1') && !localStorage.getItem('pwaPromptedForever_v1')) {
+        setShow(true);
+        sessionStorage.setItem('hasSeenWelcome_v1', 'true');
+      }
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as any);
