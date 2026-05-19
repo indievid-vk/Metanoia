@@ -73,6 +73,13 @@ export default function Home() {
 
   useEffect(() => {
     const showBeatitudes = () => {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                           (window.navigator as any).standalone ||
+                           document.referrer.includes('android-app://') ||
+                           window.location.search.includes('mode=standalone');
+      
+      if (!isStandalone) return;
+
       try {
         const hasSeen = sessionStorage.getItem('beatitudesSeen');
         if (!hasSeen) {
