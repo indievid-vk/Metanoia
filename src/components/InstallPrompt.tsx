@@ -37,8 +37,8 @@ export default function InstallPrompt() {
     const hasSeenInSession = sessionStorage.getItem('hasSeenWelcome_v1');
     const hasPromptedForever = localStorage.getItem('pwaPromptedForever_v1');
 
-    if (!hasSeenInSession && !hasPromptedForever) {
-      const delay = isIOS ? 3000 : 8000; 
+    if (isIOS && !hasSeenInSession && !hasPromptedForever) {
+      const delay = 3500; 
       const timer = setTimeout(() => {
         // Safe check for standalone again
         if (!window.matchMedia('(display-mode: standalone)').matches) {
@@ -52,7 +52,7 @@ export default function InstallPrompt() {
     // Listen for beforeinstallprompt (Android/Chrome)
     const handleBeforeInstallPrompt = (e: any) => {
       console.log('Capture beforeinstallprompt');
-      e.preventDefault();
+      // Do NOT call e.preventDefault() to let the browser show its native prompt automatically
       setDeferredPrompt(e);
     };
 
