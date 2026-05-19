@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useSinsStore, Passion } from '../store';
-import { MOCK_SINS, PASSIONS } from '../data/mock';
+import { MOCK_SINS, PASSIONS } from '../data/constants';
 import { DecorativeDivider } from '../components/DecorativeDivider';
 
 export default function MyConfession() {

@@ -8,14 +8,30 @@ export default function UpdatePopup() {
   const {
     offlineReady: [offlineReady, setOfflineReady] = [false, () => {}],
     needUpdate: [needUpdate, setNeedUpdate] = [false, () => {}],
-    updateServiceWorker,
-  } = useRegisterSW() || {
-    offlineReady: [false, () => {}],
-    needUpdate: [false, () => {}],
-    updateServiceWorker: (reload?: boolean) => { if(reload) window.location.reload(); },
-  };
+    updateServiceWorker = (reload?: boolean) => { if (reload) window.location.reload(); },
+  } = useRegisterSW({
+    onRegistered(r) {
+      if (r) {
+        setInterval(() => {
+          r.update();
+        }, 60 * 60 * 1000);
+      }
+    }
+  }) || {};
 
-  const CURRENT_VERSION = '1.1.6'; // Increment to force popup
+  const CURRENT_VERSION = '1.1.7'; 
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.ready.then(reg => reg.update());
+        }
+      }
+    };
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => window.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
   const [show, setShow] = useState(false);
   const [type, setType] = useState<'update' | 'offline' | 'new-version'>('update');
 

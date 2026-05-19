@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, Loader2, Info } from 'lucide-react';
 import { getAssetPath } from '../utils';
-import { COMMANDMENTS } from '../data/mock';
 import InstallPrompt from './InstallPrompt';
 import UpdatePopup from './UpdatePopup';
 import ToastContainer from './Toast';

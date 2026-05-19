@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Plus, Check, Trash2, X, Minimize2, ArrowUp } from 'lucide-react';
 import { useSinsStore, Passion, SinSeverity } from '../store';
-import { PASSIONS, MOCK_SINS } from '../data/mock';
+import { PASSIONS, MOCK_SINS } from '../data/constants';
 import { BackToTopButton } from '../components/BackToTopButton';
 import { getAssetPath } from '../utils';
 import { DecorativeDivider } from '../components/DecorativeDivider';
