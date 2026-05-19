@@ -13,6 +13,22 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Global PWA event capture to prevent missing it during mount
+      window.deferredPrompt = null;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        console.log('Capture beforeinstallprompt (global)');
+        e.preventDefault();
+        window.deferredPrompt = e;
+        window.dispatchEvent(new CustomEvent('pwa-prompt-available'));
+      });
+      
+      window.addEventListener('appinstalled', () => {
+        console.log('App installed (global)');
+        window.deferredPrompt = null;
+        localStorage.setItem('pwaPromptedForever_v1', 'true');
+      });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

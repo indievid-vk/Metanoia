@@ -33,6 +33,11 @@ export default function InstallPrompt() {
     setPlatform(isIOS ? 'ios' : isAndroid ? 'android' : 'other');
     setShowFAB(true);
 
+    // Initial check for globally captured prompt
+    if ((window as any).deferredPrompt) {
+      setDeferredPrompt((window as any).deferredPrompt);
+    }
+
     // Initial prompt logic
     const hasSeenInSession = sessionStorage.getItem('hasSeenWelcome_v1');
     const hasPromptedForever = localStorage.getItem('pwaPromptedForever_v1');
@@ -41,7 +46,7 @@ export default function InstallPrompt() {
       // For iOS we show instructions by timeout because there's no event
       if (isIOS) {
         const timer = setTimeout(() => {
-          if (!window.matchMedia('(display-mode: standalone)').matches) {
+          if (!window.matchMedia('(display-mode: standalone)').matches && !(window as any).pwaPopupActive) {
             setShow(true);
             sessionStorage.setItem('hasSeenWelcome_v1', 'true');
           }
@@ -50,23 +55,56 @@ export default function InstallPrompt() {
       }
       
       // For Android/Other, we wait for the event to show the prompt with the button
-      // But we can also set a fallback timer if the event takes too long or isn't supported
+      // If we already have the prompt (captured globally), show it soon
+      if ((window as any).deferredPrompt) {
+        const timer = setTimeout(() => {
+          if (!(window as any).pwaPopupActive) {
+            setShow(true);
+            sessionStorage.setItem('hasSeenWelcome_v1', 'true');
+          }
+        }, 2000);
+        return () => clearTimeout(timer);
+      }
+
+      // If no prompt yet, wait up to 20s for the event before showing manual fallback
+      // This long wait ensures we don't annoy the user with manual instructions 
+      // when the browser is just about to fire the beforeinstallprompt event.
       const fallbackTimer = setTimeout(() => {
-        if (!window.matchMedia('(display-mode: standalone)').matches && !deferredPrompt) {
+        if (!window.matchMedia('(display-mode: standalone)').matches && 
+            !deferredPrompt && 
+            !(window as any).deferredPrompt &&
+            !(window as any).pwaPopupActive) {
           setShow(true);
           sessionStorage.setItem('hasSeenWelcome_v1', 'true');
         }
-      }, 10000); // Wait longer for the event before showing manual fallback
+      }, 20000); 
       return () => clearTimeout(fallbackTimer);
     }
 
-    // Listen for beforeinstallprompt (Android/Chrome)
+    // Listen for custom event from index.html listener
+    const handlePromptAvailable = () => {
+      console.log('Prompt became available via global listener');
+      const event = (window as any).deferredPrompt;
+      setDeferredPrompt(event);
+      
+      // Auto-show if we haven't prompted yet and no other popup is active
+      if (!sessionStorage.getItem('hasSeenWelcome_v1') && 
+          !localStorage.getItem('pwaPromptedForever_v1') && 
+          !(window as any).pwaPopupActive) {
+        setShow(true);
+        sessionStorage.setItem('hasSeenWelcome_v1', 'true');
+      }
+    };
+
+    window.addEventListener('pwa-prompt-available', handlePromptAvailable);
+
+    // Listen for beforeinstallprompt just in case (though global should catch it)
     const handleBeforeInstallPrompt = (e: any) => {
-      console.log('Capture beforeinstallprompt');
+      console.log('Capture beforeinstallprompt (local)');
       e.preventDefault();
       setDeferredPrompt(e);
+      (window as any).deferredPrompt = e;
       
-      // When event fires, if we haven't prompted yet, show our window WITH the button
       if (!sessionStorage.getItem('hasSeenWelcome_v1') && !localStorage.getItem('pwaPromptedForever_v1')) {
         setShow(true);
         sessionStorage.setItem('hasSeenWelcome_v1', 'true');
@@ -80,19 +118,24 @@ export default function InstallPrompt() {
       console.log('App installed successfully');
       setShow(false);
       setShowFAB(false);
+      setDeferredPrompt(null);
+      (window as any).deferredPrompt = null;
       localStorage.setItem('pwaPromptedForever_v1', 'true');
     };
 
     window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
+      window.removeEventListener('pwa-prompt-available', handlePromptAvailable);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as any);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) {
+    const promptEvent = deferredPrompt || (window as any).deferredPrompt;
+    
+    if (!promptEvent) {
       if (platform === 'ios') {
         setShow(true);
       }
@@ -101,13 +144,14 @@ export default function InstallPrompt() {
     
     try {
       setIsInstalling(true);
-      await deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
+      await promptEvent.prompt();
+      const { outcome } = await promptEvent.userChoice;
       
       if (outcome === 'accepted') {
         toast.success('Приложение успешно установлено');
         setShow(false);
         setDeferredPrompt(null);
+        (window as any).deferredPrompt = null;
         localStorage.setItem('pwaPromptedForever_v1', 'true');
       }
     } catch (err) {
@@ -136,7 +180,12 @@ export default function InstallPrompt() {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => setShow(true)}
+            onClick={() => {
+              if ((window as any).deferredPrompt && !deferredPrompt) {
+                setDeferredPrompt((window as any).deferredPrompt);
+              }
+              setShow(true);
+            }}
             className="fixed bottom-24 right-5 z-[90] w-12 h-12 bg-[var(--color-cinnabar)] text-white rounded-full shadow-[0_8px_30px_rgb(195,59,59,0.4)] flex items-center justify-center border border-white/20"
           >
             <div className="relative">
@@ -228,7 +277,7 @@ export default function InstallPrompt() {
                   </div>
                 ) : (
                   <div className="w-full space-y-4">
-                    {deferredPrompt ? (
+                    {(deferredPrompt || (window as any).deferredPrompt) ? (
                       <motion.button
                         whileTap={{ scale: 0.96 }}
                         onClick={handleInstallClick}
