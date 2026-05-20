@@ -65,6 +65,9 @@ export default defineConfig(({mode}) => {
       VitePWA({
         registerType: 'prompt',
         injectRegister: 'auto',
+        devOptions: {
+          enabled: false
+        },
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
         manifest: {
           name: 'Помощь кающимся',
