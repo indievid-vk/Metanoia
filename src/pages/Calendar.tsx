@@ -26,6 +26,57 @@ type AzbykaResponse = {
   };
 };
 
+const PROXIES = [
+  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+];
+
+const fetchWithProxyFallback = async (originalUrl: string): Promise<string> => {
+  let lastError: Error | null = null;
+  for (const getProxyUrl of PROXIES) {
+    const proxyUrl = getProxyUrl(originalUrl);
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 7000); // 7 seconds timeout
+
+      const res = await fetch(proxyUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const text = await res.text();
+        if (text && text.trim().length > 100 && !text.includes('Too Many Requests') && !text.includes('Rate limit exceeded')) {
+          return text;
+        }
+      }
+    } catch (e) {
+      console.warn(`Proxy failed for ${originalUrl} via ${proxyUrl}:`, e);
+      lastError = e instanceof Error ? e : new Error(String(e));
+    }
+  }
+  throw lastError || new Error('Все доступные CORS-прокси вернули ошибку или недоступны.');
+};
+
+const safeLocalStorageSet = (key: string, value: string) => {
+  try {
+    localStorage.setItem(key, value);
+  } catch (e) {
+    console.warn("Storage write failed. Clearing ortho_cal cache and retrying...", e);
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && (k.startsWith('ortho_cal_v1_') || k.startsWith('ortho_cal_v2_'))) {
+          localStorage.removeItem(k);
+          i--;
+        }
+      }
+      localStorage.setItem(key, value);
+    } catch (err) {
+      console.error("Failed to write to localStorage after cleaning", err);
+    }
+  }
+};
+
 export default function Calendar() {
   const [data, setData] = useState<AzbykaResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,157 +99,176 @@ export default function Calendar() {
 
   useEffect(() => {
     const fetchCalendar = async () => {
-      try {
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const day = String(currentDate.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+      
+      const cacheKeyDay = `ortho_cal_v2_day_${dateStr}`;
+      const cacheKeyBible = `ortho_cal_v2_bible_${dateStr}`;
+
+      const cachedDay = localStorage.getItem(cacheKeyDay);
+      const cachedBible = localStorage.getItem(cacheKeyBible);
+
+      let isDayLoaded = false;
+      let isBibleLoaded = false;
+
+      // 1. Try loading calendar data from cache
+      if (cachedDay) {
+        try {
+          setData(JSON.parse(cachedDay));
+          setLoading(false);
+          setError(null);
+          isDayLoaded = true;
+        } catch (e) {
+          console.warn("Error parsing cached calendar data:", e);
+          localStorage.removeItem(cacheKeyDay);
+        }
+      }
+
+      // 2. Try loading bible readings content from cache
+      if (cachedBible) {
+        setBibleContent(cachedBible);
+        setBibleLoading(false);
+        setBibleError(null);
+        isBibleLoaded = true;
+      }
+
+      // If both blocks were perfectly restored from the cache, we don't need any network hits!
+      if (isDayLoaded && isBibleLoaded) {
+        return;
+      }
+
+      // Initialize missing states for network fetch
+      if (!isDayLoaded) {
         setLoading(true);
         setError(null);
-        
-        const year = currentDate.getFullYear();
-        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-        const day = String(currentDate.getDate()).padStart(2, '0');
-        const dateStr = `${year}-${month}-${day}`;
-        
-        const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=https://azbyka.ru/days/api/day/${dateStr}.json`);
-        if (!res.ok) {
-          throw new Error('Failed to fetch calendar data');
-        }
-        const json = await res.json();
-        setData(json);
-
-        // Helper to check if a date matches today in the client timezone
-        const isToday = (date: Date) => {
-          const today = new Date();
-          return date.getDate() === today.getDate() &&
-                 date.getMonth() === today.getMonth() &&
-                 date.getFullYear() === today.getFullYear();
-        };
-
-        // Fetch and parse the full Scripture Readings text from Azbyka
+      }
+      if (!isBibleLoaded) {
         setBibleLoading(true);
         setBibleError(null);
         setBibleContent(null);
-        try {
-          const isSelectedToday = isToday(currentDate);
-          const bibleUrl = isSelectedToday 
-            ? 'https://azbyka.ru/biblia/days' 
-            : `https://azbyka.ru/biblia/days/${dateStr}`;
-            
-          const proxies = [
-            `https://api.allorigins.win/raw?url=${encodeURIComponent(bibleUrl)}`,
-            `https://corsproxy.io/?${encodeURIComponent(bibleUrl)}`,
-            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(bibleUrl)}`
-          ];
-          
-          let html = '';
-          let fetchedSuccessfully = false;
-          
-          for (const proxyUrl of proxies) {
-            try {
-              const bibleRes = await fetch(proxyUrl);
-              if (bibleRes.ok) {
-                const text = await bibleRes.text();
-                if (text && text.trim().length > 1000) {
-                  html = text;
-                  fetchedSuccessfully = true;
-                  break;
-                }
-              }
-            } catch (e) {
-              console.warn(`Proxy ${proxyUrl} failed:`, e);
-            }
-          }
-          
-          if (!fetchedSuccessfully) {
-            throw new Error('Не удалось загрузить данные чтений ни через один из известных прокси-серверов.');
-          }
+      }
 
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(html, 'text/html');
-          
-          const titleDivs = doc.querySelectorAll('.days__book-title[id^="reading-"]');
-          
-          if (titleDivs.length > 0) {
-            const readingBlocks: string[] = [];
-            titleDivs.forEach((titleDiv) => {
-              const h2 = titleDiv.querySelector('h2');
-              if (!h2) return;
-              
-              let titleText = '';
-              let subtitleText = '';
-              
-              const h2Clone = h2.cloneNode(true) as HTMLElement;
-              const subtitleSpan = h2Clone.querySelector('.h2-subtitle');
-              if (subtitleSpan) {
-                subtitleText = subtitleSpan.textContent?.trim() || '';
-                subtitleSpan.remove();
-              }
-              titleText = h2Clone.textContent?.trim() || '';
-              
-              const versesHtml: string[] = [];
-              let sibling = titleDiv.nextElementSibling;
-              while (sibling && !sibling.classList.contains('days__book-title')) {
-                if (sibling.classList.contains('tbl-content') || sibling.querySelector('.verse')) {
-                  const russianVerses = sibling.querySelectorAll('.verse[data-lang="r"]');
-                  russianVerses.forEach((verseEl) => {
-                    // Remove checkmark checkboxes and icons
-                    verseEl.querySelectorAll('.checkbox, .icon-check').forEach(el => el.remove());
-                    // Expand and inline inner links (like theological lexicon terms) to avoid breaking styles
-                    verseEl.querySelectorAll('a').forEach(link => {
-                      const span = doc.createElement('span');
-                      span.innerHTML = link.innerHTML;
-                      link.parentNode?.replaceChild(span, link);
-                    });
-                    
-                    const lineNum = verseEl.getAttribute('data-line') || '';
-                    const verseText = verseEl.innerHTML.replace(/\s+/g, ' ').trim();
-                    versesHtml.push(`
-                      <p class="mb-3 leading-relaxed text-[var(--color-ink)]/90 text-sm sm:text-base">
-                        <sup class="text-[var(--color-cinnabar)] font-mono font-bold mr-1.5 text-xs align-super">${lineNum}</sup>
-                        <span>${verseText}</span>
-                      </p>
-                    `);
-                  });
-                }
-                sibling = sibling.nextElementSibling;
-              }
-              
-              if (versesHtml.length > 0) {
-                readingBlocks.push(`
-                  <div class="bg-[#fdfbf6] p-5 rounded-2xl border border-[var(--color-cinnabar)]/10 shadow-sm mb-6 space-y-3 hover:shadow-md transition-shadow">
-                    <div class="border-b border-[var(--color-cinnabar)]/10 pb-2 mb-4">
-                      <h4 class="font-izhitsa text-lg sm:text-xl text-[var(--color-cinnabar)] leading-tight">
-                        ${titleText}
-                      </h4>
-                      <p class="font-sans text-xs text-[var(--color-ink)]/50 uppercase tracking-wider font-semibold mt-1">
-                        ${subtitleText}
-                      </p>
-                    </div>
-                    <div class="space-y-2 font-sans">
-                      ${versesHtml.join('')}
-                    </div>
-                  </div>
-                `);
-              }
-            });
-            
-            if (readingBlocks.length > 0) {
-              setBibleContent(readingBlocks.join(''));
-            } else {
-              setBibleError('Тексты чтений на текущий день не найдены в русском Синодальном переводе.');
-            }
-          } else {
-            // Check if there is alternative simple markup on the page
-            setBibleError('Не удалось выделить разделы богослужебных чтений на текущий день.');
-          }
-        } catch (e) {
-          console.error('Error fetching bible text:', e);
-          setBibleError(e instanceof Error ? e.message : 'Ошибка при разборе текста чтений');
-        } finally {
-          setBibleLoading(false);
+      try {
+        let currentDayData = data;
+
+        // Fetch calendar data if not cached
+        if (!isDayLoaded) {
+          const calendarUrl = `https://azbyka.ru/days/api/day/${dateStr}.json`;
+          const calendarHtml = await fetchWithProxyFallback(calendarUrl);
+          const json = JSON.parse(calendarHtml);
+          setData(json);
+          currentDayData = json;
+          safeLocalStorageSet(cacheKeyDay, calendarHtml);
+          setLoading(false);
         }
 
+        // Fetch bible readings if not cached
+        if (!isBibleLoaded) {
+          try {
+            const isToday = (date: Date) => {
+              const today = new Date();
+              return date.getDate() === today.getDate() &&
+                     date.getMonth() === today.getMonth() &&
+                     date.getFullYear() === today.getFullYear();
+            };
+            const isSelectedToday = isToday(currentDate);
+            const bibleUrl = isSelectedToday 
+              ? 'https://azbyka.ru/biblia/days' 
+              : `https://azbyka.ru/biblia/days/${dateStr}`;
+              
+            const html = await fetchWithProxyFallback(bibleUrl);
+
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            const titleDivs = doc.querySelectorAll('.days__book-title[id^="reading-"]');
+            
+            if (titleDivs.length > 0) {
+              const readingBlocks: string[] = [];
+              titleDivs.forEach((titleDiv) => {
+                const h2 = titleDiv.querySelector('h2');
+                if (!h2) return;
+                
+                let titleText = '';
+                let subtitleText = '';
+                
+                const h2Clone = h2.cloneNode(true) as HTMLElement;
+                const subtitleSpan = h2Clone.querySelector('.h2-subtitle');
+                if (subtitleSpan) {
+                  subtitleText = subtitleSpan.textContent?.trim() || '';
+                  subtitleSpan.remove();
+                }
+                titleText = h2Clone.textContent?.trim() || '';
+                
+                const versesHtml: string[] = [];
+                let sibling = titleDiv.nextElementSibling;
+                while (sibling && !sibling.classList.contains('days__book-title')) {
+                  if (sibling.classList.contains('tbl-content') || sibling.querySelector('.verse')) {
+                    const russianVerses = sibling.querySelectorAll('.verse[data-lang="r"]');
+                    russianVerses.forEach((verseEl) => {
+                      // Remove checkmark checkboxes and icons
+                      verseEl.querySelectorAll('.checkbox, .icon-check').forEach(el => el.remove());
+                      // Expand and inline inner links (like theological lexicon terms) to avoid breaking styles
+                      verseEl.querySelectorAll('a').forEach(link => {
+                        const span = doc.createElement('span');
+                        span.innerHTML = link.innerHTML;
+                        link.parentNode?.replaceChild(span, link);
+                      });
+                      
+                      const lineNum = verseEl.getAttribute('data-line') || '';
+                      const verseText = verseEl.innerHTML.replace(/\s+/g, ' ').trim();
+                      versesHtml.push(`
+                        <p class="mb-3 leading-relaxed text-[var(--color-ink)]/90 text-sm sm:text-base">
+                          <sup class="text-[var(--color-cinnabar)] font-mono font-bold mr-1.5 text-xs align-super">${lineNum}</sup>
+                          <span>${verseText}</span>
+                        </p>
+                      `);
+                    });
+                  }
+                  sibling = sibling.nextElementSibling;
+                }
+                
+                if (versesHtml.length > 0) {
+                  readingBlocks.push(`
+                    <div class="bg-[#fdfbf6] p-5 rounded-2xl border border-[var(--color-cinnabar)]/10 shadow-sm mb-6 space-y-3 hover:shadow-md transition-shadow">
+                      <div class="border-b border-[var(--color-cinnabar)]/10 pb-2 mb-4">
+                        <h4 class="font-izhitsa text-lg sm:text-xl text-[var(--color-cinnabar)] leading-tight">
+                          ${titleText}
+                        </h4>
+                        <p class="font-sans text-xs text-[var(--color-ink)]/50 uppercase tracking-wider font-semibold mt-1">
+                          ${subtitleText}
+                        </p>
+                      </div>
+                      <div class="space-y-2 font-sans">
+                        ${versesHtml.join('')}
+                      </div>
+                    </div>
+                  `);
+                }
+              });
+              
+              if (readingBlocks.length > 0) {
+                const finalBibleContent = readingBlocks.join('');
+                setBibleContent(finalBibleContent);
+                safeLocalStorageSet(cacheKeyBible, finalBibleContent);
+              } else {
+                setBibleError('Тексты чтений на текущий день не найдены в русском Синодальном переводе.');
+              }
+            } else {
+              setBibleError('Не удалось выделить разделы богослужебных чтений на текущий день.');
+            }
+          } catch (e) {
+            console.error('Error fetching bible text:', e);
+            setBibleError(e instanceof Error ? e.message : 'Ошибка при разборе текста чтений');
+          } finally {
+            setBibleLoading(false);
+          }
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
+        console.error('Error fetching calendar day data:', err);
+        setError(err instanceof Error ? err.message : 'Произошла ошибка при загрузке календаря');
         setLoading(false);
       }
     };
