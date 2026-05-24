@@ -159,6 +159,24 @@ export default function RouteMap() {
     const el = containerRef.current;
     if (!el) return;
 
+    const isInteractive = (target: EventTarget | null): boolean => {
+      let currentEl = target as HTMLElement | null;
+      while (currentEl && currentEl !== el) {
+        if (
+          currentEl.tagName === 'BUTTON' || 
+          currentEl.tagName === 'A' || 
+          currentEl.tagName === 'INPUT' ||
+          currentEl.tagName === 'SELECT' ||
+          currentEl.classList?.contains('cursor-pointer') || 
+          currentEl.getAttribute?.('role') === 'button'
+        ) {
+          return true;
+        }
+        currentEl = currentEl.parentElement;
+      }
+      return false;
+    };
+
     const getDistance = (t1: Touch, t2: Touch) => {
       const dx = t1.clientX - t2.clientX;
       const dy = t1.clientY - t2.clientY;
@@ -173,8 +191,21 @@ export default function RouteMap() {
     };
 
     const handleTStart = (e: TouchEvent) => {
-      // Prevent browser bounce / page scrolling
-      e.preventDefault();
+      // If user is pinching (>= 2 fingers), ALWAYS prevent default to block browser/body-level pinch zoom
+      if (e.touches.length >= 2) {
+        e.preventDefault();
+      }
+
+      // If user is touching a button, marker or search input - do not start drag/zoom gesture
+      if (isInteractive(e.target)) {
+        isTouchDraggingRef.current = false;
+        return;
+      }
+
+      // Prevent page scrolling/bouncing from map dragging on touch
+      if (e.touches.length === 1) {
+        e.preventDefault();
+      }
 
       if (e.touches.length === 1) {
         isTouchDraggingRef.current = true;
@@ -202,14 +233,21 @@ export default function RouteMap() {
     };
 
     const handleTMove = (e: TouchEvent) => {
-      e.preventDefault();
+      const isDraggingNow = e.touches.length === 1 && isTouchDraggingRef.current && touchDragStartRef.current;
+      const isPinchingNow = e.touches.length === 2 && touchStartDistRef.current && touchStartCenterRef.current;
 
-      if (e.touches.length === 1 && isTouchDraggingRef.current && touchDragStartRef.current) {
+      if (isDraggingNow || isPinchingNow) {
+        e.preventDefault();
+      } else {
+        return;
+      }
+
+      if (isDraggingNow && touchDragStartRef.current) {
         const nextX = e.touches[0].clientX - touchDragStartRef.current.x;
         const nextY = e.touches[0].clientY - touchDragStartRef.current.y;
         setPanX(nextX);
         setPanY(nextY);
-      } else if (e.touches.length === 2 && touchStartDistRef.current && touchStartCenterRef.current) {
+      } else if (isPinchingNow && touchStartDistRef.current && touchStartCenterRef.current) {
         const dist = getDistance(e.touches[0], e.touches[1]);
         if (dist === 0) return;
 
@@ -240,6 +278,12 @@ export default function RouteMap() {
         touchStartCenterRef.current = null;
         setIsDragging(false);
       } else if (e.touches.length === 1) {
+        // If single touch remains, verify we aren't starting dragging from an interactive point
+        if (isInteractive(e.touches[0].target)) {
+          isTouchDraggingRef.current = false;
+          touchDragStartRef.current = null;
+          return;
+        }
         isTouchDraggingRef.current = true;
         touchDragStartRef.current = {
           x: e.touches[0].clientX - panXRef.current,
@@ -250,14 +294,23 @@ export default function RouteMap() {
       }
     };
 
+    const handleGesture = (e: Event) => {
+      // Prevent Safari's native multi-touch zoom behaviors
+      e.preventDefault();
+    };
+
     el.addEventListener('touchstart', handleTStart, { passive: false });
     el.addEventListener('touchmove', handleTMove, { passive: false });
     el.addEventListener('touchend', handleTEnd, { passive: false });
+    el.addEventListener('gesturestart', handleGesture, { passive: false });
+    el.addEventListener('gesturechange', handleGesture, { passive: false });
 
     return () => {
       el.removeEventListener('touchstart', handleTStart);
       el.removeEventListener('touchmove', handleTMove);
       el.removeEventListener('touchend', handleTEnd);
+      el.removeEventListener('gesturestart', handleGesture);
+      el.removeEventListener('gesturechange', handleGesture);
     };
   }, []);
 
@@ -284,9 +337,10 @@ export default function RouteMap() {
   };
 
   // Grouped regional categories for simpler navigation tabs
-  const groupRegions = (region: string): string => {
-    const r = region.toLowerCase();
-    if (r.includes('ерусалим') || r.includes('сион') || r.includes('елеон')) return 'Иерусалим';
+  const groupRegions = (loc: RouteLocation): string => {
+    const r = loc.region.toLowerCase();
+    const l = loc.location_name.toLowerCase();
+    if (r.includes('ерусалим') || r.includes('сион') || r.includes('елеон') || l.includes('иерусалим')) return 'Иерусалим';
     if (r.includes('иудея') || r.includes('пустыня') || r.includes('вифания') || r.includes('иерихон')) return 'Иудея';
     if (r.includes('галилея')) return 'Галилея';
     if (r.includes('самария')) return 'Самария';
@@ -302,7 +356,7 @@ export default function RouteMap() {
       loc.gospel_reference.toLowerCase().includes(searchQuery.toLowerCase());
       
     if (selectedRegion === 'all') return matchesSearch;
-    return groupRegions(loc.region) === selectedRegion && matchesSearch;
+    return groupRegions(loc) === selectedRegion && matchesSearch;
   });
 
   // Calculate bounding box and smoothly fit search results within viewport with optimal padding
@@ -505,8 +559,8 @@ export default function RouteMap() {
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         className={isFullScreen 
-          ? "fixed inset-0 z-50 bg-[#faf6ee] w-screen h-screen m-0 rounded-none border-none select-none cursor-grab active:cursor-grabbing"
-          : "relative w-full rounded-2xl overflow-hidden border border-[var(--color-cinnabar)]/20 shadow-md bg-[#faf6ee] select-none cursor-grab active:cursor-grabbing"
+          ? "fixed inset-0 z-50 bg-[#faf6ee] w-full h-full m-0 rounded-none border-none select-none cursor-grab active:cursor-grabbing touch-none"
+          : "relative w-full rounded-2xl overflow-hidden border border-[var(--color-cinnabar)]/20 shadow-md bg-[#faf6ee] select-none cursor-grab active:cursor-grabbing touch-none"
         }
       >
         {/* Interactive SVG Layer */}
