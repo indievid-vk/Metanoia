@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { Compass, Search, ChevronRight, Cross, RotateCcw, X, Plus, Minus, Minimize2 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Compass, Search, ChevronRight, Cross, RotateCcw, X, Plus, Minus, Minimize2, Maximize, Minimize } from 'lucide-react';
 import routeDataRaw from '../../routeData.json';
 
 interface Coordinate {
@@ -40,6 +40,25 @@ const getCoords = (lat: number, lng: number) => {
   };
 };
 
+const getOffsetCoords = (loc: RouteLocation) => {
+  const base = getCoords(loc.coordinates.lat, loc.coordinates.lng);
+  
+  // Specific offsets for overlapping points in Jerusalem Temple (lat: 31.7776, lng: 35.2354)
+  // Shift them slightly in a gorgeous triangular structure (approx. 20-25px in zoom 9 space)
+  if (Math.abs(loc.coordinates.lat - 31.7776) < 0.0001 && Math.abs(loc.coordinates.lng - 35.2354) < 0.0001) {
+    if (loc.chronological_order === 2) {
+      return { x: base.x - 22, y: base.y - 12 };
+    }
+    if (loc.chronological_order === 5) {
+      return { x: base.x + 22, y: base.y - 12 };
+    }
+    if (loc.chronological_order === 9) {
+      return { x: base.x, y: base.y + 18 };
+    }
+  }
+  return base;
+};
+
 const backgroundTiles: { x: number; y: number }[] = [];
 for (let y = 198; y <= 212; y++) {
   for (let x = 296; x <= 311; x++) {
@@ -76,6 +95,35 @@ export default function RouteMap() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeLocation, setActiveLocation] = useState<number | null>(null);
   const [hoveredLocation, setHoveredLocation] = useState<number | null>(null);
+  const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
+
+  // References to keep event listeners perfectly synced (avoiding stale captures)
+  const scaleRef = useRef(scale);
+  const panXRef = useRef(panX);
+  const panYRef = useRef(panY);
+
+  useEffect(() => { scaleRef.current = scale; }, [scale]);
+  useEffect(() => { panXRef.current = panX; }, [panX]);
+  useEffect(() => { panYRef.current = panY; }, [panY]);
+
+  // Touch gesture state values tracked via refs
+  const touchStartDistRef = useRef<number | null>(null);
+  const touchStartScaleRef = useRef<number>(1);
+  const touchStartCenterRef = useRef<{ x: number; y: number } | null>(null);
+  const touchDragStartRef = useRef<{ x: number; y: number } | null>(null);
+  const isTouchDraggingRef = useRef<boolean>(false);
+
+  // Lock body scroll in fullscreen mode to prevent scrolling leaks
+  useEffect(() => {
+    if (isFullScreen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isFullScreen]);
 
   // Dynamically observe container dimensions to keep coordinates perfectly mapped
   React.useEffect(() => {
@@ -103,6 +151,113 @@ export default function RouteMap() {
     return () => {
       resizeObserver.disconnect();
       window.removeEventListener('resize', updateDimensions);
+    };
+  }, []);
+
+  // Set up touch event listeners strictly matching passive=false to allow preventDefault()
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const getDistance = (t1: Touch, t2: Touch) => {
+      const dx = t1.clientX - t2.clientX;
+      const dy = t1.clientY - t2.clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+
+    const getCenter = (t1: Touch, t2: Touch) => {
+      return {
+        x: (t1.clientX + t2.clientX) / 2,
+        y: (t1.clientY + t2.clientY) / 2
+      };
+    };
+
+    const handleTStart = (e: TouchEvent) => {
+      // Prevent browser bounce / page scrolling
+      e.preventDefault();
+
+      if (e.touches.length === 1) {
+        isTouchDraggingRef.current = true;
+        touchDragStartRef.current = {
+          x: e.touches[0].clientX - panXRef.current,
+          y: e.touches[0].clientY - panYRef.current
+        };
+        setIsDragging(true);
+      } else if (e.touches.length === 2) {
+        isTouchDraggingRef.current = false;
+        const dist = getDistance(e.touches[0], e.touches[1]);
+        touchStartDistRef.current = dist;
+        touchStartScaleRef.current = scaleRef.current;
+
+        const rect = el.getBoundingClientRect();
+        const center = getCenter(e.touches[0], e.touches[1]);
+        const relativeCenterX = center.x - rect.left;
+        const relativeCenterY = center.y - rect.top;
+
+        touchStartCenterRef.current = {
+          x: relativeCenterX,
+          y: relativeCenterY
+        };
+      }
+    };
+
+    const handleTMove = (e: TouchEvent) => {
+      e.preventDefault();
+
+      if (e.touches.length === 1 && isTouchDraggingRef.current && touchDragStartRef.current) {
+        const nextX = e.touches[0].clientX - touchDragStartRef.current.x;
+        const nextY = e.touches[0].clientY - touchDragStartRef.current.y;
+        setPanX(nextX);
+        setPanY(nextY);
+      } else if (e.touches.length === 2 && touchStartDistRef.current && touchStartCenterRef.current) {
+        const dist = getDistance(e.touches[0], e.touches[1]);
+        if (dist === 0) return;
+
+        const scaleDiff = dist / touchStartDistRef.current;
+        const targetScaleUnclamped = scaleDiff * touchStartScaleRef.current;
+        const clampedScale = Math.min(Math.max(targetScaleUnclamped, 0.08), 72.0);
+
+        const mouseX = touchStartCenterRef.current.x;
+        const mouseY = touchStartCenterRef.current.y;
+
+        const oldX = (mouseX - panXRef.current) / scaleRef.current;
+        const oldY = (mouseY - panYRef.current) / scaleRef.current;
+
+        const newPanX = mouseX - oldX * clampedScale;
+        const newPanY = mouseY - oldY * clampedScale;
+
+        setScale(clampedScale);
+        setPanX(newPanX);
+        setPanY(newPanY);
+      }
+    };
+
+    const handleTEnd = (e: TouchEvent) => {
+      if (e.touches.length === 0) {
+        isTouchDraggingRef.current = false;
+        touchDragStartRef.current = null;
+        touchStartDistRef.current = null;
+        touchStartCenterRef.current = null;
+        setIsDragging(false);
+      } else if (e.touches.length === 1) {
+        isTouchDraggingRef.current = true;
+        touchDragStartRef.current = {
+          x: e.touches[0].clientX - panXRef.current,
+          y: e.touches[0].clientY - panYRef.current
+        };
+        touchStartDistRef.current = null;
+        touchStartCenterRef.current = null;
+      }
+    };
+
+    el.addEventListener('touchstart', handleTStart, { passive: false });
+    el.addEventListener('touchmove', handleTMove, { passive: false });
+    el.addEventListener('touchend', handleTEnd, { passive: false });
+
+    return () => {
+      el.removeEventListener('touchstart', handleTStart);
+      el.removeEventListener('touchmove', handleTMove);
+      el.removeEventListener('touchend', handleTEnd);
     };
   }, []);
 
@@ -163,7 +318,7 @@ export default function RouteMap() {
     let maxY = -Infinity;
     
     locations.forEach(loc => {
-      const coords = getCoords(loc.coordinates.lat, loc.coordinates.lng);
+      const coords = getOffsetCoords(loc);
       if (coords.x < minX) minX = coords.x;
       if (coords.x > maxX) maxX = coords.x;
       if (coords.y < minY) minY = coords.y;
@@ -215,7 +370,7 @@ export default function RouteMap() {
     const displayWidth = dimensions.width;
     const displayHeight = dimensions.height;
     
-    const coords = getCoords(loc.coordinates.lat, loc.coordinates.lng);
+    const coords = getOffsetCoords(loc);
     const newPanX = (displayWidth / 2) - (coords.x * targetScale);
     const newPanY = (displayHeight / 2) - (coords.y * targetScale);
     
@@ -244,24 +399,6 @@ export default function RouteMap() {
   };
 
   const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  // Touch handlers
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 1) {
-      setIsDragging(true);
-      setDragStart({ x: e.touches[0].clientX - panX, y: e.touches[0].clientY - panY });
-    }
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || e.touches.length !== 1) return;
-    setPanX(e.touches[0].clientX - dragStart.x);
-    setPanY(e.touches[0].clientY - dragStart.y);
-  };
-
-  const handleTouchEnd = () => {
     setIsDragging(false);
   };
 
@@ -335,7 +472,7 @@ export default function RouteMap() {
     .slice()
     .sort((a, b) => a.chronological_order - b.chronological_order)
     .map(loc => {
-      const coords = getCoords(loc.coordinates.lat, loc.coordinates.lng);
+      const coords = getOffsetCoords(loc);
       return `${coords.x},${coords.y}`;
     })
     .join(' ');
@@ -343,18 +480,20 @@ export default function RouteMap() {
   return (
     <div className="space-y-4">
       {/* Introduction */}
-      <div className="bg-[#fdfbf6] p-4 rounded-2xl border border-[var(--color-cinnabar)]/10 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-[var(--color-cinnabar)]/10 rounded-xl text-[var(--color-cinnabar)] shrink-0">
-            <Compass className="w-6 h-6 animate-pulse" />
-          </div>
-          <div>
-            <p className="text-xs sm:text-sm font-sans font-medium text-[var(--color-ink)]/85 leading-relaxed m-0 select-text">
-              Интерактивный путеводитель по местам пребывания Спасителя нашего Иисуса Христа
-            </p>
+      {!isFullScreen && (
+        <div className="bg-[#fdfbf6] p-4 rounded-2xl border border-[var(--color-cinnabar)]/10 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-[var(--color-cinnabar)]/10 rounded-xl text-[var(--color-cinnabar)] shrink-0">
+              <Compass className="w-6 h-6 animate-pulse" />
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm font-sans font-medium text-[var(--color-ink)]/85 leading-relaxed m-0 select-text">
+                Интерактивный путеводитель по местам пребывания Спасителя нашего Иисуса Христа
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Map Viewport Area */}
       <div 
@@ -365,15 +504,15 @@ export default function RouteMap() {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        className="relative w-full rounded-2xl overflow-hidden border border-[var(--color-cinnabar)]/20 shadow-md bg-[#faf6ee] select-none cursor-grab active:cursor-grabbing"
+        className={isFullScreen 
+          ? "fixed inset-0 z-50 bg-[#faf6ee] w-screen h-screen m-0 rounded-none border-none select-none cursor-grab active:cursor-grabbing"
+          : "relative w-full rounded-2xl overflow-hidden border border-[var(--color-cinnabar)]/20 shadow-md bg-[#faf6ee] select-none cursor-grab active:cursor-grabbing"
+        }
       >
         {/* Interactive SVG Layer */}
         <svg 
           viewBox={`0 0 ${dimensions.width} ${dimensions.height}`} 
-          className="w-full h-[330px] select-none"
+          className={`w-full select-none ${isFullScreen ? "h-full" : "h-[330px]"}`}
         >
           {/* Main Transformed Coordinate System */}
           <g 
@@ -547,7 +686,7 @@ export default function RouteMap() {
 
             {/* Render 23 Interactive Custom Markers with beautiful scale-responsive proportions */}
             {routeData.map((loc) => {
-              const coords = getCoords(loc.coordinates.lat, loc.coordinates.lng);
+              const coords = getOffsetCoords(loc);
               const isActive = activeLocation === loc.chronological_order;
               
               // To keep visual sizes of markers nearly constant regardless of map zoom (scale):
@@ -670,6 +809,13 @@ export default function RouteMap() {
             className="p-2 border-t border-stone-100 text-[var(--color-cinnabar)] hover:bg-amber-50 active:scale-95 transition-all outline-none"
           >
             <Minimize2 className="w-4 h-4" />
+          </button>
+          <button 
+            onClick={() => setIsFullScreen(prev => !prev)}
+            title={isFullScreen ? "Свернуть" : "Во весь экран"}
+            className="p-2 border-t border-stone-100 text-stone-700 hover:bg-amber-50 active:scale-95 transition-all outline-none"
+          >
+            {isFullScreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
           </button>
         </div>
 
