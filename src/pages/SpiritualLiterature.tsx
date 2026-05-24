@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { getAssetPath } from '../utils';
 import DownloadButton from '../components/DownloadButton';
@@ -47,6 +48,8 @@ function BookAccordion({ title, subtitle, downloadUrl, fileName, children, forma
 }
 
 export default function SpiritualLiterature() {
+  const navigate = useNavigate();
+
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-12 px-4">
       <div className="pb-8">
@@ -54,15 +57,34 @@ export default function SpiritualLiterature() {
 
         <div className="text-center mb-8 relative z-10">
           <h1 className="font-izhitsa text-3xl sm:text-5xl text-[var(--color-cinnabar)] mb-2 uppercase tracking-wide">
-            Душеполезная литература
+            Душеполезная информация
           </h1>
           <DecorativeDivider className="mb-4" />
           <p className="text-xs text-[var(--color-ink)]/60 italic mb-4">
-            (духовное чтение)
+            (духовное чтение и материалы)
           </p>
           <div className="font-izhitsa text-[var(--color-ink)]/80 max-w-2xl mx-auto mb-10">
-            Книги, помогающие в духовном делании, трезвении и понимании воли Божией.
+            Карта Земного пути Спасителя, книги для духовного чтения, помогающие в духовном делании, трезвении и понимании воли Божией.
           </div>
+
+          <div className="max-w-xl mx-auto mb-8">
+            <button 
+              onClick={() => navigate('/gospel-life/route-map')}
+              className="w-full bg-[var(--color-parchment)] border-2 border-[var(--color-cinnabar)]/45 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-left group relative overflow-hidden ring-1 ring-amber-100 flex flex-col cursor-pointer"
+            >
+              <div className="absolute top-2 right-2">
+                <div className="bg-amber-105 text-amber-900 border border-amber-250 select-none text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-xs animate-pulse">Карта</div>
+              </div>
+              <div className="absolute top-0 right-0 w-16 h-16 bg-[var(--color-cinnabar)]/5 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-150"></div>
+              <h3 className="font-izhitsa text-xl text-[var(--color-cinnabar)] mb-2 group-hover:text-red-700 transition-colors">Земной путь Спасителя</h3>
+              <p className="text-sm text-[var(--color-ink)]/75 leading-relaxed font-sans">
+                Интерактивная хроника и карта 23 ключевых мест чудес, проповедей и Крестного пути Господа Иисуса Христа.
+              </p>
+            </button>
+          </div>
+
+          <div className="my-8 border-t border-[var(--color-cinnabar)]/10 max-w-lg mx-auto" />
+          <h2 className="font-izhitsa text-2xl text-[var(--color-cinnabar)] mb-6 uppercase tracking-wide text-center">Рекомендуемые книги</h2>
 
           <BookAccordion 
             title="Близ есть, при дверех" 

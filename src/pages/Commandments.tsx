@@ -4,6 +4,19 @@ import commandmentsData from '../data/commandments.json';
 import { BackToTopButton } from '../components/BackToTopButton';
 import { DecorativeDivider } from '../components/DecorativeDivider';
 import { useBookmarksStore } from '../store';
+import AsceticsContent from '../components/AsceticsContent';
+
+const BEATITUDES = [
+  "Блаженны нищие духом, ибо их есть Царство Небесное.",
+  "Блаженны плачущие, ибо они утешатся.",
+  "Блаженны кроткие, ибо они наследуют землю.",
+  "Блаженны алчущие и жаждущие правды, ибо они насытятся.",
+  "Блаженны милостивые, ибо они помилованы будут.",
+  "Блаженны чистые сердцем, ибо они Бога узрят.",
+  "Блаженны миротворцы, ибо они будут наречены сынами Божиими.",
+  "Блаженны изгнанные за правду, ибо их есть Царство Небесное.",
+  "Блаженны вы, когда будут поносить вас и гнать и всячески неправедно злословить за Меня. Радуйтесь и веселитесь, ибо велика ваша награда на небесах."
+];
 
 export default function Commandments() {
   const { setBookmark, getBookmark } = useBookmarksStore();
@@ -46,6 +59,21 @@ export default function Commandments() {
           <div className="font-izhitsa text-[var(--color-ink)]/80 max-w-2xl mx-auto">
             Христианские добродетели согласно евангельским заповедям.
           </div>
+        </div>
+
+        {/* Заповеди Блаженств list as requested */}
+        <div className="bg-white/55 border-2 border-[var(--color-cinnabar)]/25 p-6 rounded-3xl shadow-sm relative z-10 mb-8">
+          <h2 className="font-izhitsa text-2xl text-center text-[var(--color-cinnabar)] mb-2 uppercase tracking-wide">Заповеди Блаженств</h2>
+          <div className="text-center text-xs font-izhitsa italic text-[var(--color-ink)]/70 mb-4">(Мф. 5:3-12)</div>
+          <DecorativeDivider className="mb-4" />
+          <ol className="space-y-4 px-1 sm:px-2 pb-2 font-izhitsa text-stone-900">
+            {BEATITUDES.map((cmd, idx) => (
+              <li key={idx} className="flex items-start gap-3">
+                <span className="font-izhitsa text-[var(--color-cinnabar)] font-bold shrink-0">{idx + 1}.</span>
+                <span className="text-sm sm:text-base text-[var(--color-ink)] text-justify leading-relaxed">{cmd}</span>
+              </li>
+            ))}
+          </ol>
         </div>
 
         <div className="relative z-10">
@@ -112,6 +140,18 @@ export default function Commandments() {
           </div>
         )})}
       </div>
+
+      {/* Аскетика дня. Практика block duplication */}
+      <div className="mt-16 bg-white/55 border-2 border-[var(--color-cinnabar)]/45 p-6 rounded-3xl shadow-md relative z-10">
+        <div className="text-center mb-6">
+          <h2 className="font-izhitsa text-2xl sm:text-3xl text-[var(--color-cinnabar)] mb-2 uppercase tracking-wide">
+            Аскетика дня. Практика
+          </h2>
+          <DecorativeDivider className="mb-4" />
+        </div>
+        <AsceticsContent />
+      </div>
+
       </div>
       </div>
       <BackToTopButton />

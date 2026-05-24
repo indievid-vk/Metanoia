@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import gospelCommandmentsData from '../data/commandments.json';
 import { getAssetPath } from '../utils';
 import { DecorativeDivider } from '../components/DecorativeDivider';
+import AsceticsContent from '../components/AsceticsContent';
 
 interface InteractiveButtonProps {
   onClick: () => void;
@@ -161,16 +162,15 @@ export default function Home() {
 
       {showPopup && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[var(--color-parchment)] border-2 border-[var(--color-cinnabar)]/50 p-4 sm:px-6 sm:py-8 rounded-[2rem] max-w-lg w-full shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden">
+          <div className="bg-[var(--color-parchment)] border-2 border-[var(--color-cinnabar)]/50 p-4 sm:p-6 rounded-[2rem] max-w-lg w-full shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden">
             <button 
               onClick={() => setShowPopup(false)}
-              className="absolute top-2 right-4 text-3xl font-light text-[var(--color-ink)]/50 hover:text-[var(--color-ink)] z-10"
+              className="absolute top-2 right-4 text-3xl font-light text-[var(--color-ink)]/50 hover:text-[var(--color-ink)] z-15 cursor-pointer"
             >
               ×
             </button>
             <div className="shrink-0">
-              <h2 className="font-izhitsa text-xl sm:text-4xl text-center text-[var(--color-cinnabar)] mb-2 uppercase tracking-wide">Заповеди Блаженств</h2>
-              <div className="text-center text-sm font-izhitsa italic text-[var(--color-ink)]/70 mb-4">(Мф. 5:3-12)</div>
+              <h2 className="font-izhitsa text-xl sm:text-3xl text-center text-[var(--color-cinnabar)] mb-1 uppercase tracking-wide">Аскетика дня. Практика</h2>
               <DecorativeDivider />
             </div>
             
@@ -179,28 +179,21 @@ export default function Home() {
               <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-[var(--color-ink)]/10 to-transparent z-10 pointer-events-none shadow-[inset_0_10px_10px_-10px_rgba(0,0,0,0.2)]" />
               
               <div className="overflow-y-auto flex-1 pr-1 sm:pr-2 py-4 relative scroll-smooth custom-scrollbar">
-                <ul className="space-y-4 px-1 sm:px-2 pb-4">
-                  {BEATITUDES.map((cmd, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
-                      <span className="font-izhitsa text-[var(--color-cinnabar)] shrink-0">{idx + 1}.</span>
-                      <span className="text-sm sm:text-lg text-[var(--color-ink)] text-justify leading-snug">{cmd}</span>
-                    </li>
-                  ))}
-                </ul>
+                <AsceticsContent />
               </div>
               
               {/* Bottom scroll shadow */}
               <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-[var(--color-ink)]/10 to-transparent z-10 pointer-events-none shadow-[inset_0_-10px_10px_-10px_rgba(0,0,0,0.2)]" />
             </div>
 
-            <div className="shrink-0 mt-2">
+            <div className="shrink-0 mt-3">
               <DecorativeDivider />
-              <div className="mb-4 sm:mb-6" />
+              <div className="mb-3" />
               <button 
                 onClick={() => setShowPopup(false)}
-                className="w-full py-3 bg-gradient-to-r from-[var(--color-cinnabar)]/90 to-[var(--color-cinnabar)] text-white rounded-2xl font-izhitsa shadow-md hover:brightness-110 transition-all text-lg"
+                className="w-full py-3 bg-[var(--color-cinnabar)] hover:bg-[#912525] text-white rounded-2xl font-izhitsa shadow-md hover:brightness-110 transition-all text-lg cursor-pointer"
               >
-                На главную
+                Закрыть
               </button>
             </div>
           </div>

@@ -32,6 +32,7 @@ import Angels from './pages/Angels';
 import RepentanceHelp from './pages/RepentanceHelp';
 import About from './pages/About';
 import RouteMap from './pages/RouteMap';
+import Ascetics from './pages/Ascetics';
 
 export default function App() {
   return (
@@ -59,6 +60,7 @@ export default function App() {
           <Route path="gospel-life/catechesis/questions" element={<CatechesisQuestions />} />
           <Route path="gospel-life/repentance-help" element={<RepentanceHelp />} />
           <Route path="gospel-life/commandments" element={<Commandments />} />
+          <Route path="gospel-life/ascetics" element={<Ascetics />} />
           <Route path="gospel-life/treby" element={<Treby />} />
           <Route path="gospel-life/scripture" element={<Scripture />} />
           <Route path="gospel-life/death" element={<Death />} />

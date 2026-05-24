@@ -93,6 +93,9 @@ function getPageTitle(path: string) {
   if (path.startsWith('/gospel-life/catechesis')) return 'Оглашение';
   if (path.startsWith('/gospel-life/repentance-help')) return 'В помощь кающимся';
   if (path.startsWith('/gospel-life/route-map')) return 'Земной путь Христа';
+  if (path.startsWith('/gospel-life/literature')) return 'Душеполезная информация';
+  if (path.startsWith('/gospel-life/ascetics')) return 'Аскетика дня';
+  if (path.startsWith('/gospel-life/commandments')) return 'Евангельские заповеди';
   if (path.startsWith('/gospel-life')) return 'Жизнь по Евангелию';
   if (path.startsWith('/my-confession')) return 'Моя исповедь';
   if (path === '/angels') return 'Мир Ангелов';
