@@ -43,18 +43,16 @@ const getCoords = (lat: number, lng: number) => {
 const getOffsetCoords = (loc: RouteLocation) => {
   const base = getCoords(loc.coordinates.lat, loc.coordinates.lng);
   
-  // Specific offsets for overlapping points in Jerusalem Temple (lat: 31.7776, lng: 35.2354)
-  // Shift them slightly in a gorgeous triangular structure (approx. 20-25px in zoom 9 space)
-  if (Math.abs(loc.coordinates.lat - 31.7776) < 0.0001 && Math.abs(loc.coordinates.lng - 35.2354) < 0.0001) {
-    if (loc.chronological_order === 2) {
-      return { x: base.x - 22, y: base.y - 12 };
-    }
-    if (loc.chronological_order === 5) {
-      return { x: base.x + 22, y: base.y - 12 };
-    }
-    if (loc.chronological_order === 9) {
-      return { x: base.x, y: base.y + 18 };
-    }
+  // Specific offsets for Jerusalem Temple points (2, 5, 9) to ensure they are always beautifully separated
+  // and placed adjacent to one another ("рядом") without exact visual overlap under any zoom scale.
+  if (loc.chronological_order === 2) {
+    return { x: base.x - 22, y: base.y - 12 };
+  }
+  if (loc.chronological_order === 5) {
+    return { x: base.x + 22, y: base.y - 12 };
+  }
+  if (loc.chronological_order === 9) {
+    return { x: base.x, y: base.y + 18 };
   }
   return base;
 };
@@ -85,7 +83,7 @@ const ruLabels = [
 export default function RouteMap() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   
-  const [dimensions, setDimensions] = useState({ width: 800, height: 330 });
+  const [dimensions, setDimensions] = useState({ width: 800, height: 292 });
   const [scale, setScale] = useState<number>(0.38);
   const [panX, setPanX] = useState<number>(-320);
   const [panY, setPanY] = useState<number>(-120);
@@ -133,7 +131,7 @@ export default function RouteMap() {
       if (containerRef.current) {
         setDimensions({
           width: containerRef.current.clientWidth || 800,
-          height: containerRef.current.clientHeight || 330
+          height: containerRef.current.clientHeight || 292
         });
       }
     };
@@ -369,7 +367,7 @@ export default function RouteMap() {
     if (!containerRef.current || locations.length === 0) return;
     
     const width = containerRef.current.clientWidth || 800;
-    const height = containerRef.current.clientHeight || 330;
+    const height = containerRef.current.clientHeight || 292;
     
     let minX = Infinity;
     let maxX = -Infinity;
@@ -565,13 +563,13 @@ export default function RouteMap() {
         onMouseLeave={handleMouseUp}
         className={isFullScreen 
           ? "fixed inset-0 z-50 bg-[#faf6ee] w-full h-[100dvh] m-0 rounded-none border-none select-none cursor-grab active:cursor-grabbing touch-none"
-          : "relative w-full h-[330px] rounded-2xl overflow-hidden border border-[var(--color-cinnabar)]/20 shadow-md bg-[#faf6ee] select-none cursor-grab active:cursor-grabbing touch-none"
+          : "relative w-full h-[292px] rounded-2xl overflow-hidden border border-[var(--color-cinnabar)]/20 shadow-md bg-[#faf6ee] select-none cursor-grab active:cursor-grabbing touch-none"
         }
       >
         {/* Interactive SVG Layer */}
         <svg 
           viewBox={`0 0 ${dimensions.width} ${dimensions.height}`} 
-          className={`w-full select-none ${isFullScreen ? "h-[100dvh]" : "h-[330px]"}`}
+          className={`w-full select-none ${isFullScreen ? "h-[100dvh]" : "h-[292px]"}`}
         >
           {/* Main Transformed Coordinate System */}
           <g 

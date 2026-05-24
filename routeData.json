@@ -12,7 +12,7 @@
     "id": "loc_002",
     "location_name": "Иерусалим (Храм)",
     "region": "Иудея",
-    "coordinates": { "lat": 31.7776, "lng": 35.2354 },
+    "coordinates": { "lat": 31.7766, "lng": 35.2354 },
     "gospel_reference": "Лк. 2:22-38",
     "description": "Сретение Господне. Принесение Младенца в Храм на 40-й день, пророчество праведного Симеона Богоприимца.",
     "chronological_order": 2
@@ -39,7 +39,7 @@
     "id": "loc_005",
     "location_name": "Иерусалим (Храм)",
     "region": "Иудея",
-    "coordinates": { "lat": 31.7776, "lng": 35.2354 },
+    "coordinates": { "lat": 31.7780, "lng": 35.2354 },
     "gospel_reference": "Лк. 2:41-52",
     "description": "Отрок Иисус в Храме. Пасхальное паломничество двенадцатилетнего Иисуса и беседа с учителями Закона.",
     "chronological_order": 5
@@ -73,9 +73,9 @@
   },
   {
     "id": "loc_009",
-    "location_name": "Иерусалим",
+    "location_name": "Иерусалим (Храм)",
     "region": "Иудея",
-    "coordinates": { "lat": 31.7776, "lng": 35.2354 },
+    "coordinates": { "lat": 31.7774, "lng": 35.2365 },
     "gospel_reference": "Ин. 2:13-25",
     "description": "Первое очищение Иерусалимского храма от торговцев в праздник Пасхи. Беседа с фарисеем Никодимом.",
     "chronological_order": 9
