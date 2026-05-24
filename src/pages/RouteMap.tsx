@@ -233,6 +233,11 @@ export default function RouteMap() {
     };
 
     const handleTMove = (e: TouchEvent) => {
+      // Block all multi-finger browser-level zooms under any circumstance
+      if (e.touches.length >= 2) {
+        e.preventDefault();
+      }
+
       const isDraggingNow = e.touches.length === 1 && isTouchDraggingRef.current && touchDragStartRef.current;
       const isPinchingNow = e.touches.length === 2 && touchStartDistRef.current && touchStartCenterRef.current;
 
@@ -559,14 +564,14 @@ export default function RouteMap() {
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         className={isFullScreen 
-          ? "fixed inset-0 z-50 bg-[#faf6ee] w-full h-full m-0 rounded-none border-none select-none cursor-grab active:cursor-grabbing touch-none"
-          : "relative w-full rounded-2xl overflow-hidden border border-[var(--color-cinnabar)]/20 shadow-md bg-[#faf6ee] select-none cursor-grab active:cursor-grabbing touch-none"
+          ? "fixed inset-0 z-50 bg-[#faf6ee] w-full h-[100dvh] m-0 rounded-none border-none select-none cursor-grab active:cursor-grabbing touch-none"
+          : "relative w-full h-[330px] rounded-2xl overflow-hidden border border-[var(--color-cinnabar)]/20 shadow-md bg-[#faf6ee] select-none cursor-grab active:cursor-grabbing touch-none"
         }
       >
         {/* Interactive SVG Layer */}
         <svg 
           viewBox={`0 0 ${dimensions.width} ${dimensions.height}`} 
-          className={`w-full select-none ${isFullScreen ? "h-full" : "h-[330px]"}`}
+          className={`w-full select-none ${isFullScreen ? "h-[100dvh]" : "h-[330px]"}`}
         >
           {/* Main Transformed Coordinate System */}
           <g 
@@ -875,8 +880,8 @@ export default function RouteMap() {
 
         {/* Integrated Floating Card Detail Overlay (Parchment manuscript look) */}
         {activeLoc && (
-          <div className="absolute bottom-4 left-4 right-4 z-40 bg-[#fdfbf6] border-2 border-[var(--color-cinnabar)]/80 p-3.5 rounded-xl shadow-xl space-y-2 animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="flex items-start justify-between gap-2">
+          <div className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-[380px] z-40 bg-[#fdfbf6] border-2 border-[var(--color-cinnabar)]/80 p-3 sm:p-3.5 rounded-xl shadow-xl flex flex-col justify-between max-h-[42dvh] sm:max-h-[45dvh] space-y-1.5 sm:space-y-2 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300 pointer-events-auto">
+            <div className="flex items-start justify-between gap-2 shrink-0">
               <div>
                 <span className="text-[9px] bg-[var(--color-cinnabar)]/10 text-[var(--color-cinnabar)] border border-[var(--color-cinnabar)]/15 px-2.2 py-0.5 rounded-full font-bold uppercase tracking-wider font-mono">
                   Пункт {activeLoc.chronological_order} из 23
@@ -896,14 +901,16 @@ export default function RouteMap() {
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-xs font-bold text-[var(--color-cinnabar)] flex items-center gap-1.5 m-0 pt-0.5 select-text">
+            <p className="text-xs font-bold text-[var(--color-cinnabar)] flex items-center gap-1.5 m-0 pt-0.5 select-text shrink-0">
               <span>📖 {activeLoc.gospel_reference}</span>
             </p>
-            <p className="text-xs text-[var(--color-ink)]/90 leading-relaxed m-0 text-justify select-text">
-              {activeLoc.description}
-            </p>
+            <div className="overflow-y-auto pr-1 flex-1 min-h-0">
+              <p className="text-xs text-[var(--color-ink)]/90 leading-relaxed m-0 text-justify select-text">
+                {activeLoc.description}
+              </p>
+            </div>
             {/* Step coordinates stepper */}
-            <div className="flex items-center justify-between pt-2 border-t border-[var(--color-cinnabar)]/10">
+            <div className="flex items-center justify-between pt-2 border-t border-[var(--color-cinnabar)]/10 shrink-0">
               <button
                 disabled={activeLoc.chronological_order === 1}
                 onClick={(e) => {
