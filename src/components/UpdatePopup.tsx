@@ -5,11 +5,7 @@ import { X, CheckCircle, RefreshCcw } from 'lucide-react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 export default function UpdatePopup() {
-  const {
-    offlineReady: [offlineReady, setOfflineReady] = [false, () => {}],
-    needUpdate: [needUpdate, setNeedUpdate] = [false, () => {}],
-    updateServiceWorker = (reload?: boolean) => { if (reload) window.location.reload(); },
-  } = useRegisterSW({
+  const rSW = useRegisterSW({
     onRegistered(r) {
       if (r) {
         setInterval(() => {
@@ -17,7 +13,11 @@ export default function UpdatePopup() {
         }, 60 * 60 * 1000);
       }
     }
-  }) || {};
+  });
+
+  const [offlineReady, setOfflineReady] = (rSW && rSW.offlineReady) || [false, () => {}];
+  const [needUpdate, setNeedUpdate] = (rSW && rSW.needUpdate) || [false, () => {}];
+  const updateServiceWorker = (rSW && rSW.updateServiceWorker) || ((reload?: boolean) => { if (reload) window.location.reload(); });
 
   const CURRENT_VERSION = '1.1.7'; 
 
@@ -32,6 +32,7 @@ export default function UpdatePopup() {
     window.addEventListener('visibilitychange', handleVisibilityChange);
     return () => window.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
+
   const [show, setShow] = useState(false);
   const [type, setType] = useState<'update' | 'offline' | 'new-version'>('update');
 
@@ -42,20 +43,25 @@ export default function UpdatePopup() {
     // Check if app is already installed
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches 
       || (window.navigator as any).standalone 
-      || document.referrer.includes('android-app://');
+      || document.referrer.includes('android-app://')
+      || window.location.search.includes('mode=standalone');
 
-    // If version mismatch or not set
-    if (storedVersion !== CURRENT_VERSION) {
-      if (isStandalone) {
-        // App updated and it is installed!
-        setType('new-version');
-        setShow(true);
-        (window as any).pwaPopupActive = true;
-      } else {
-        // Just update version silently if not installed yet to avoid overlap with InstallPrompt
-        localStorage.setItem('appVersion', CURRENT_VERSION);
-      }
+    // If version mismatch
+    if (storedVersion && storedVersion !== CURRENT_VERSION) {
+      // App updated! Show it in both standalone and browser mode
+      setType('new-version');
+      setShow(true);
+      (window as any).pwaPopupActive = true;
+    } else if (!storedVersion) {
+      // Just update version silently if first visit
+      localStorage.setItem('appVersion', CURRENT_VERSION);
     }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      (window as any).pwaPopupActive = false;
+    };
   }, []);
 
   useEffect(() => {

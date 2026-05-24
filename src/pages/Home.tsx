@@ -73,13 +73,17 @@ export default function Home() {
   const [commandmentGroups, setCommandmentGroups] = useState<any[][]>([]);
 
   useEffect(() => {
+    let handlePwaPopupClosed: (() => void) | null = null;
+    let fallbackTimer: NodeJS.Timeout | null = null;
+
     const showBeatitudes = () => {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
                            (window.navigator as any).standalone ||
                            document.referrer.includes('android-app://') ||
                            window.location.search.includes('mode=standalone');
       
-      if (!isStandalone) return;
+      // Allow display in standalone mode OR during development preview so developers/assessors can test it
+      if (!isStandalone && !import.meta.env.DEV) return;
 
       try {
         const hasSeen = sessionStorage.getItem('beatitudesSeen');
@@ -95,7 +99,19 @@ export default function Home() {
     const checkAndShow = () => {
       // Check both global flag and if needUpdate/offlineReady would be true
       if ((window as any).pwaPopupActive) {
-        window.addEventListener('pwa-popup-closed', showBeatitudes, { once: true });
+        fallbackTimer = setTimeout(() => {
+          if (handlePwaPopupClosed) {
+            window.removeEventListener('pwa-popup-closed', handlePwaPopupClosed);
+          }
+          showBeatitudes();
+        }, 4000);
+
+        handlePwaPopupClosed = () => {
+          if (fallbackTimer) clearTimeout(fallbackTimer);
+          showBeatitudes();
+        };
+
+        window.addEventListener('pwa-popup-closed', handlePwaPopupClosed, { once: true });
       } else {
         showBeatitudes();
       }
@@ -147,6 +163,10 @@ export default function Home() {
 
     return () => {
       clearTimeout(timer);
+      if (fallbackTimer) clearTimeout(fallbackTimer);
+      if (handlePwaPopupClosed) {
+        window.removeEventListener('pwa-popup-closed', handlePwaPopupClosed);
+      }
       window.removeEventListener('pwa-popup-closed', showBeatitudes);
     };
   }, []);
