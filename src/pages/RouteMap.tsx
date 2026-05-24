@@ -820,7 +820,7 @@ export default function RouteMap() {
                         width={rectWidth} 
                         height={rectHeight} 
                         rx={rxUniform} 
-                        fill="rgba(253, 251, 246, 0.96)" 
+                        fill="rgba(253, 251, 246, 0.50)" 
                         stroke="#ac2e2e" 
                         strokeWidth={1 / scale} 
                       />
@@ -878,7 +878,7 @@ export default function RouteMap() {
 
         {/* Integrated Floating Card Detail Overlay (Parchment manuscript look) */}
         {activeLoc && (
-          <div className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-[380px] z-40 bg-[#fdfbf6] border-2 border-[var(--color-cinnabar)]/80 p-3 sm:p-3.5 rounded-xl shadow-xl flex flex-col justify-between max-h-[42dvh] sm:max-h-[45dvh] space-y-1.5 sm:space-y-2 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300 pointer-events-auto">
+          <div className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-[380px] z-40 bg-[#fdfbf6]/50 backdrop-blur-md border-2 border-[var(--color-cinnabar)]/80 p-3 sm:p-3.5 rounded-xl shadow-xl flex flex-col justify-between max-h-[42dvh] sm:max-h-[45dvh] space-y-1.5 sm:space-y-2 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300 pointer-events-auto">
             <div className="flex items-start justify-between gap-2 shrink-0">
               <div>
                 <span className="text-[9px] bg-[var(--color-cinnabar)]/10 text-[var(--color-cinnabar)] border border-[var(--color-cinnabar)]/15 px-2.2 py-0.5 rounded-full font-bold uppercase tracking-wider font-mono">

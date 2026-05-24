@@ -633,15 +633,16 @@ export default function Calendar() {
                 <table className="min-w-full text-sm text-left text-stone-800 border-collapse">
                   <thead>
                     <tr className="bg-stone-100 border-b border-stone-200 font-izhitsa text-[var(--color-cinnabar)]">
-                      <th className="px-4 py-3 rounded-l-lg">Пост / Событие</th>
-                      <th className="px-4 py-3 rounded-r-lg">Период в 2026 году</th>
+                      <th colSpan={2} className="px-4 py-3 rounded-lg">Пост / Событие и Даты</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-stone-100 font-sans">
                     {/* Великий пост */}
                     <tr className="bg-stone-50/20">
-                      <td className="px-4 pt-3 pb-1 font-semibold font-izhitsa text-[var(--color-cinnabar)] text-base">Великий пост</td>
-                      <td className="px-4 pt-3 pb-1 text-stone-600 font-medium">со 2 марта по 18 апреля</td>
+                      <td colSpan={2} className="px-4 pt-3 pb-1">
+                        <div className="font-semibold font-izhitsa text-[var(--color-cinnabar)] text-base">Великий пост</div>
+                        <div className="text-stone-500 font-sans text-xs sm:text-sm mt-0.5">Период в 2026 году: со 2 марта по 18 апреля</div>
+                      </td>
                     </tr>
                     <tr className="border-b border-stone-100/50">
                       <td colSpan={2} className="px-4 pb-3.5 pt-1 text-xs sm:text-sm leading-relaxed text-stone-700 font-sans bg-white/30">
@@ -650,8 +651,10 @@ export default function Calendar() {
                     </tr>
                     {/* Петров пост */}
                     <tr className="bg-stone-50/20">
-                      <td className="px-4 pt-3 pb-1 font-semibold font-izhitsa text-[var(--color-cinnabar)] text-base">Петров (Апостольский)</td>
-                      <td className="px-4 pt-3 pb-1 text-stone-600 font-medium font-sans">с 15 июня по 11 июля</td>
+                      <td colSpan={2} className="px-4 pt-3 pb-1">
+                        <div className="font-semibold font-izhitsa text-[var(--color-cinnabar)] text-base">Петров (Апостольский)</div>
+                        <div className="text-stone-500 font-sans text-xs sm:text-sm mt-0.5">Период в 2026 году: с 15 июня по 11 июля</div>
+                      </td>
                     </tr>
                     <tr className="border-b border-stone-100/50">
                       <td colSpan={2} className="px-4 pb-3.5 pt-1 text-xs sm:text-sm leading-relaxed text-stone-700 font-sans bg-white/30">
@@ -660,8 +663,10 @@ export default function Calendar() {
                     </tr>
                     {/* Успенский пост */}
                     <tr className="bg-stone-50/20">
-                      <td className="px-4 pt-3 pb-1 font-semibold font-izhitsa text-[var(--color-cinnabar)] text-base">Успенский пост</td>
-                      <td className="px-4 pt-3 pb-1 text-stone-600 font-medium font-sans">с 14 по 27 августа</td>
+                      <td colSpan={2} className="px-4 pt-3 pb-1">
+                        <div className="font-semibold font-izhitsa text-[var(--color-cinnabar)] text-base">Успенский пост</div>
+                        <div className="text-stone-500 font-sans text-xs sm:text-sm mt-0.5">Период в 2026 году: с 14 по 27 августа</div>
+                      </td>
                     </tr>
                     <tr className="border-b border-stone-100/50">
                       <td colSpan={2} className="px-4 pb-3.5 pt-1 text-xs sm:text-sm leading-relaxed text-stone-700 font-sans bg-white/30">
@@ -670,8 +675,10 @@ export default function Calendar() {
                     </tr>
                     {/* Рождественский пост */}
                     <tr className="bg-stone-50/20">
-                      <td className="px-4 pt-3 pb-1 font-semibold font-izhitsa text-[var(--color-cinnabar)] text-base">Рождественский</td>
-                      <td className="px-4 pt-3 pb-1 text-stone-600 font-medium font-sans">с 28 ноября по 6 января</td>
+                      <td colSpan={2} className="px-4 pt-3 pb-1">
+                        <div className="font-semibold font-izhitsa text-[var(--color-cinnabar)] text-base">Рождественский</div>
+                        <div className="text-stone-500 font-sans text-xs sm:text-sm mt-0.5">Период в 2026 году: с 28 ноября по 6 января</div>
+                      </td>
                     </tr>
                     <tr className="border-b border-stone-100/50">
                       <td colSpan={2} className="px-4 pb-3.5 pt-1 text-xs sm:text-sm leading-relaxed text-stone-700 font-sans bg-white/30">
@@ -686,15 +693,16 @@ export default function Calendar() {
                 <table className="min-w-full text-sm text-left text-stone-800 border-collapse">
                   <thead>
                     <tr className="bg-stone-100 border-b border-stone-200 font-izhitsa text-[var(--color-cinnabar)]">
-                      <th className="px-4 py-3 rounded-l-lg">Однодневный пост / Событие</th>
-                      <th className="px-4 py-3 rounded-r-lg">Дата (нов. стиль)</th>
+                      <th colSpan={2} className="px-4 py-3 rounded-lg">Однодневный пост / Событие и Даты</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-stone-100 font-sans">
                     {/* Каждая среда и пятница */}
                     <tr className="bg-stone-50/20">
-                      <td className="px-4 pt-3 pb-1 font-semibold font-izhitsa text-stone-800 text-base">Каждая среда и пятница</td>
-                      <td className="px-4 pt-3 pb-1 text-stone-600 font-medium font-sans">В течение всего года</td>
+                      <td colSpan={2} className="px-4 pt-3 pb-1">
+                        <div className="font-semibold font-izhitsa text-stone-800 text-base">Каждая среда и пятница</div>
+                        <div className="text-stone-500 font-sans text-xs sm:text-sm mt-0.5">Период: В течение всего года</div>
+                      </td>
                     </tr>
                     <tr className="border-b border-stone-100/50">
                       <td colSpan={2} className="px-4 pb-3.5 pt-1 text-xs sm:text-sm leading-relaxed text-stone-700 font-sans bg-white/30">
@@ -703,8 +711,10 @@ export default function Calendar() {
                     </tr>
                     {/* Крещенский сочельник */}
                     <tr className="bg-stone-50/20">
-                      <td className="px-4 pt-3 pb-1 font-semibold font-izhitsa text-[var(--color-cinnabar)] text-base">Крещенский сочельник</td>
-                      <td className="px-4 pt-3 pb-1 text-stone-600 font-medium font-sans">18 января</td>
+                      <td colSpan={2} className="px-4 pt-3 pb-1">
+                        <div className="font-semibold font-izhitsa text-[var(--color-cinnabar)] text-base">Крещенский сочельник</div>
+                        <div className="text-stone-500 font-sans text-xs sm:text-sm mt-0.5">Дата: 18 января (нов. стиль)</div>
+                      </td>
                     </tr>
                     <tr className="border-b border-stone-100/50">
                       <td colSpan={2} className="px-4 pb-3.5 pt-1 text-xs sm:text-sm leading-relaxed text-stone-700 font-sans bg-white/30">
@@ -713,8 +723,10 @@ export default function Calendar() {
                     </tr>
                     {/* Усекновение главы */}
                     <tr className="bg-stone-50/20">
-                      <td className="px-4 pt-3 pb-1 font-semibold font-izhitsa text-[var(--color-cinnabar)] text-base">Усекновение главы Иоанна Предтечи</td>
-                      <td className="px-4 pt-3 pb-1 text-stone-600 font-medium font-sans">11 сентября</td>
+                      <td colSpan={2} className="px-4 pt-3 pb-1">
+                        <div className="font-semibold font-izhitsa text-[var(--color-cinnabar)] text-base">Усекновение главы Иоанна Предтечи</div>
+                        <div className="text-stone-500 font-sans text-xs sm:text-sm mt-0.5">Дата: 11 сентября (нов. стиль)</div>
+                      </td>
                     </tr>
                     <tr className="border-b border-stone-100/50">
                       <td colSpan={2} className="px-4 pb-3.5 pt-1 text-xs sm:text-sm leading-relaxed text-stone-700 font-sans bg-white/30">
@@ -723,8 +735,10 @@ export default function Calendar() {
                     </tr>
                     {/* Воздвижение Креста */}
                     <tr className="bg-stone-50/20">
-                      <td className="px-4 pt-3 pb-1 font-semibold font-izhitsa text-[var(--color-cinnabar)] text-base">Воздвижение Креста Господня</td>
-                      <td className="px-4 pt-3 pb-1 text-stone-600 font-medium font-sans">27 сентября</td>
+                      <td colSpan={2} className="px-4 pt-3 pb-1">
+                        <div className="font-semibold font-izhitsa text-[var(--color-cinnabar)] text-base">Воздвижение Креста Господня</div>
+                        <div className="text-stone-500 font-sans text-xs sm:text-sm mt-0.5">Дата: 27 сентября (нов. стиль)</div>
+                      </td>
                     </tr>
                     <tr className="border-b border-stone-100/50">
                       <td colSpan={2} className="px-4 pb-3.5 pt-1 text-xs sm:text-sm leading-relaxed text-stone-700 font-sans bg-white/30">
@@ -739,15 +753,16 @@ export default function Calendar() {
                 <table className="min-w-full text-sm text-left text-stone-800 border-collapse">
                   <thead>
                     <tr className="bg-stone-100 border-b border-stone-200 font-izhitsa text-[var(--color-cinnabar)]">
-                      <th className="px-4 py-3 rounded-l-lg">Сплошная седмица</th>
-                      <th className="px-4 py-3 rounded-r-lg">Период в календаре</th>
+                      <th colSpan={2} className="px-4 py-3 rounded-lg">Сплошная седмица и Период</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-stone-100 font-sans">
                     {/* Святки */}
                     <tr className="bg-stone-50/20">
-                      <td className="px-4 pt-3 pb-1 font-semibold font-izhitsa text-green-800 text-base">Святки</td>
-                      <td className="px-4 pt-3 pb-1 text-stone-600 font-medium">с 7 по 17 января</td>
+                      <td colSpan={2} className="px-4 pt-3 pb-1">
+                        <div className="font-semibold font-izhitsa text-green-800 text-base">Святки</div>
+                        <div className="text-stone-500 font-sans text-xs sm:text-sm mt-0.5">Период: с 7 по 17 января</div>
+                      </td>
                     </tr>
                     <tr className="border-b border-stone-100/50">
                       <td colSpan={2} className="px-4 pb-3.5 pt-1 text-xs sm:text-sm leading-relaxed text-stone-700 font-sans bg-white/30">
@@ -756,8 +771,10 @@ export default function Calendar() {
                     </tr>
                     {/* Мытаря и фарисея */}
                     <tr className="bg-stone-50/20">
-                      <td className="px-4 pt-3 pb-1 font-semibold font-izhitsa text-green-800 text-base">Мытаря и фарисея</td>
-                      <td className="px-4 pt-3 pb-1 text-stone-600 font-medium">2 недели до Великого поста</td>
+                      <td colSpan={2} className="px-4 pt-3 pb-1">
+                        <div className="font-semibold font-izhitsa text-green-800 text-base">Мытаря и фарисея</div>
+                        <div className="text-stone-500 font-sans text-xs sm:text-sm mt-0.5">Период: 2 недели до Великого поста</div>
+                      </td>
                     </tr>
                     <tr className="border-b border-stone-100/50">
                       <td colSpan={2} className="px-4 pb-3.5 pt-1 text-xs sm:text-sm leading-relaxed text-stone-700 font-sans bg-white/30">
@@ -766,8 +783,10 @@ export default function Calendar() {
                     </tr>
                     {/* Сырная */}
                     <tr className="bg-stone-50/20">
-                      <td className="px-4 pt-3 pb-1 font-semibold font-izhitsa text-green-800 text-base">Сырная (Масленица)</td>
-                      <td className="px-4 pt-3 pb-1 text-stone-600 font-medium">1 неделя до Великого поста</td>
+                      <td colSpan={2} className="px-4 pt-3 pb-1">
+                        <div className="font-semibold font-izhitsa text-green-800 text-base">Сырная (Масленица)</div>
+                        <div className="text-stone-500 font-sans text-xs sm:text-sm mt-0.5">Период: 1 неделя до Великого поста</div>
+                      </td>
                     </tr>
                     <tr className="border-b border-stone-100/50">
                       <td colSpan={2} className="px-4 pb-3.5 pt-1 text-xs sm:text-sm leading-relaxed text-stone-700 font-sans bg-white/30">
@@ -776,8 +795,10 @@ export default function Calendar() {
                     </tr>
                     {/* Пасхальная */}
                     <tr className="bg-stone-50/20">
-                      <td className="px-4 pt-3 pb-1 font-semibold font-izhitsa text-green-800 text-base">Пасхальная (Светлая)</td>
-                      <td className="px-4 pt-3 pb-1 text-stone-600 font-medium font-sans">Неделя после Пасхи</td>
+                      <td colSpan={2} className="px-4 pt-3 pb-1">
+                        <div className="font-semibold font-izhitsa text-green-800 text-base">Пасхальная (Светлая)</div>
+                        <div className="text-stone-500 font-sans text-xs sm:text-sm mt-0.5">Период: Неделя после Пасхи</div>
+                      </td>
                     </tr>
                     <tr className="border-b border-stone-100/50">
                       <td colSpan={2} className="px-4 pb-3.5 pt-1 text-xs sm:text-sm leading-relaxed text-stone-700 font-sans bg-white/30">
@@ -786,8 +807,10 @@ export default function Calendar() {
                     </tr>
                     {/* Троицкая */}
                     <tr className="bg-stone-50/20">
-                      <td className="px-4 pt-3 pb-1 font-semibold font-izhitsa text-green-800 text-base">Троицкая</td>
-                      <td className="px-4 pt-3 pb-1 text-stone-600 font-medium font-sans">Неделя после Троицы</td>
+                      <td colSpan={2} className="px-4 pt-3 pb-1">
+                        <div className="font-semibold font-izhitsa text-green-800 text-base">Троицкая</div>
+                        <div className="text-stone-500 font-sans text-xs sm:text-sm mt-0.5">Период: Неделя после Троицы</div>
+                      </td>
                     </tr>
                     <tr className="border-b border-stone-100/50">
                       <td colSpan={2} className="px-4 pb-3.5 pt-1 text-xs sm:text-sm leading-relaxed text-stone-700 font-sans bg-white/30">
