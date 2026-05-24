@@ -31,6 +31,7 @@ import SpiritualLiterature from './pages/SpiritualLiterature';
 import Angels from './pages/Angels';
 import RepentanceHelp from './pages/RepentanceHelp';
 import About from './pages/About';
+import RouteMap from './pages/RouteMap';
 
 export default function App() {
   return (
@@ -53,6 +54,7 @@ export default function App() {
           <Route path="prayer-book" element={<PrayerBook />} />
           <Route path="calendar" element={<Calendar />} />
           <Route path="gospel-life" element={<Gospel />} />
+          <Route path="gospel-life/route-map" element={<RouteMap />} />
           <Route path="gospel-life/catechesis" element={<Catechesis />} />
           <Route path="gospel-life/catechesis/questions" element={<CatechesisQuestions />} />
           <Route path="gospel-life/repentance-help" element={<RepentanceHelp />} />
