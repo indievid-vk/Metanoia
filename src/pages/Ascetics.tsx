@@ -22,7 +22,7 @@ export default function Ascetics() {
           </div>
         </div>
 
-        <div className="bg-white/55 border border-[var(--color-ink)]/10 p-6 rounded-2xl shadow-sm relative z-10">
+        <div className="bg-white/70 border border-[var(--color-ink)]/10 p-5 sm:p-10 rounded-3xl shadow-md relative z-10 transition-all duration-300">
           <AsceticsContent />
         </div>
       </div>
