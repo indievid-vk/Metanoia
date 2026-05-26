@@ -272,6 +272,43 @@ export default function Home() {
         {/* Divine Background Light */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-[radial-gradient(circle_at_center,rgba(255,220,150,0.15)_0%,transparent_60%)] pointer-events-none mix-blend-screen" />
 
+        {/* Hanging Bookmark Ribbon for "Памятка" linking to "Аскетика дня" */}
+        <motion.div 
+          initial={{ y: -120, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.7, duration: 0.9, type: 'spring' }}
+          whileHover={{ y: 6 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => navigate('/gospel-life/ascetics')}
+          className="absolute top-0 left-4 sm:left-6 z-40 cursor-pointer drop-shadow-lg select-none touch-manipulation group"
+        >
+          <div 
+            className="w-10 sm:w-11 h-[110px] sm:h-[120px] bg-[var(--color-cinnabar)] flex flex-col items-center justify-between pt-2 pb-5 text-white relative transition-all duration-300 group-hover:brightness-110 border-x border-[#b03d32] shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
+            style={{
+              clipPath: 'polygon(0% 0%, 100% 0%, 100% 88%, 50% 100%, 0% 88%)',
+            }}
+          >
+            {/* Golden pattern thread at the top */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-amber-400 opacity-90 shadow-sm" />
+            
+            {/* Decorative cross of gold thread */}
+            <span className="text-amber-300 text-[10px] pointer-events-none mb-1">✙</span>
+
+            {/* Vertical text "ПАМЯТКА" */}
+            <div className="flex flex-col items-center justify-center font-izhitsa text-[9px] sm:text-[10px] tracking-[0.05em] uppercase text-amber-100 leading-none my-1 font-bold pointer-events-none">
+              <span>П</span>
+              <span>а</span>
+              <span>м</span>
+              <span>я</span>
+              <span>т</span>
+              <span>ка</span>
+            </div>
+
+            {/* Bottom beautiful ornament */}
+            <span className="text-amber-300 text-[9px] pointer-events-none mt-1">✦</span>
+          </div>
+        </motion.div>
+
         <div className="relative w-full h-full flex flex-col items-center justify-center z-20 origin-center">
           <div className="relative flex items-center justify-center" style={{ aspectRatio: '369/500', maxHeight: '100%', maxWidth: '100%' }}>
             
@@ -324,8 +361,9 @@ export default function Home() {
           onClick={() => navigate('/gospel-life/route-map')}
           className="absolute bottom-1 right-2 sm:bottom-4 sm:right-6 md:right-10 lg:right-24 xl:right-32 lg:top-1/2 lg:-translate-y-1/2 lg:bottom-auto z-40 cursor-pointer flex flex-col items-center group touch-manipulation"
         >
-          {/* Subtle warm ambient glow behind the compass on hover */}
-          <div className="absolute inset-x-0 top-0 bottom-8 rounded-full bg-amber-500/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+          {/* Glowing background radiance behind the wind rose */}
+          <div className="absolute -inset-6 sm:-inset-8 rounded-full bg-[radial-gradient(circle_at_center,rgba(245,158,11,0.25)_0%,rgba(217,119,6,0.12)_45%,transparent_70%)] blur-xl pointer-events-none animate-[pulse_3.5s_ease-in-out_infinite]" />
+          <div className="absolute -inset-2 sm:-inset-4 rounded-full bg-[radial-gradient(circle_at_center,rgba(253,230,138,0.35)_0%,transparent_60%)] blur-md pointer-events-none animate-[pulse_2s_ease-in-out_infinite] group-hover:brightness-110 transition-[filter] duration-300" />
 
           {/* SVG representation of the historical red-terracotta compass rose */}
           <div className="relative w-24 h-24 sm:w-28 sm:h-28 md:w-36 md:h-36 lg:w-40 lg:h-40 xl:w-44 xl:h-44 transition-transform duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:rotate-[25deg]">

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Compass, Search, ChevronRight, Cross, RotateCcw, X, Plus, Minus, Minimize2, Maximize, Minimize } from 'lucide-react';
+import { Compass, ChevronRight, Cross, RotateCcw, X, Plus, Minus, Minimize2, Maximize, Minimize } from 'lucide-react';
 import routeDataRaw from '../../routeData.json';
 
 interface Coordinate {
@@ -90,7 +90,6 @@ export default function RouteMap() {
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [selectedRegion, setSelectedRegion] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeLocation, setActiveLocation] = useState<number | null>(null);
   const [hoveredLocation, setHoveredLocation] = useState<number | null>(null);
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
@@ -353,13 +352,8 @@ export default function RouteMap() {
   };
 
   const filteredLocations = routeData.filter((loc) => {
-    const matchesSearch = 
-      loc.location_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      loc.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      loc.gospel_reference.toLowerCase().includes(searchQuery.toLowerCase());
-      
-    if (selectedRegion === 'all') return matchesSearch;
-    return groupRegions(loc) === selectedRegion && matchesSearch;
+    if (selectedRegion === 'all') return true;
+    return groupRegions(loc) === selectedRegion;
   });
 
   // Calculate bounding box and smoothly fit search results within viewport with optimal padding
@@ -420,7 +414,7 @@ export default function RouteMap() {
     if (activeLocation === null) {
       fitBoundingBox(filteredLocations);
     }
-  }, [selectedRegion, searchQuery, dimensions.width, dimensions.height]);
+  }, [selectedRegion, dimensions.width, dimensions.height]);
 
   // Center and zoom into a location
   const centerOnLocation = (loc: RouteLocation, targetScale = 4.5) => {
@@ -506,7 +500,6 @@ export default function RouteMap() {
   const resetMap = () => {
     setActiveLocation(null);
     setSelectedRegion('all');
-    setSearchQuery('');
     fitBoundingBox(routeData);
   };
 
@@ -938,21 +931,6 @@ export default function RouteMap() {
 
       {/* Filters Panel */}
       <div className="space-y-2">
-        {/* Search bar */}
-        <div className="relative">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setActiveLocation(null);
-            }}
-            placeholder="Поиск по местам, Евангелию или описанию..."
-            className="w-full pl-9 pr-4 py-2 text-xs bg-[#fdfbf6] rounded-xl border border-[var(--color-cinnabar)]/15 focus:outline-none focus:ring-1 focus:ring-[var(--color-cinnabar)] font-sans text-[var(--color-ink)] placeholder-stone-400"
-          />
-          <Search className="w-4 h-4 text-stone-400 absolute left-3 top-2.5" />
-        </div>
-
         {/* Quick Regions filter pillbox */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 scrollbar-none drag-scroll">
           {['all', 'Иудея', 'Иерусалим', 'Галилея', 'Самария', 'Египет', 'Иорданская долина'].map((reg) => {
