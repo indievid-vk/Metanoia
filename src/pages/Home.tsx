@@ -272,43 +272,6 @@ export default function Home() {
         {/* Divine Background Light */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-[radial-gradient(circle_at_center,rgba(255,220,150,0.15)_0%,transparent_60%)] pointer-events-none mix-blend-screen" />
 
-        {/* Hanging Bookmark Ribbon for "Памятка" linking to "Аскетика дня" */}
-        <motion.div 
-          initial={{ y: -120, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.7, duration: 0.9, type: 'spring' }}
-          whileHover={{ y: 6 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => navigate('/gospel-life/ascetics')}
-          className="absolute top-0 left-4 sm:left-6 z-40 cursor-pointer drop-shadow-lg select-none touch-manipulation group"
-        >
-          <div 
-            className="w-10 sm:w-11 h-[110px] sm:h-[120px] bg-[var(--color-cinnabar)] flex flex-col items-center justify-between pt-2 pb-5 text-white relative transition-all duration-300 group-hover:brightness-110 border-x border-[#b03d32] shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
-            style={{
-              clipPath: 'polygon(0% 0%, 100% 0%, 100% 88%, 50% 100%, 0% 88%)',
-            }}
-          >
-            {/* Golden pattern thread at the top */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-amber-400 opacity-90 shadow-sm" />
-            
-            {/* Decorative cross of gold thread */}
-            <span className="text-amber-300 text-[10px] pointer-events-none mb-1">✙</span>
-
-            {/* Vertical text "ПАМЯТКА" */}
-            <div className="flex flex-col items-center justify-center font-izhitsa text-[9px] sm:text-[10px] tracking-[0.05em] uppercase text-amber-100 leading-none my-1 font-bold pointer-events-none">
-              <span>П</span>
-              <span>а</span>
-              <span>м</span>
-              <span>я</span>
-              <span>т</span>
-              <span>ка</span>
-            </div>
-
-            {/* Bottom beautiful ornament */}
-            <span className="text-amber-300 text-[9px] pointer-events-none mt-1">✦</span>
-          </div>
-        </motion.div>
-
         <div className="relative w-full h-full flex flex-col items-center justify-center z-20 origin-center">
           <div className="relative flex items-center justify-center" style={{ aspectRatio: '369/500', maxHeight: '100%', maxWidth: '100%' }}>
             
@@ -317,6 +280,49 @@ export default function Home() {
               alt="Обложка Помощь кающимся" 
               className="w-full h-full object-contain block"
             />
+
+            {/* Elegant Vintage Leather Outset Bookmark Tabs (Index Tabs) sticking out of the right book edge */}
+            <div className="absolute right-0 top-[22%] flex flex-col gap-4 z-40 transform translate-x-[93%] select-none pointer-events-auto">
+              {/* "Памятка" Tab */}
+              <motion.button 
+                whileHover={{ x: 6, brightness: 1.08 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate('/gospel-life/ascetics')}
+                className="w-[30px] sm:w-[36px] py-4 bg-[#99251e] text-amber-100 flex flex-col items-center justify-center rounded-r-xl border-y border-r border-[#69110b]/50 cursor-pointer transition-all relative group"
+                style={{
+                  boxShadow: 'inset 2px 0 3px rgba(255,255,255,0.15), 3px 5px 12px rgba(0,0,0,0.36)',
+                }}
+              >
+                {/* Embedded golden margin edge thread */}
+                <div className="absolute top-1.5 bottom-1.5 right-0.5 w-[2px] bg-gradient-to-b from-amber-300 via-amber-400 to-amber-500 opacity-80 rounded-full" />
+                <span className="text-[7px] sm:text-[9px] text-amber-300 font-bold mb-1 pointer-events-none">✙</span>
+                <span className="text-[9px] sm:text-[11px] font-bold tracking-[0.14em] uppercase [writing-mode:vertical-lr] font-serif text-amber-50 select-none">
+                  Памятка
+                </span>
+                {/* Hover back shadow glow */}
+                <div className="absolute inset-0 bg-amber-500/10 rounded-r-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+              </motion.button>
+
+              {/* "Карта" Tab */}
+              <motion.button 
+                whileHover={{ x: 6, brightness: 1.08 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate('/gospel-life/route-map')}
+                className="w-[30px] sm:w-[36px] py-4 bg-[#801b15] text-amber-100 flex flex-col items-center justify-center rounded-r-xl border-y border-r border-[#520d09]/50 cursor-pointer transition-all relative group"
+                style={{
+                  boxShadow: 'inset 2px 0 3px rgba(255,255,255,0.15), 3px 5px 12px rgba(0,0,0,0.36)',
+                }}
+              >
+                {/* Embedded golden margin edge thread */}
+                <div className="absolute top-1.5 bottom-1.5 right-0.5 w-[2px] bg-gradient-to-b from-amber-300 via-amber-400 to-amber-500 opacity-80 rounded-full" />
+                <span className="text-[7px] sm:text-[9px] text-amber-300 font-bold mb-1 pointer-events-none">✦</span>
+                <span className="text-[9px] sm:text-[11px] font-bold tracking-[0.14em] uppercase [writing-mode:vertical-lr] font-serif text-amber-50 select-none">
+                  Карта
+                </span>
+                {/* Hover back shadow glow */}
+                <div className="absolute inset-0 bg-amber-500/10 rounded-r-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+              </motion.button>
+            </div>
             
             {/* Transparent overlay buttons positioned over the image ovals */}
             <div className="absolute inset-0 z-30">
@@ -350,96 +356,6 @@ export default function Home() {
             </div>
           </div>
         </div>
-
-        {/* Floating Interactive Compass Rose (Роза ветров) pointing to the Map of Gospel events */}
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.85, rotate: -15 }}
-          animate={{ opacity: 1, scale: 1, rotate: 0 }}
-          transition={{ delay: 0.5, duration: 0.8, type: 'spring' }}
-          whileHover={{ scale: 1.06 }}
-          whileTap={{ scale: 0.94 }}
-          onClick={() => navigate('/gospel-life/route-map')}
-          className="absolute bottom-1 right-2 sm:bottom-4 sm:right-6 md:right-10 lg:right-24 xl:right-32 lg:top-1/2 lg:-translate-y-1/2 lg:bottom-auto z-40 cursor-pointer flex flex-col items-center group touch-manipulation"
-        >
-          {/* Glowing background radiance behind the wind rose */}
-          <div className="absolute -inset-6 sm:-inset-8 rounded-full bg-[radial-gradient(circle_at_center,rgba(245,158,11,0.25)_0%,rgba(217,119,6,0.12)_45%,transparent_70%)] blur-xl pointer-events-none animate-[pulse_3.5s_ease-in-out_infinite]" />
-          <div className="absolute -inset-2 sm:-inset-4 rounded-full bg-[radial-gradient(circle_at_center,rgba(253,230,138,0.35)_0%,transparent_60%)] blur-md pointer-events-none animate-[pulse_2s_ease-in-out_infinite] group-hover:brightness-110 transition-[filter] duration-300" />
-
-          {/* SVG representation of the historical red-terracotta compass rose */}
-          <div className="relative w-24 h-24 sm:w-28 sm:h-28 md:w-36 md:h-36 lg:w-40 lg:h-40 xl:w-44 xl:h-44 transition-transform duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:rotate-[25deg]">
-            <svg 
-              viewBox="0 0 200 200" 
-              className="w-full h-full drop-shadow-[0_4px_10px_rgba(106,59,40,0.22)]"
-            >
-              {/* Outer classic dashed & detailed circles matching antique maps */}
-              <circle cx="100" cy="100" r="58" fill="none" stroke="var(--color-cinnabar)" strokeWidth="1" strokeDasharray="3,3" opacity="0.4" />
-              <circle cx="100" cy="100" r="53" fill="none" stroke="#6D4130" strokeWidth="0.8" strokeDasharray="6,2" opacity="0.25" />
-              <circle cx="100" cy="100" r="12" fill="none" stroke="var(--color-cinnabar)" strokeWidth="0.8" opacity="0.32" />
-
-              {/* Cardinal line markers inside the circle */}
-              <line x1="100" y1="42" x2="100" y2="48" stroke="var(--color-cinnabar)" strokeWidth="1.2" opacity="0.75" />
-              <line x1="100" y1="152" x2="100" y2="158" stroke="var(--color-cinnabar)" strokeWidth="1.2" opacity="0.75" />
-              <line x1="42" y1="100" x2="48" y2="100" stroke="var(--color-cinnabar)" strokeWidth="1.2" opacity="0.75" />
-              <line x1="152" y1="100" x2="158" y2="100" stroke="var(--color-cinnabar)" strokeWidth="1.2" opacity="0.75" />
-              
-              {/* Secondary Diagonal Diamond Points (faded background needles) */}
-              {/* NW-SE */}
-              <g opacity="0.5">
-                <polygon points="100,100 100,94 62,62" fill="#8c764e" />
-                <polygon points="100,100 94,100 62,62" fill="#bba683" />
-                <polygon points="100,100 100,106 138,138" fill="#8c764e" />
-                <polygon points="100,100 106,100 138,138" fill="#bba683" />
-              </g>
-              {/* NE-SW */}
-              <g opacity="0.5">
-                <polygon points="100,100 100,94 138,62" fill="#bba683" />
-                <polygon points="100,100 106,100 138,62" fill="#8c764e" />
-                <polygon points="100,100 100,106 62,138" fill="#bba683" />
-                <polygon points="100,100 94,100 62,138" fill="#8c764e" />
-              </g>
-
-              {/* Major Cardinal Needles with gorgeous deep bevel shadows (3D look) */}
-              {/* North Needle */}
-              <polygon points="100,100 100,16 90,100" fill="#b04e43" />
-              <polygon points="100,100 100,16 110,100" fill="#852f25" />
-
-              {/* South Needle */}
-              <polygon points="100,100 100,184 90,100" fill="#852f25" />
-              <polygon points="100,100 100,184 110,100" fill="#b04e43" />
-
-              {/* West Needle */}
-              <polygon points="100,100 24,100 100,90" fill="#b04e43" />
-              <polygon points="100,100 24,100 100,110" fill="#852f25" />
-
-              {/* East Needle */}
-              <polygon points="100,100 176,100 100,90" fill="#852f25" />
-              <polygon points="100,100 176,100 100,110" fill="#b04e43" />
-
-              {/* Vintage Center Pin details */}
-              <circle cx="100" cy="100" r="5.5" fill="#fdfbf6" stroke="#852f25" strokeWidth="1.5" />
-              <circle cx="100" cy="100" r="1.8" fill="#ac2e2e" />
-
-              {/* Slender red label "N" for North exactly like in the reference image */}
-              <text 
-                x="100" 
-                y="9" 
-                fill="#ac2e2e" 
-                fontFamily="var(--font-sans), sans-serif" 
-                fontWeight="900" 
-                fontSize="17" 
-                textAnchor="middle"
-                className="select-none"
-              >
-                N
-              </text>
-            </svg>
-          </div>
-
-          {/* Letter-spaced antique caption label in the matching font */}
-          <span className="mt-0 sm:mt-1.5 text-xs sm:text-sm lg:text-base font-izhitsa text-[#6A3B28] group-hover:text-[var(--color-cinnabar)] tracking-[0.25em] transition-colors duration-300 select-none uppercase drop-shadow-[0_1px_1px_rgba(255,255,255,0.7)]">
-            К А Р Т А
-          </span>
-        </motion.div>
       </div>
     </div>
   );
