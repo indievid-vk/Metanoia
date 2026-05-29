@@ -5,7 +5,7 @@ import AsceticsContent from '../components/AsceticsContent';
 
 export default function Ascetics() {
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-12 px-4">
+    <div className="max-w-4xl mx-auto space-y-8 pb-12 px-4 relative overflow-x-hidden">
       <div className="pb-8">
         <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-cinnabar)]/5 rounded-bl-full -mr-16 -mt-16 pointer-events-none"></div>
 

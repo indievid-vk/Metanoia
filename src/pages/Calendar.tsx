@@ -77,6 +77,22 @@ const safeLocalStorageSet = (key: string, value: string) => {
   }
 };
 
+const isFishAllowed = (fasting: { fasting: string; description: string | null } | null) => {
+  if (!fasting) return false;
+  const textToSearch = `${fasting.fasting || ''} ${fasting.description || ''}`.toLowerCase();
+  
+  // Checking typical Russian terms suggesting fish is allowed in fast
+  if (textToSearch.includes('рыб') && 
+      !textToSearch.includes('без рыбы') && 
+      !textToSearch.includes('рыба исключается') && 
+      !textToSearch.includes('запрещена рыба') && 
+      !textToSearch.includes('рыба не разрешается') && 
+      !textToSearch.includes('весьма строгий пост')) {
+    return true;
+  }
+  return false;
+};
+
 export default function Calendar() {
   const [data, setData] = useState<AzbykaResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -359,7 +375,7 @@ export default function Calendar() {
       {loading ? (
         <div className="flex flex-col items-center justify-center p-12 text-[var(--color-ink)]/70">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-cinnabar)] mb-3" />
-          <span className="font-izhitsa">Получение благовременных данных...</span>
+          <span className="font-izhitsa">Получение данных...</span>
         </div>
       ) : error ? (
         <div className="p-6 text-center bg-stone-50 border border-[var(--color-cinnabar)]/20 rounded-xl text-[var(--color-ink)] animate-fade-in">
@@ -406,11 +422,18 @@ export default function Calendar() {
                 <div className="bg-white/40 p-4 rounded-xl border border-[var(--color-ink)]/5 flex flex-col justify-center">
                   <span className="text-[var(--color-ink)]/50 text-xs uppercase tracking-widest block mb-1">Особенности трапезы</span>
                   
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
                     {data.fasting.type === 'fasting' ? (
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800 border border-red-200">
-                        Постный день
-                      </span>
+                      <>
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800 border border-red-200">
+                          Постный день
+                        </span>
+                        {isFishAllowed(data.fasting) && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-900 border border-amber-200 animate-pulse">
+                            🐟 Разрешается рыба
+                          </span>
+                        )}
+                      </>
                     ) : (
                       <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200">
                         Поста нет
@@ -420,9 +443,23 @@ export default function Calendar() {
                   
                   <div className="mt-2 text-base font-izhitsa text-[var(--color-ink)] leading-tight">
                     {data.fasting.fasting ? (
-                      <div dangerouslySetInnerHTML={{ __html: data.fasting.fasting }} className="[&_a]:text-[var(--color-cinnabar)] [&_a]:underline font-izhitsa font-medium text-[var(--color-cinnabar)]" />
+                      <div className="space-y-1.5">
+                        <div dangerouslySetInnerHTML={{ __html: data.fasting.fasting }} className="[&_a]:text-[var(--color-cinnabar)] [&_a]:underline font-izhitsa font-medium text-[var(--color-cinnabar)]" />
+                        {data.fasting.type === 'fasting' && isFishAllowed(data.fasting) && !data.fasting.fasting.toLowerCase().includes('рыб') && (
+                          <div className="text-amber-800 font-sans text-xs font-medium flex items-center gap-1 mt-1">
+                            <span>✦ В этот день разрешается рыба и морепродукты</span>
+                          </div>
+                        )}
+                      </div>
                     ) : data.fasting.type === 'fasting' ? (
-                      <span>Постный день (однодневный пост: среда/пятница)</span>
+                      <div className="space-y-1">
+                        <span>Постный день (однодневный пост: среда/пятница)</span>
+                        {isFishAllowed(data.fasting) && (
+                          <div className="text-amber-800 font-sans text-xs font-medium flex items-center gap-1 mt-0.5">
+                            <span>✦ Разрешается рыба</span>
+                          </div>
+                        )}
+                      </div>
                     ) : (
                       <span className="font-sans text-sm text-[var(--color-ink)]/70">Разрешена любая пища (мясоед)</span>
                     )}

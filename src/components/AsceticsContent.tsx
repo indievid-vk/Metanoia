@@ -44,25 +44,25 @@ export default function AsceticsContent() {
               <span className="text-amber-500">✙</span> 1. Страх Божий
             </h3>
             <p className="text-base sm:text-lg text-stone-800 pl-6">
-              Это искреннее переживание о своей будущей вечной участи.
+              Это чувство священного страха, чувство глубочайшего благоговения к Богу, искреннее переживание о своей будущей вечной участи. Шествие ко Христу начинается и совершается под водительством страха Божия.
             </p>
           </div>
 
           <div className="space-y-2">
             <h3 className="font-izhitsa text-base sm:text-lg text-[var(--color-cinnabar)] flex items-center gap-2">
-              <span className="text-amber-500">✙</span> 2. Сокрушение духа
+              <span className="text-amber-500">✙</span> 2. Сокрушение сердца
             </h3>
             <p className="text-base sm:text-lg text-stone-800 pl-6">
-              Это постоянная борьба с мыслями и ощущениями, которыми обнаруживает себя сокровенная в сердце греховная страсть, обуздание телесных чувств и чрева в смиренной молитве, в частой исповеди.
+              Это духовное состояние, рождающееся от осознания того, что всю жизнь прожил в грехах и страстях, во вражде с Богом. Сокрушение сердца — результат действия страха Божия.
             </p>
           </div>
 
           <div className="space-y-2">
             <h3 className="font-izhitsa text-base sm:text-lg text-[var(--color-cinnabar)] flex items-center gap-2">
-              <span className="text-amber-500">✙</span> 3. Блаженный плач
+              <span className="text-amber-500">✙</span> 3. Плач блаженный
             </h3>
             <p className="text-base sm:text-lg text-stone-800 pl-6">
-              Это благостливая печаль верной души о своих грехах или искреннее сожаление о них.
+              Внутреннее духовное состояние сокрушения о грехах, соединённое с надеждой на милосердие Божие. Выражается в искренней скорби о своих грехах и стремлении к исправлению.
             </p>
           </div>
         </div>
@@ -71,7 +71,7 @@ export default function AsceticsContent() {
       {/* SECTION 3: Poverty of spirit */}
       <div className="bg-amber-50/20 p-6 rounded-2xl border border-amber-200/40 space-y-3">
         <p className="text-base sm:text-lg text-stone-800">
-          Если Христианин будет постоянно упражняться в страхе Божьем, сокрушении духа и искреннем сожалению о своих грехах, то со временем при содействии благодати Божией зародится в душе новое состояние, называемое <strong className="text-[var(--color-cinnabar)]">нищетой духа</strong>.
+          Если Христианин будет постоянно упражняться в страхе Божьем, сокрушении сердца и искреннем сожалению о своих грехах, то со временем при содействии благодати Божией зародится в душе новое состояние, называемое <strong className="text-[var(--color-cinnabar)]">нищетой духа</strong>.
         </p>
         <div className="border-l-2 border-amber-500 pl-4 py-1">
           <p className="italic text-base sm:text-lg text-stone-700 leading-relaxed">
@@ -128,6 +128,13 @@ export default function AsceticsContent() {
               <span className="text-amber-500 text-xl leading-none mt-0.5">✦</span>
               <p>
                 <strong>Самоукорение и покаяние:</strong> Если не успеваем отклонить и согрешаем, то, осознав согрешение, немедленно просим у Бога прощения, сокрушаемся сердцем, совершаем самоукорение, и фиксируем грех в <em>дневнике кающегося</em> для дальнейшего исповедания его на Таинстве Исповеди.
+              </p>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <span className="text-amber-500 text-xl leading-none mt-0.5">✦</span>
+              <p>
+                <strong>Памятование о смерти, об аде и рае, о мытарствах, о частном и страшном суде.</strong>
               </p>
             </div>
           </div>
