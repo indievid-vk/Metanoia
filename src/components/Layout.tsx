@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { ChevronLeft, Loader2, Info } from 'lucide-react';
+import { ChevronLeft, Loader2, Info, Search } from 'lucide-react';
 import { getAssetPath } from '../utils';
 import InstallPrompt from './InstallPrompt';
 import UpdatePopup from './UpdatePopup';
 import ToastContainer from './Toast';
+import SearchOverlay from './SearchOverlay';
 
 export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [showSearch, setShowSearch] = useState(false);
 
   useEffect(() => {
     const mainElement = document.querySelector('main');
@@ -31,24 +33,47 @@ export default function Layout() {
             <button 
               onClick={() => navigate(-1)}
               className="mr-3 p-1 rounded-full hover:bg-black/5 transition-colors text-[var(--color-cinnabar)]"
+              aria-label="Назад"
             >
               <ChevronLeft size={24} />
             </button>
           ) : (
-            <div className="w-8 mr-3" />
+            <button 
+              onClick={() => setShowSearch(true)}
+              className="mr-3 p-1 rounded-full hover:bg-black/5 transition-colors text-[var(--color-cinnabar)] cursor-pointer"
+              title="Поиск"
+              aria-label="Поиск по приложению"
+            >
+              <Search size={22} />
+            </button>
           )}
           <h1 className={`font-izhitsa text-[var(--color-cinnabar)] flex-1 text-center transition-colors z-20 ${isHome ? 'text-3xl uppercase tracking-widest leading-tight drop-shadow-sm' : 'text-2xl'}`}>
             {getPageTitle(location.pathname)}
           </h1>
-          <button 
-            onClick={() => navigate('/about')}
-            className={`p-1 rounded-full hover:bg-black/5 transition-colors text-[var(--color-cinnabar)] ${location.pathname === '/about' ? 'opacity-0 pointer-events-none' : ''}`}
-            title="О приложении"
-          >
-            <Info size={24} />
-          </button>
+          <div className="flex items-center gap-1">
+            {!isHome && (
+              <button 
+                onClick={() => setShowSearch(true)}
+                className="p-1 rounded-full hover:bg-black/5 transition-colors text-[var(--color-cinnabar)] cursor-pointer"
+                title="Поиск"
+                aria-label="Поиск по приложению"
+              >
+                <Search size={22} />
+              </button>
+            )}
+            <button 
+              onClick={() => navigate('/about')}
+              className={`p-1 rounded-full hover:bg-black/5 transition-colors text-[var(--color-cinnabar)] cursor-pointer ${location.pathname === '/about' ? 'opacity-0 pointer-events-none' : ''}`}
+              title="О приложении"
+            >
+              <Info size={24} />
+            </button>
+          </div>
         </div>
       </header>
+
+      {/* Global Search Dialog */}
+      <SearchOverlay isOpen={showSearch} onClose={() => setShowSearch(false)} />
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto overflow-x-hidden relative flex flex-col">
