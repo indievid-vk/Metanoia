@@ -23,7 +23,7 @@ export default function Layout() {
   return (
     <>
       <UpdatePopup />
-      <div className={`h-[100dvh] flex flex-col max-w-md mx-auto bg-[var(--color-parchment)] shadow-2xl relative overflow-hidden`}>
+      <div className={`h-[100dvh] w-full flex flex-col max-w-md mx-auto bg-[var(--color-parchment)] shadow-2xl relative overflow-hidden`}>
         {/* Header */}
         <header className="shrink-0 relative z-10 bg-[var(--color-parchment)]">
         <div className="flex items-center px-4 py-3">
@@ -51,7 +51,7 @@ export default function Layout() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto relative flex flex-col">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden relative flex flex-col">
           <div 
             className={isHome ? "absolute inset-0" : "w-full p-4 pb-[130px]"}
           >
