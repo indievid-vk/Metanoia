@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Download, Share, PlusSquare, MoreVertical, Loader2, Smartphone, Monitor } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import { toast } from '../hooks/useToast';
 
 export default function InstallPrompt() {
+  const location = useLocation();
   const [show, setShow] = useState(false);
   const [showFAB, setShowFAB] = useState(false);
   const [platform, setPlatform] = useState<'ios' | 'android' | 'other' | null>(null);
@@ -203,7 +205,7 @@ export default function InstallPrompt() {
               }
               setShow(true);
             }}
-            className="fixed bottom-24 right-5 z-[90] w-12 h-12 bg-[var(--color-cinnabar)] text-white rounded-full shadow-[0_8px_30px_rgb(195,59,59,0.4)] flex items-center justify-center border border-white/20"
+            className={`absolute ${location.pathname === '/' ? 'bottom-[calc(1.15rem+env(safe-area-inset-bottom,0px))]' : 'bottom-[calc(6.5rem+env(safe-area-inset-bottom,0px))]'} right-4 z-[45] w-12 h-12 bg-[var(--color-cinnabar)] text-white rounded-full shadow-[0_6px_25px_rgba(195,59,59,0.45)] flex items-center justify-center border border-white/20 transition-all cursor-pointer hover:scale-105 active:scale-95`}
           >
             <div className="relative">
               <Download size={20} />
