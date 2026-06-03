@@ -97,6 +97,15 @@ export default function Home() {
     };
 
     const checkAndShow = () => {
+      // If PWA setup has made the update/offline popup visible, wait till it closes completely
+      if ((window as any).pwaPopupVisible) {
+        handlePwaPopupClosed = () => {
+          showBeatitudes();
+        };
+        window.addEventListener('pwa-popup-closed', handlePwaPopupClosed, { once: true });
+        return;
+      }
+
       // Check both global flag and if needUpdate/offlineReady would be true
       if ((window as any).pwaPopupActive) {
         fallbackTimer = setTimeout(() => {

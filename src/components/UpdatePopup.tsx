@@ -37,6 +37,13 @@ export default function UpdatePopup() {
   const [type, setType] = useState<'update' | 'offline' | 'new-version'>('update');
 
   useEffect(() => {
+    (window as any).pwaPopupVisible = show;
+    return () => {
+      (window as any).pwaPopupVisible = false;
+    };
+  }, [show]);
+
+  useEffect(() => {
     // Knowledge Base Section 6: Version-based check
     const storedVersion = localStorage.getItem('appVersion');
     
