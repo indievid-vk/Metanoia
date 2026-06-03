@@ -104,6 +104,14 @@ export default function PrayerViewer() {
       <div className="space-y-6">
         {prayers.map((item, index) => {
           if (item.type === 'header') {
+            const isLong = (item.text || item.slavonic || '').length > 60 || (item.text || item.slavonic || '').includes('\n');
+            if (isLong) {
+              return (
+                <div key={index} className="my-8 p-6 bg-[var(--color-cinnabar)]/5 border border-[var(--color-cinnabar)]/10 rounded-xl text-justify italic font-izhitsa text-base sm:text-lg leading-relaxed text-[var(--color-ink)] opacity-90 whitespace-pre-wrap select-text shadow-sm">
+                  {item.text || item.slavonic}
+                </div>
+              );
+            }
             return (
               <div key={index} className="text-center my-10 relative">
                 <div className="absolute inset-x-0 top-1/2 h-px bg-[var(--color-cinnabar)]/10 -z-10" />

@@ -156,12 +156,18 @@ export default function UpdatePopup() {
             
             <div className="space-y-3">
               <h4 className="font-izhitsa text-2xl text-[var(--color-ink)] leading-tight px-4">
-                {type === 'offline' ? 'Готово к работе офлайн' : 'Приложение обновилось!'}
+                {type === 'offline' 
+                  ? 'Готово к работе офлайн' 
+                  : type === 'update' 
+                    ? 'Доступно обновление!' 
+                    : 'Приложение обновлено!'}
               </h4>
               <p className="text-sm text-[var(--color-ink)]/60 font-sans leading-relaxed px-2">
                 {type === 'offline' 
                   ? 'Приложение сохранено в памяти вашего устройства для доступа без интернета.'
-                  : 'Стало удобнее'}
+                  : type === 'update'
+                    ? 'Рекомендуем установить новую версию для стабильной работы и получения последних дополнений.'
+                    : 'Службы успешно обновлены. Стало удобнее и исправлены некоторые ошибки.'}
               </p>
             </div>
             
