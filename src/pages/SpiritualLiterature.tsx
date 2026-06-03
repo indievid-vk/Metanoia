@@ -127,6 +127,20 @@ export default function SpiritualLiterature() {
               Этот труд является незаменимым руководством для тех, кто ищет твердой духовной опоры и желает глубже понять аскетическую традицию Православной Церкви в ее практическом применении.
             </p>
           </BookAccordion>
+
+          <div className="my-8 border-t border-[var(--color-ink)]/5 max-w-sm mx-auto" />
+
+          <BookAccordion 
+            title="До и после. Апология книги Еноха" 
+            subtitle="Митрополит Митрофан (Баданин)"
+            downloadUrl={getAssetPath("/books/Do_i_posle_Apologiya_knigi_Enoha.epub")}
+            fileName="Do_i_posle_Apologiya_knigi_Enoha.epub"
+          >
+            <h4 className="font-izhitsa text-lg text-[var(--color-cinnabar)] mb-3">О книге «До и после. Апология книги Еноха»</h4>
+            <p className="text-justify leading-relaxed">
+              Представленная книга митрополита Митрофана (Баданина), правящего архиерея Мурманской епархии, представляет собой богословский труд, ставящий своей задачей апологию (от др.-греч . ἀπολογία «оправдание», «защита») одного из древнейших священных текстов, сохранившихся в истории человечества – Книги Еноха . Эта книга практически единственный источник наших знаний о трагических страницах жизни допотопного человечества, приведших к ужасам эпохи исполинов и завершившейся наказанием Всемирного Потопа.
+            </p>
+          </BookAccordion>
           
           <DecorativeDivider className="mt-12" />
         </div>
