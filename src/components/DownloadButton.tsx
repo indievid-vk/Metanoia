@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BookText, ChevronRight, Loader2 } from 'lucide-react';
+import { toast } from '../hooks/useToast';
 
 interface DownloadButtonProps {
   title: string;
@@ -34,14 +35,20 @@ export default function DownloadButton({ title, subtitle, downloadUrl, fileName,
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      toast.success(`Книга «${title}» успешно скачана`);
     } catch (error) {
       console.error('Download error:', error);
       // Fallback to direct link if fetch fails
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = fileName;
-      a.target = "_blank";
-      a.click();
+      try {
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = fileName;
+        a.target = "_blank";
+        a.click();
+        toast.info(`Скачивание книги «${title}» началось`);
+      } catch (err) {
+        toast.error(`Не удалось скачать книгу «${title}»`);
+      }
     } finally {
       setIsDownloading(false);
     }
