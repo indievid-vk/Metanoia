@@ -19,7 +19,7 @@ export default function UpdatePopup() {
   const [needUpdate, setNeedUpdate] = (rSW && rSW.needUpdate) || [false, () => {}];
   const updateServiceWorker = (rSW && rSW.updateServiceWorker) || ((reload?: boolean) => { if (reload) window.location.reload(); });
 
-  const CURRENT_VERSION = '1.1.7'; 
+  const CURRENT_VERSION = '1.1.8'; 
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -60,8 +60,15 @@ export default function UpdatePopup() {
       setShow(true);
       (window as any).pwaPopupActive = true;
     } else if (!storedVersion) {
-      // Just update version silently if first visit
-      localStorage.setItem('appVersion', CURRENT_VERSION);
+      if (isStandalone) {
+        // Installed app updated to version-aware build
+        setType('new-version');
+        setShow(true);
+        (window as any).pwaPopupActive = true;
+      } else {
+        // Just update version silently if first visit in browser
+        localStorage.setItem('appVersion', CURRENT_VERSION);
+      }
     }
   }, []);
 
