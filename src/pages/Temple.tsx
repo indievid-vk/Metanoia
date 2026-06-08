@@ -30,6 +30,17 @@ export default function Temple() {
         </button>
 
         <button 
+          onClick={() => navigate('/temple/sacraments')}
+          className="bg-[var(--color-parchment)] border border-[var(--color-cinnabar)]/30 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow text-left group relative overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 w-16 h-16 bg-[var(--color-cinnabar)]/5 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-150"></div>
+          <h3 className="font-izhitsa text-xl text-[var(--color-ink)] mb-2 group-hover:text-[var(--color-cinnabar)] transition-colors">Таинства Церкви</h3>
+          <p className="text-sm text-[var(--color-ink)]/70 leading-relaxed">
+            Священнодействия Православной Церкви: понятие о таинствах, количество таинств и святоотеческая мысль.
+          </p>
+        </button>
+
+        <button 
           onClick={() => navigate('/temple/rules')}
           className="bg-[var(--color-parchment)] border border-[var(--color-cinnabar)]/30 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow text-left group relative overflow-hidden"
         >

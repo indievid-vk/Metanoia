@@ -10,6 +10,7 @@ import Layout from './components/Layout';
 import Home from './pages/Home';
 import Temple from './pages/Temple';
 import TempleRules from './pages/TempleRules';
+import Sacraments from './pages/Sacraments';
 import Confession from './pages/Confession';
 import MyConfession from './pages/MyConfession';
 import PrayerBook from './pages/PrayerBook';
@@ -33,6 +34,7 @@ import RepentanceHelp from './pages/RepentanceHelp';
 import About from './pages/About';
 import RouteMap from './pages/RouteMap';
 import Ascetics from './pages/Ascetics';
+import Dogmas from './pages/Dogmas';
 
 export default function App() {
   return (
@@ -42,6 +44,7 @@ export default function App() {
           <Route index element={<Home />} />
           <Route path="temple" element={<Temple />} />
           <Route path="temple/rules" element={<TempleRules />} />
+          <Route path="temple/sacraments" element={<Sacraments />} />
           <Route path="temple/confession" element={<Confession />} />
           <Route path="temple/liturgy" element={<Liturgy />} />
           <Route path="temple/treby" element={<Treby />} />
@@ -63,6 +66,7 @@ export default function App() {
           <Route path="gospel-life/ascetics" element={<Ascetics />} />
           <Route path="gospel-life/treby" element={<Treby />} />
           <Route path="gospel-life/scripture" element={<Scripture />} />
+          <Route path="gospel-life/dogmas" element={<Dogmas />} />
           <Route path="gospel-life/death" element={<Death />} />
           <Route path="gospel-life/literature" element={<SpiritualLiterature />} />
           <Route path="gospel-life/angels" element={<Angels />} />

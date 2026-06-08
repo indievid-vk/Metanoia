@@ -104,19 +104,32 @@ export default function PrayerViewer() {
       <div className="space-y-6">
         {prayers.map((item, index) => {
           if (item.type === 'header') {
-            const isLong = (item.text || item.slavonic || '').length > 60 || (item.text || item.slavonic || '').includes('\n');
+            const headerText = item.text || item.slavonic || '';
+            const isEvening = id === 'evening';
+            const isPrayerTitle = isEvening && (
+              headerText.startsWith('Молитва') || 
+              headerText.includes('Кондак') || 
+              headerText.includes('Отпуст') || 
+              headerText.includes('Тропари') || 
+              headerText.includes('Тропарь') || 
+              headerText.includes('Ипакои') || 
+              headerText.includes('Исповедание') ||
+              headerText.includes('Пасхальные часы')
+            );
+
+            const isLong = !isPrayerTitle && (headerText.length > 60 || headerText.includes('\n'));
             if (isLong) {
               return (
                 <div key={index} className="my-8 p-6 bg-[var(--color-cinnabar)]/5 border border-[var(--color-cinnabar)]/10 rounded-xl text-justify italic font-izhitsa text-base sm:text-lg leading-relaxed text-[var(--color-ink)] opacity-90 whitespace-pre-wrap select-text shadow-sm">
-                  {item.text || item.slavonic}
+                  {headerText}
                 </div>
               );
             }
             return (
               <div key={index} className="text-center my-10 relative">
                 <div className="absolute inset-x-0 top-1/2 h-px bg-[var(--color-cinnabar)]/10 -z-10" />
-                <h3 className="font-izhitsa text-2xl text-[var(--color-cinnabar)] bg-[var(--color-parchment)] inline-block px-6">
-                  {item.text || item.slavonic}
+                <h3 className="font-izhitsa text-2xl text-[var(--color-cinnabar)] bg-[var(--color-parchment)] inline-block px-6 max-w-[90%] whitespace-pre-wrap leading-normal animate-in fade-in duration-300">
+                  {headerText}
                 </h3>
               </div>
             );
