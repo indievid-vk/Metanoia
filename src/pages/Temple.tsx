@@ -19,13 +19,13 @@ export default function Temple() {
         </button>
 
         <button 
-          onClick={() => navigate('/temple/liturgy')}
+          onClick={() => navigate('/temple/divine-services')}
           className="bg-[var(--color-parchment)] border border-[var(--color-cinnabar)]/30 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow text-left group relative overflow-hidden"
         >
           <div className="absolute top-0 right-0 w-16 h-16 bg-[var(--color-cinnabar)]/5 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-150"></div>
-          <h3 className="font-izhitsa text-xl text-[var(--color-ink)] mb-2 group-hover:text-[var(--color-cinnabar)] transition-colors">Литургия</h3>
+          <h3 className="font-izhitsa text-xl text-[var(--color-ink)] mb-2 group-hover:text-[var(--color-cinnabar)] transition-colors">Богослужения</h3>
           <p className="text-sm text-[var(--color-ink)]/70 leading-relaxed">
-            Последование Божественной Литургии свт. Иоанна Златоуста и свт. Василия Великого с переводом.
+            Суточный круг богослужения и Божественная Литургия свт. Иоанна Златоуста и свт. Василия Великого с переводом.
           </p>
         </button>
 

@@ -110,6 +110,9 @@ export default function Layout() {
 
 function getPageTitle(path: string) {
   if (path === '/') return 'Помощь кающимся';
+  if (path.startsWith('/temple/divine-services/daily')) return 'Суточный круг';
+  if (path.startsWith('/temple/divine-services')) return 'Богослужения';
+  if (path.startsWith('/temple/liturgy')) return 'Божественная Литургия';
   if (path.startsWith('/temple/confession')) return 'Исповедь';
   if (path.startsWith('/temple')) return 'В Храм';
   if (path.startsWith('/prayer-book')) return 'Молитва';

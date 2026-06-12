@@ -35,6 +35,8 @@ import About from './pages/About';
 import RouteMap from './pages/RouteMap';
 import Ascetics from './pages/Ascetics';
 import Dogmas from './pages/Dogmas';
+import DivineServices from './pages/DivineServices';
+import DailyCycle from './pages/DailyCycle';
 
 export default function App() {
   return (
@@ -46,6 +48,8 @@ export default function App() {
           <Route path="temple/rules" element={<TempleRules />} />
           <Route path="temple/sacraments" element={<Sacraments />} />
           <Route path="temple/confession" element={<Confession />} />
+          <Route path="temple/divine-services" element={<DivineServices />} />
+          <Route path="temple/divine-services/daily" element={<DailyCycle />} />
           <Route path="temple/liturgy" element={<Liturgy />} />
           <Route path="temple/treby" element={<Treby />} />
           <Route path="temple/prosphora" element={<Prosphora />} />
