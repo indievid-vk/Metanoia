@@ -5,14 +5,16 @@ export interface Temptation {
   id: string;
   name: string;
   explanation: string;
-  status: 'stopped' | 'less' | 'often'; // "перестал услаждаться" | "реже услаждаюсь" | "часто услаждаюсь, не начал борьбу"
+  status: 'stopped' | 'less' | 'often' | 'custom'; // "перестал услаждаться" | "реже услаждаюсь" | "часто услаждаюсь, не начал борьбу" | "свой статус"
+  customStatusText?: string;
   createdAt: string;
 }
 
-const STATUS_LABELS = {
+const STATUS_LABELS: Record<string, string> = {
   stopped: 'перестал услаждаться',
   less: 'реже услаждаюсь',
   often: 'часто услаждаюсь, не начал борьбу',
+  custom: 'свой статус',
 };
 
 const DEFAULT_TEMPTATIONS: Temptation[] = [
@@ -36,6 +38,14 @@ const DEFAULT_TEMPTATIONS: Temptation[] = [
     explanation: 'Употребление пищи сверх сытости ради удовольствия, особенно по вечерам перед сном.',
     status: 'often',
     createdAt: new Date().toISOString()
+  },
+  {
+    id: '4',
+    name: 'Рьяный спортивный болельщик',
+    explanation: 'Люблю смотреть бойцовские соревнования и болеть за бойцов.',
+    status: 'custom',
+    customStatusText: 'перестал смотреть и болеть',
+    createdAt: new Date().toISOString()
   }
 ];
 
@@ -43,8 +53,9 @@ export const TemptationTracker: React.FC = () => {
   const [temptations, setTemptations] = useState<Temptation[]>([]);
   const [name, setName] = useState('');
   const [explanation, setExplanation] = useState('');
-  const [status, setStatus] = useState<'stopped' | 'less' | 'often'>('often');
-  const [filter, setFilter] = useState<'all' | 'stopped' | 'less' | 'often'>('all');
+  const [status, setStatus] = useState<'stopped' | 'less' | 'often' | 'custom'>('often');
+  const [customStatusText, setCustomStatusText] = useState('');
+  const [filter, setFilter] = useState<'all' | 'stopped' | 'less' | 'often' | 'custom'>('all');
 
   // Load from LocalStorage
   useEffect(() => {
@@ -76,6 +87,7 @@ export const TemptationTracker: React.FC = () => {
       name: name.trim(),
       explanation: explanation.trim(),
       status,
+      customStatusText: status === 'custom' ? (customStatusText.trim() || 'перестал смотреть и болеть') : undefined,
       createdAt: new Date().toISOString()
     };
 
@@ -86,6 +98,7 @@ export const TemptationTracker: React.FC = () => {
     setName('');
     setExplanation('');
     setStatus('often');
+    setCustomStatusText('');
   };
 
   const handleDelete = (id: string) => {
@@ -93,10 +106,24 @@ export const TemptationTracker: React.FC = () => {
     saveTemptations(updated);
   };
 
-  const handleChangeStatus = (id: string, newStatus: 'stopped' | 'less' | 'often') => {
+  const handleChangeStatus = (id: string, newStatus: 'stopped' | 'less' | 'often' | 'custom') => {
     const updated = temptations.map(item => {
       if (item.id === id) {
-        return { ...item, status: newStatus };
+        const nextItem = { ...item, status: newStatus };
+        if (newStatus === 'custom' && !item.customStatusText) {
+          nextItem.customStatusText = 'нажмите для ввода...';
+        }
+        return nextItem;
+      }
+      return item;
+    });
+    saveTemptations(updated);
+  };
+
+  const handleUpdateCustomStatusText = (id: string, newText: string) => {
+    const updated = temptations.map(item => {
+      if (item.id === id) {
+        return { ...item, customStatusText: newText };
       }
       return item;
     });
@@ -160,11 +187,11 @@ export const TemptationTracker: React.FC = () => {
             <label className="block text-xs uppercase tracking-wider text-[var(--color-cinnabar)]/60 font-semibold">
               Текущий статус борьбы
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
               <button
                 type="button"
                 onClick={() => setStatus('often')}
-                className={`py-2 px-3.5 text-xs sm:text-sm rounded-lg border font-semibold transition-all flex items-center justify-start gap-2 ${
+                className={`py-2 px-3.5 text-xs sm:text-sm rounded-lg border font-semibold transition-all flex items-center justify-start gap-2 cursor-pointer ${
                   status === 'often'
                     ? 'bg-rose-50 border-rose-400 text-rose-700 font-bold shadow-xs'
                     : 'bg-white/40 border-stone-200 text-stone-600 hover:bg-stone-50'
@@ -177,7 +204,7 @@ export const TemptationTracker: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setStatus('less')}
-                className={`py-2 px-3.5 text-xs sm:text-sm rounded-lg border font-semibold transition-all flex items-center justify-start gap-2 ${
+                className={`py-2 px-3.5 text-xs sm:text-sm rounded-lg border font-semibold transition-all flex items-center justify-start gap-2 cursor-pointer ${
                   status === 'less'
                     ? 'bg-amber-50 border-amber-400 text-amber-700 font-bold shadow-xs'
                     : 'bg-white/40 border-stone-200 text-stone-600 hover:bg-stone-50'
@@ -190,7 +217,7 @@ export const TemptationTracker: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setStatus('stopped')}
-                className={`py-2 px-3.5 text-xs sm:text-sm rounded-lg border font-semibold transition-all flex items-center justify-start gap-2 ${
+                className={`py-2 px-3.5 text-xs sm:text-sm rounded-lg border font-semibold transition-all flex items-center justify-start gap-2 cursor-pointer ${
                   status === 'stopped'
                     ? 'bg-emerald-50 border-emerald-400 text-emerald-700 font-bold shadow-xs'
                     : 'bg-white/40 border-stone-200 text-stone-600 hover:bg-stone-50'
@@ -199,11 +226,42 @@ export const TemptationTracker: React.FC = () => {
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
                 перестал услаждаться
               </button>
+
+              <button
+                type="button"
+                onClick={() => setStatus('custom')}
+                className={`py-2 px-3.5 text-xs sm:text-sm rounded-lg border font-semibold transition-all flex items-center justify-start gap-2 cursor-pointer ${
+                  status === 'custom'
+                    ? 'bg-sky-50 border-sky-400 text-sky-700 font-bold shadow-xs'
+                    : 'bg-white/40 border-stone-200 text-stone-600 hover:bg-stone-50'
+                }`}
+              >
+                <div className="w-2.5 h-2.5 rounded-full bg-sky-500 shrink-0" />
+                свой статус
+              </button>
             </div>
+
+            {status === 'custom' && (
+              <div className="space-y-1 mt-2">
+                <label className="block text-xs uppercase tracking-wider text-[var(--color-cinnabar)]/60 font-semibold pl-1">
+                  Текст вашего статуса
+                </label>
+                <input
+                  type="text"
+                  value={customStatusText}
+                  onChange={(e) => setCustomStatusText(e.target.value)}
+                  placeholder="Например: перестал смотреть и болеть, временно победил..."
+                  className="w-full bg-white/70 border border-amber-800/10 rounded-lg p-2.5 text-sm focus:border-[var(--color-cinnabar)] focus:ring-1 focus:ring-[var(--color-cinnabar)] outline-none"
+                  required
+                />
+              </div>
+            )}
+
             <p className="text-[11px] text-stone-500 italic pl-1">
               {status === 'often' && '🔴 часто услаждаюсь, не начал борьбу — требуется усиленное внимание и немедленное покаяние.'}
               {status === 'less' && '🟡 реже услаждаюсь — начало сознательной борьбы, страсть идет на убыль.'}
               {status === 'stopped' && '🟢 перестал услаждаться — слава Богу, искушение преодолевается по Его милости.'}
+              {status === 'custom' && '🔵 свой статус — укажите индивидуальное описание текущего состояния.'}
             </p>
           </div>
 
@@ -228,7 +286,7 @@ export const TemptationTracker: React.FC = () => {
           <div className="flex bg-white/40 border border-amber-800/10 rounded-lg p-0.5 text-xs text-stone-600 font-semibold self-start sm:self-center overflow-x-auto max-w-full">
             <button
               onClick={() => setFilter('all')}
-              className={`px-3 py-1.5 rounded-md transition-all whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-md transition-all whitespace-nowrap cursor-pointer ${
                 filter === 'all' ? 'bg-[var(--color-cinnabar)] text-white font-bold' : 'hover:text-[var(--color-cinnabar)]'
               }`}
             >
@@ -236,7 +294,7 @@ export const TemptationTracker: React.FC = () => {
             </button>
             <button
               onClick={() => setFilter('often')}
-              className={`px-3 py-1.5 rounded-md transition-all whitespace-nowrap flex items-center gap-1 ${
+              className={`px-3 py-1.5 rounded-md transition-all whitespace-nowrap flex items-center gap-1 cursor-pointer ${
                 filter === 'often' ? 'bg-rose-600 text-white font-bold' : 'hover:text-rose-600'
               }`}
             >
@@ -245,7 +303,7 @@ export const TemptationTracker: React.FC = () => {
             </button>
             <button
               onClick={() => setFilter('less')}
-              className={`px-3 py-1.5 rounded-md transition-all whitespace-nowrap flex items-center gap-1 ${
+              className={`px-3 py-1.5 rounded-md transition-all whitespace-nowrap flex items-center gap-1 cursor-pointer ${
                 filter === 'less' ? 'bg-amber-600 text-white font-bold' : 'hover:text-amber-600'
               }`}
             >
@@ -254,12 +312,21 @@ export const TemptationTracker: React.FC = () => {
             </button>
             <button
               onClick={() => setFilter('stopped')}
-              className={`px-3 py-1.5 rounded-md transition-all whitespace-nowrap flex items-center gap-1 ${
+              className={`px-3 py-1.5 rounded-md transition-all whitespace-nowrap flex items-center gap-1 cursor-pointer ${
                 filter === 'stopped' ? 'bg-emerald-600 text-white font-bold' : 'hover:text-emerald-600'
               }`}
             >
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
               Побеждено
+            </button>
+            <button
+              onClick={() => setFilter('custom')}
+              className={`px-3 py-1.5 rounded-md transition-all whitespace-nowrap flex items-center gap-1 cursor-pointer ${
+                filter === 'custom' ? 'bg-sky-600 text-white font-bold' : 'hover:text-sky-600'
+              }`}
+            >
+              <div className="w-1.5 h-1.5 rounded-full bg-sky-500 shrink-0" />
+              Свой статус
             </button>
           </div>
         </div>
@@ -281,6 +348,9 @@ export const TemptationTracker: React.FC = () => {
               } else if (item.status === 'stopped') {
                 badgeColor = "bg-emerald-50 text-emerald-700 border-emerald-200";
                 dotColor = "bg-emerald-500";
+              } else if (item.status === 'custom') {
+                badgeColor = "bg-sky-50 text-sky-700 border-sky-200";
+                dotColor = "bg-sky-500";
               }
 
               return (
@@ -295,7 +365,7 @@ export const TemptationTracker: React.FC = () => {
                       </h4>
                       <button
                         onClick={() => handleDelete(item.id)}
-                        className="text-stone-400 hover:text-rose-600 p-1 rounded-md transition-colors shrink-0"
+                        className="text-stone-400 hover:text-rose-600 p-1 rounded-md transition-colors shrink-0 cursor-pointer"
                         title="Удалить запись"
                       >
                         <Trash2 size={16} />
@@ -308,7 +378,7 @@ export const TemptationTracker: React.FC = () => {
                       </p>
                     ) : (
                       <p className="text-xs text-stone-400 italic font-sans pl-1">
-                        Без пояснений. Нажмите чтобы дописать, или ведите мысленную брань.
+                        Без пояснений. Введите пояснения или ведите мысленную брань.
                       </p>
                     )}
                   </div>
@@ -317,14 +387,25 @@ export const TemptationTracker: React.FC = () => {
                   <div className="mt-4 pt-3 border-t border-stone-100/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className={`px-2.5 py-1 text-xs font-semibold rounded-full border flex items-center gap-1.5 w-fit ${badgeColor}`}>
                       <div className={`w-2 h-2 rounded-full ${dotColor}`} />
-                      {STATUS_LABELS[item.status]}
+                      {item.status === 'custom' ? (
+                        <input
+                          type="text"
+                          value={item.customStatusText || ''}
+                          onChange={(e) => handleUpdateCustomStatusText(item.id, e.target.value)}
+                          placeholder="свой статус..."
+                          className="bg-transparent border-b border-dashed border-sky-400 font-semibold text-sky-800 focus:outline-none w-36 text-xs py-0 px-1"
+                          title="Нажмите для редактирования статуса"
+                        />
+                      ) : (
+                        STATUS_LABELS[item.status]
+                      )}
                     </div>
 
                     {/* Fast Change Status Widget */}
                     <div className="flex bg-white/50 border border-stone-200/50 rounded-md p-0.5 text-[10px] sm:text-xs">
                       <button
                         onClick={() => handleChangeStatus(item.id, 'often')}
-                        className={`px-1.5 py-0.5 rounded transition-all ${
+                        className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${
                           item.status === 'often' ? 'bg-rose-500 text-white font-bold' : 'text-stone-500 hover:text-rose-600'
                         }`}
                         title="Поставить статус: часто услаждаюсь, не начал борьбу"
@@ -333,7 +414,7 @@ export const TemptationTracker: React.FC = () => {
                       </button>
                       <button
                         onClick={() => handleChangeStatus(item.id, 'less')}
-                        className={`px-1.5 py-0.5 rounded transition-all ${
+                        className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${
                           item.status === 'less' ? 'bg-amber-500 text-white font-bold' : 'text-stone-400 hover:text-amber-600'
                         }`}
                         title="Поставить статус: реже услаждаюсь"
@@ -342,12 +423,21 @@ export const TemptationTracker: React.FC = () => {
                       </button>
                       <button
                         onClick={() => handleChangeStatus(item.id, 'stopped')}
-                        className={`px-1.5 py-0.5 rounded transition-all ${
+                        className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${
                           item.status === 'stopped' ? 'bg-emerald-500 text-white font-bold' : 'text-stone-400 hover:text-emerald-600'
                         }`}
                         title="Поставить статус: перестал услаждаться"
                       >
                         Победа
+                      </button>
+                      <button
+                        onClick={() => handleChangeStatus(item.id, 'custom')}
+                        className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${
+                          item.status === 'custom' ? 'bg-sky-500 text-white font-bold' : 'text-stone-400 hover:text-sky-600'
+                        }`}
+                        title="Поставить статус: свой статус"
+                      >
+                        Свой
                       </button>
                     </div>
                   </div>
