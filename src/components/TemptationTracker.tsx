@@ -164,7 +164,7 @@ export const TemptationTracker: React.FC = () => {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Наприклад: Праздность, ропот, излишний сон, гнев..."
+              placeholder="Например: Праздность, ропот, излишний сон, гнев..."
               className="w-full bg-white/70 border border-amber-800/10 rounded-lg p-2.5 text-sm sm:text-base focus:border-[var(--color-cinnabar)] focus:ring-1 focus:ring-[var(--color-cinnabar)] outline-none"
               required
             />
