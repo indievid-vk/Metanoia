@@ -141,8 +141,17 @@ export default function Confession() {
                           <li key={sin.id} className="flex items-start bg-white/80 p-2 rounded border border-[var(--color-ink)]/5 shadow-sm">
                             <span className="text-[var(--color-cinnabar)] mr-2 mt-1">❦</span>
                             <div className="flex-1 cursor-pointer" onClick={() => setExpandedSelectedSin(isExpanded ? null : sin.id)}>
-                              <div className="flex justify-between items-center">
-                                <span className="text-[var(--color-ink)] text-sm sm:text-base">{sin.title}</span>
+                              <div className="flex justify-between items-center gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-[var(--color-ink)] text-sm sm:text-base font-medium">{sin.title}</span>
+                                  <span className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded-sm whitespace-nowrap ${
+                                    sin.severity === 'Смертный' ? 'bg-red-100 text-red-800' : 
+                                    sin.severity === 'Тяжкий' ? 'bg-orange-100 text-orange-800' : 
+                                    'bg-green-100 text-green-800'
+                                  }`}>
+                                    {sin.severity}
+                                  </span>
+                                </div>
                                 {isExpanded ? <ChevronUp size={14} className="text-[var(--color-ink)]/50" /> : <ChevronDown size={14} className="text-[var(--color-ink)]/50" />}
                               </div>
                               
