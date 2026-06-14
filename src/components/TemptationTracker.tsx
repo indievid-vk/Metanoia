@@ -164,7 +164,7 @@ export const TemptationTracker: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setStatus('often')}
-                className={`py-2 px-3 text-xs sm:text-sm rounded-lg border font-semibold transition-all flex items-center justify-center gap-2 ${
+                className={`py-2 px-3.5 text-xs sm:text-sm rounded-lg border font-semibold transition-all flex items-center justify-start gap-2 ${
                   status === 'often'
                     ? 'bg-rose-50 border-rose-400 text-rose-700 font-bold shadow-xs'
                     : 'bg-white/40 border-stone-200 text-stone-600 hover:bg-stone-50'
@@ -177,7 +177,7 @@ export const TemptationTracker: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setStatus('less')}
-                className={`py-2 px-3 text-xs sm:text-sm rounded-lg border font-semibold transition-all flex items-center justify-center gap-2 ${
+                className={`py-2 px-3.5 text-xs sm:text-sm rounded-lg border font-semibold transition-all flex items-center justify-start gap-2 ${
                   status === 'less'
                     ? 'bg-amber-50 border-amber-400 text-amber-700 font-bold shadow-xs'
                     : 'bg-white/40 border-stone-200 text-stone-600 hover:bg-stone-50'
@@ -190,7 +190,7 @@ export const TemptationTracker: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setStatus('stopped')}
-                className={`py-2 px-3 text-xs sm:text-sm rounded-lg border font-semibold transition-all flex items-center justify-center gap-2 ${
+                className={`py-2 px-3.5 text-xs sm:text-sm rounded-lg border font-semibold transition-all flex items-center justify-start gap-2 ${
                   status === 'stopped'
                     ? 'bg-emerald-50 border-emerald-400 text-emerald-700 font-bold shadow-xs'
                     : 'bg-white/40 border-stone-200 text-stone-600 hover:bg-stone-50'

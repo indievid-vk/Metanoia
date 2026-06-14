@@ -5,6 +5,8 @@ import gospelCommandmentsData from '../data/commandments.json';
 import { getAssetPath } from '../utils';
 import { DecorativeDivider } from '../components/DecorativeDivider';
 import AsceticsContent from '../components/AsceticsContent';
+import { TemptationTracker } from '../components/TemptationTracker';
+import { BookOpen, Flame } from 'lucide-react';
 
 interface InteractiveButtonProps {
   onClick: () => void;
@@ -69,6 +71,7 @@ const BEATITUDES = [
 export default function Home() {
   const navigate = useNavigate();
   const [showPopup, setShowPopup] = useState(false);
+  const [popupTab, setPopupTab] = useState<'guide' | 'temptations'>('guide');
   const [currentGroupIdx, setCurrentGroupIdx] = useState(0);
   const [commandmentGroups, setCommandmentGroups] = useState<any[][]>([]);
 
@@ -191,7 +194,7 @@ export default function Home() {
 
       {showPopup && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[var(--color-parchment)] border-2 border-[var(--color-cinnabar)]/50 p-4 sm:p-6 rounded-[2rem] max-w-lg w-full shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden">
+          <div className="bg-[var(--color-parchment)] border-2 border-[var(--color-cinnabar)]/50 p-4 sm:p-6 rounded-[2rem] max-w-2xl w-full shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden">
             <button 
               onClick={() => setShowPopup(false)}
               className="absolute top-2 right-4 text-3xl font-light text-[var(--color-ink)]/50 hover:text-[var(--color-ink)] z-15 cursor-pointer"
@@ -202,13 +205,43 @@ export default function Home() {
               <h2 className="font-izhitsa text-xl sm:text-3xl text-center text-[var(--color-cinnabar)] mb-1 uppercase tracking-wide">Аскетика дня. Практика</h2>
               <DecorativeDivider />
             </div>
+
+            {/* Tab Switcher inside the popup */}
+            <div className="flex bg-white/50 border border-[var(--color-cinnabar)]/10 rounded-lg p-1.5 max-w-md w-full mx-auto shadow-sm mt-3 shrink-0 font-izhitsa z-20 relative">
+              <button
+                onClick={() => setPopupTab('guide')}
+                className={`flex-1 flex items-center justify-center gap-2 py-1.5 px-3 text-xs sm:text-sm rounded-md transition-all cursor-pointer ${
+                  popupTab === 'guide'
+                    ? 'bg-[var(--color-cinnabar)] text-[var(--color-parchment)] shadow-sm font-semibold'
+                    : 'text-[var(--color-ink)]/70 hover:text-[var(--color-cinnabar)] hover:bg-white/30'
+                }`}
+              >
+                <BookOpen size={14} />
+                Руководство
+              </button>
+              <button
+                onClick={() => setPopupTab('temptations')}
+                className={`flex-1 flex items-center justify-center gap-2 py-1.5 px-3 text-xs sm:text-sm rounded-md transition-all cursor-pointer ${
+                  popupTab === 'temptations'
+                    ? 'bg-[var(--color-cinnabar)] text-[var(--color-parchment)] shadow-sm font-semibold'
+                    : 'text-[var(--color-ink)]/70 hover:text-[var(--color-cinnabar)] hover:bg-white/30'
+                }`}
+              >
+                <Flame size={14} />
+                Борьба с искушениями
+              </button>
+            </div>
             
             <div className="relative flex-1 min-h-0 overflow-hidden flex flex-col mt-4">
               {/* Top scroll shadow */}
               <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-[var(--color-ink)]/10 to-transparent z-10 pointer-events-none shadow-[inset_0_10px_10px_-10px_rgba(0,0,0,0.2)]" />
               
               <div className="overflow-y-auto flex-1 pr-1 sm:pr-2 py-4 relative scroll-smooth custom-scrollbar">
-                <AsceticsContent />
+                {popupTab === 'guide' ? (
+                  <AsceticsContent />
+                ) : (
+                  <TemptationTracker />
+                )}
               </div>
               
               {/* Bottom scroll shadow */}
