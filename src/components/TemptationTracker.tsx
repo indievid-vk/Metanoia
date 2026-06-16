@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trash2, Plus, Sparkles, Smile, Shield, Flame, AlertCircle, HelpCircle } from 'lucide-react';
+import { Trash2, Plus, Sparkles, Smile, Shield, Flame, AlertCircle, HelpCircle, Edit2, Check, X } from 'lucide-react';
 
 export interface Temptation {
   id: string;
@@ -57,6 +57,11 @@ export const TemptationTracker: React.FC = () => {
   const [customStatusText, setCustomStatusText] = useState('');
   const [filter, setFilter] = useState<'all' | 'stopped' | 'less' | 'often' | 'custom'>('all');
 
+  // Edit States
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editExplanation, setEditExplanation] = useState('');
+
   // Load from LocalStorage
   useEffect(() => {
     const saved = localStorage.getItem('pravoslav_temptations');
@@ -104,6 +109,35 @@ export const TemptationTracker: React.FC = () => {
   const handleDelete = (id: string) => {
     const updated = temptations.filter(item => item.id !== id);
     saveTemptations(updated);
+    if (editingId === id) {
+      setEditingId(null);
+    }
+  };
+
+  const startEditing = (item: Temptation) => {
+    setEditingId(item.id);
+    setEditName(item.name);
+    setEditExplanation(item.explanation);
+  };
+
+  const handleSaveEdit = (id: string) => {
+    if (!editName.trim()) return;
+    const updated = temptations.map(item => {
+      if (item.id === id) {
+        return {
+          ...item,
+          name: editName.trim(),
+          explanation: editExplanation.trim(),
+        };
+      }
+      return item;
+    });
+    saveTemptations(updated);
+    setEditingId(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
   };
 
   const handleChangeStatus = (id: string, newStatus: 'stopped' | 'less' | 'often' | 'custom') => {
@@ -353,35 +387,95 @@ export const TemptationTracker: React.FC = () => {
                 dotColor = "bg-sky-500";
               }
 
+              const isEditing = item.id === editingId;
+
               return (
                 <div 
                   key={item.id}
-                  className="bg-white/40 border border-[var(--color-cinnabar)]/10 rounded-xl p-4 sm:p-5 flex flex-col justify-between hover:bg-white/60 transition-all duration-300 shadow-xs"
+                  className={`bg-white/40 border rounded-xl p-4 sm:p-5 flex flex-col justify-between hover:bg-white/60 transition-all duration-300 shadow-xs ${
+                    isEditing ? 'border-[var(--color-cinnabar)]/30 bg-orange-50/10' : 'border-[var(--color-cinnabar)]/10'
+                  }`}
                 >
-                  <div className="space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <h4 className="font-izhitsa text-base sm:text-lg text-[var(--color-cinnabar)] line-clamp-2">
-                        {item.name}
-                      </h4>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="text-stone-400 hover:text-rose-600 p-1 rounded-md transition-colors shrink-0 cursor-pointer"
-                        title="Удалить запись"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+                  {isEditing ? (
+                    <div className="space-y-3 w-full">
+                      <div className="flex items-center justify-between border-b border-[var(--color-cinnabar)]/10 pb-2">
+                        <span className="text-xs uppercase tracking-wider text-[var(--color-cinnabar)] font-semibold font-izhitsa">Редактирование</span>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleSaveEdit(item.id)}
+                            className="bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 p-1.5 rounded-lg transition-all cursor-pointer"
+                            title="Сохранить изменения"
+                          >
+                            <Check size={14} className="stroke-[3]" />
+                          </button>
+                          <button
+                            onClick={handleCancelEdit}
+                            className="bg-stone-50 text-stone-600 border border-stone-200 hover:bg-stone-100 p-1.5 rounded-lg transition-all cursor-pointer"
+                            title="Отменить"
+                          >
+                            <X size={14} className="stroke-[3]" />
+                          </button>
+                        </div>
+                      </div>
 
-                    {item.explanation ? (
-                      <p className="text-xs sm:text-sm text-stone-700 leading-relaxed font-izhitsa bg-white/20 p-2.5 rounded border border-stone-100">
-                        {item.explanation}
-                      </p>
-                    ) : (
-                      <p className="text-xs text-stone-400 italic font-sans pl-1">
-                        Без пояснений. Введите пояснения или ведите мысленную брань.
-                      </p>
-                    )}
-                  </div>
+                      <div className="space-y-1">
+                        <label className="block text-[10px] uppercase font-bold text-stone-500">Название</label>
+                        <input
+                          type="text"
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="w-full bg-white/70 border border-amber-800/10 rounded-lg py-1.5 px-2.5 text-sm outline-none focus:border-[var(--color-cinnabar)] focus:ring-1 focus:ring-[var(--color-cinnabar)]"
+                          placeholder="Название услаждения/искушения..."
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-[10px] uppercase font-bold text-stone-500">Пояснение / План борьбы</label>
+                        <textarea
+                          value={editExplanation}
+                          onChange={(e) => setEditExplanation(e.target.value)}
+                          className="w-full bg-white/70 border border-amber-800/10 rounded-lg py-1.5 px-2.5 text-xs outline-none focus:border-[var(--color-cinnabar)] focus:ring-1 focus:ring-[var(--color-cinnabar)] resize-y"
+                          placeholder="Ваш план духовного противодействия..."
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="font-izhitsa text-base sm:text-lg text-[var(--color-cinnabar)] line-clamp-2">
+                          {item.name}
+                        </h4>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            onClick={() => startEditing(item)}
+                            className="text-stone-400 hover:text-[var(--color-cinnabar)] p-1 rounded-md transition-colors cursor-pointer"
+                            title="Редактировать запись"
+                          >
+                            <Edit2 size={15} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(item.id)}
+                            className="text-stone-400 hover:text-rose-600 p-1 rounded-md transition-colors shrink-0 cursor-pointer"
+                            title="Удалить запись"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {item.explanation ? (
+                        <p className="text-xs sm:text-sm text-stone-700 leading-relaxed font-izhitsa bg-white/20 p-2.5 rounded border border-stone-100/50">
+                          {item.explanation}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-stone-400 italic font-sans pl-1">
+                          Без пояснений. Введите пояснения или ведите мысленную брань.
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   {/* Status interactive selector for existing item */}
                   <div className="mt-4 pt-3 border-t border-stone-100/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2">

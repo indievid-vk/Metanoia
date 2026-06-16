@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, BookOpen, Info, Image as ImageIcon, Users, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar as CalendarIcon, BookOpen, Info, Image as ImageIcon, Users, ChevronLeft, ChevronRight, Sparkles, Award } from 'lucide-react';
 import { DecorativeDivider } from '../components/DecorativeDivider';
 
 type AzbykaResponse = {
@@ -24,37 +24,6 @@ type AzbykaResponse = {
     description: string | null;
     voice: number;
   };
-};
-
-const PROXIES = [
-  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-  (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
-];
-
-const fetchWithProxyFallback = async (originalUrl: string): Promise<string> => {
-  let lastError: Error | null = null;
-  for (const getProxyUrl of PROXIES) {
-    const proxyUrl = getProxyUrl(originalUrl);
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 7000); // 7 seconds timeout
-
-      const res = await fetch(proxyUrl, { signal: controller.signal });
-      clearTimeout(timeoutId);
-
-      if (res.ok) {
-        const text = await res.text();
-        if (text && text.trim().length > 100 && !text.includes('Too Many Requests') && !text.includes('Rate limit exceeded')) {
-          return text;
-        }
-      }
-    } catch (e) {
-      console.warn(`Proxy failed for ${originalUrl} via ${proxyUrl}:`, e);
-      lastError = e instanceof Error ? e : new Error(String(e));
-    }
-  }
-  throw lastError || new Error('Все доступные CORS-прокси вернули ошибку или недоступны.');
 };
 
 const safeLocalStorageSet = (key: string, value: string) => {
@@ -101,6 +70,9 @@ export default function Calendar() {
   
   // Fasting tab selection
   const [fastingTab, setFastingTab] = useState<'multiday' | 'oneday' | 'weeks'>('multiday');
+  
+  // Orthodox Holidays tab selection
+  const [holidayTab, setHolidayTab] = useState<'easter' | 'twelve' | 'great' | 'traditions'>('easter');
   
   // Selected saint or holiday modal state
   const [selectedItem, setSelectedItem] = useState<{
@@ -171,12 +143,14 @@ export default function Calendar() {
 
         // Fetch calendar data if not cached
         if (!isDayLoaded) {
-          const calendarUrl = `https://azbyka.ru/days/api/day/${dateStr}.json`;
-          const calendarHtml = await fetchWithProxyFallback(calendarUrl);
-          const json = JSON.parse(calendarHtml);
+          const res = await fetch(`/api/calendar?date=${dateStr}`);
+          if (!res.ok) {
+            throw new Error(`Ошибка загрузки календаря с сервера: ${res.status}`);
+          }
+          const json = await res.json();
           setData(json);
           currentDayData = json;
-          safeLocalStorageSet(cacheKeyDay, calendarHtml);
+          safeLocalStorageSet(cacheKeyDay, JSON.stringify(json));
           setLoading(false);
         }
 
@@ -190,11 +164,11 @@ export default function Calendar() {
                      date.getFullYear() === today.getFullYear();
             };
             const isSelectedToday = isToday(currentDate);
-            const bibleUrl = isSelectedToday 
-              ? 'https://azbyka.ru/biblia/days' 
-              : `https://azbyka.ru/biblia/days/${dateStr}`;
-              
-            const html = await fetchWithProxyFallback(bibleUrl);
+            const res = await fetch(`/api/bible?date=${dateStr}&today=${isSelectedToday ? 'true' : 'false'}`);
+            if (!res.ok) {
+              throw new Error(`Ошибка загрузки чтений с сервера: ${res.status}`);
+            }
+            const html = await res.text();
 
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
@@ -619,6 +593,396 @@ export default function Calendar() {
                 />
               ) : (
                 <p className="text-sm font-sans text-stone-500 italic">Духовные чтения временно недоступны.</p>
+              )}
+            </div>
+          </div>
+
+          {/* Orthodox Church Holidays section based on Azbyka.ru */}
+          <div className="bg-white/60 rounded-xl p-6 shadow-sm border border-[var(--color-ink)]/10">
+            <div className="flex items-center gap-3 mb-4 border-b border-[var(--color-cinnabar)]/10 pb-2">
+              <Sparkles className="text-[var(--color-cinnabar)] animate-pulse" size={24} />
+              <h3 className="font-izhitsa text-xl text-[var(--color-cinnabar)]">Церковные праздники и традиции</h3>
+              <span className="text-[10px] sm:text-xs text-[var(--color-ink)] opacity-55 font-sans ml-auto italic hidden sm:inline">по материалам azbyka.ru</span>
+            </div>
+            
+            <p className="text-xs sm:text-sm text-[var(--color-ink)]/80 leading-relaxed mb-6 font-sans">
+              Церковные праздники — это особо выделенные дни богослужебного года, установленные в воспоминание спасительных событий земной жизни Господа Иисуса Христа, Пресвятой Богородицы и памяти великих святых. Главный христианский праздник — <strong>Светлое Христово Воскресение (Пасха)</strong>, за которым следуют 12 великих (двунадесятых) и иные церковные торжества.
+            </p>
+
+            {/* Holiday Tabs */}
+            <div className="flex border-b border-stone-200 mb-6 gap-2 sm:gap-4 overflow-x-auto pb-1 text-xs sm:text-sm font-izhitsa">
+              <button
+                onClick={() => setHolidayTab('easter')}
+                className={`py-2 px-3 shrink-0 border-b-2 font-medium transition-all cursor-pointer ${
+                  holidayTab === 'easter'
+                    ? 'border-[var(--color-cinnabar)] text-[var(--color-cinnabar)] font-semibold'
+                    : 'border-transparent text-stone-500 hover:text-[var(--color-cinnabar)]'
+                }`}
+              >
+                Пасха Христова
+              </button>
+              <button
+                onClick={() => setHolidayTab('twelve')}
+                className={`py-2 px-3 shrink-0 border-b-2 font-medium transition-all cursor-pointer ${
+                  holidayTab === 'twelve'
+                    ? 'border-[var(--color-cinnabar)] text-[var(--color-cinnabar)] font-semibold'
+                    : 'border-transparent text-stone-500 hover:text-[var(--color-cinnabar)]'
+                }`}
+              >
+                Двунадесятые праздники
+              </button>
+              <button
+                onClick={() => setHolidayTab('great')}
+                className={`py-2 px-3 shrink-0 border-b-2 font-medium transition-all cursor-pointer ${
+                  holidayTab === 'great'
+                    ? 'border-[var(--color-cinnabar)] text-[var(--color-cinnabar)] font-semibold'
+                    : 'border-transparent text-stone-500 hover:text-[var(--color-cinnabar)]'
+                }`}
+              >
+                Великие праздники
+              </button>
+              <button
+                onClick={() => setHolidayTab('traditions')}
+                className={`py-2 px-3 shrink-0 border-b-2 font-medium transition-all cursor-pointer ${
+                  holidayTab === 'traditions'
+                    ? 'border-[var(--color-cinnabar)] text-[var(--color-cinnabar)] font-semibold'
+                    : 'border-transparent text-stone-500 hover:text-[var(--color-cinnabar)]'
+                }`}
+              >
+                Традиции и Смысл
+              </button>
+            </div>
+
+            {/* Holiday Tab Content */}
+            <div className="space-y-4">
+              {holidayTab === 'easter' && (
+                <div className="bg-[#fefcf8] border border-[var(--color-cinnabar)]/20 rounded-2xl p-5 sm:p-6 space-y-4 shadow-xs relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-[var(--color-cinnabar)]/5 rounded-bl-full pointer-events-none flex items-center justify-center">
+                    <Award className="text-[var(--color-cinnabar)]/20" size={32} />
+                  </div>
+                  <div className="border-b border-[var(--color-cinnabar)]/10 pb-2">
+                    <span className="text-red-700 bg-red-50 border border-red-100 rounded-full py-0.5 px-3 text-[10px] uppercase font-bold tracking-widest font-sans inline-block mb-1">
+                      Праздник Праздников
+                    </span>
+                    <h4 className="font-izhitsa text-xl sm:text-2xl text-[var(--color-cinnabar)] leading-tight">
+                      Светлое Христово Воскресение — Святая Пасха
+                    </h4>
+                  </div>
+                  <div className="space-y-3 text-sm sm:text-base leading-relaxed text-[var(--color-ink)]/90 font-sans">
+                    <p>
+                      <strong>Пасха</strong> — это величайший христианский праздник, превосходящий все прочие торжества. Он не входит в число двунадесятых праздников, а стоит неизмеримо выше их («Праздников Праздник и Торжество торжеств»). 
+                    </p>
+                    <p>
+                      <strong>Смысл:</strong> В этот день воспоминается победа Господа Иисуса Христа над грехом, смертью и адом. Своим Воскресением Спаситель даровал всему человечеству избавление от вечной погибели, восстановил союз с Богом и открыл врата Царства Небесного: <em>«Христос воскресе из мертвых, смертию смерть поправ, и сущим во гробех живот даровав!»</em>
+                    </p>
+                    <p>
+                      <strong>Датировка:</strong> Праздник является переходящим — вычисляется по сложной формуле (Александрийской пасхалии) и всегда празднуется в первое воскресенье после весеннего полнолуния.
+                    </p>
+                    <div className="bg-white/70 border border-amber-800/10 p-3 rounded-xl mt-2 text-xs sm:text-sm space-y-1">
+                      <strong className="text-[var(--color-cinnabar)] text-xs uppercase block tracking-wider font-semibold">Основные Традиции:</strong>
+                      <ul className="list-disc list-inside space-y-1 text-stone-700 pl-1">
+                        <li><strong>Pascha (Пасхальное богослужение)</strong> — совершается ночью с субботы на воскресенье с торжественным Крестным ходом.</li>
+                        <li><strong>Приветствие верующих</strong> — возглас радости «Христос Воскресе!», на который отвечают «Воистину Воскресе!» со взаимным троекратным целованием («христосованием»).</li>
+                        <li><strong>Праздничный стол</strong> — освящение куличей, творожных пасх и крашеных яиц (символ Гроба Господня и вечной жизни). Разговение после Великого Поста.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {holidayTab === 'twelve' && (
+                <div className="space-y-4 font-sans">
+                  <div className="p-3 bg-stone-50 border border-stone-200/60 rounded-xl text-xs sm:text-sm text-stone-600">
+                    Двунадесятые праздники разделяются на праздники <strong>Господские</strong> (посвященные событиям земной жизни Спасителя) и <strong>Богородичные</strong> (посвященные Пресвятой Богородице). Также они бывают непереходящими (всегда в одну дату) и переходящими (дата зависит от Пасхи).
+                  </div>
+
+                  <div className="space-y-3">
+                    {/* 1. Рождество Богородицы */}
+                    <div className="bg-white/40 border border-stone-200/50 hover:border-[var(--color-cinnabar)]/20 transition-all rounded-xl p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 pb-1.5 mb-2">
+                        <h5 className="font-izhitsa text-base sm:text-lg text-[var(--color-cinnabar)]">Рождество Пресвятой Богородицы</h5>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] bg-sky-50 text-sky-700 border border-sky-100 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">Богородичный</span>
+                          <span className="text-[10px] bg-amber-50 text-amber-800 border border-amber-150 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">Непереходящий</span>
+                        </div>
+                      </div>
+                      <div className="text-xs sm:text-sm space-y-2 text-stone-700">
+                        <p><strong>Дата:</strong> 21 сентября (8 сентября по старому стилю).</p>
+                        <p><strong>Суть:</strong> Чудесное рождение Окроковицы Марии от престарелых бесплодных супругов Иоакима и Анны. Начало исполнения пророчеств о пришествии Спасителя мира.</p>
+                        <p><strong>Традиция:</strong> Празднуется как день всеобщей надежды и утешения, ослабление скорби.</p>
+                      </div>
+                    </div>
+
+                    {/* 2. Воздвижение Креста */}
+                    <div className="bg-white/40 border border-stone-200/50 hover:border-[var(--color-cinnabar)]/20 transition-all rounded-xl p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 pb-1.5 mb-2">
+                        <h5 className="font-izhitsa text-base sm:text-lg text-[var(--color-cinnabar)]">Воздвижение Креста Господня</h5>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] bg-red-50 text-red-700 border border-red-100 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">Господский</span>
+                          <span className="text-[10px] bg-amber-50 text-amber-800 border border-amber-150 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">Непереходящий</span>
+                        </div>
+                      </div>
+                      <div className="text-xs sm:text-sm space-y-2 text-stone-700">
+                        <p><strong>Дата:</strong> 27 сентября (14 сентября по старому стилю).</p>
+                        <p><strong>Суть:</strong> Воспоминание обретения Животворящего Древа Креста Господня в Иерусалиме в IV веке царицей Еленой у горы Голгофа, и его поднятия («воздвижения») для поклонения верующим.</p>
+                        <p><strong>Традиция:</strong> <span className="text-red-700 font-semibold">Строгий однодневный пост</span> (в воспоминание крестных страданий Господа). Вынос Креста духовенством в центр храма для всеобщего целования.</p>
+                      </div>
+                    </div>
+
+                    {/* 3. Введение во храм */}
+                    <div className="bg-white/40 border border-stone-200/50 hover:border-[var(--color-cinnabar)]/20 transition-all rounded-xl p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 pb-1.5 mb-2">
+                        <h5 className="font-izhitsa text-base sm:text-lg text-[var(--color-cinnabar)]">Введение во храм Пресвятой Богородицы</h5>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] bg-sky-50 text-sky-700 border border-sky-100 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">Богородичный</span>
+                          <span className="text-[10px] bg-amber-50 text-amber-800 border border-amber-150 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">Непереходящий</span>
+                        </div>
+                      </div>
+                      <div className="text-xs sm:text-sm space-y-2 text-stone-700">
+                        <p><strong>Дата:</strong> 4 декабря (21 ноября по старому стилю).</p>
+                        <p><strong>Суть:</strong> Торжественное посвящение трехлетней Марии Богу. Родители привели Деву в Иерусалимский храм, где Первосвященник по внушению Духа Святого ввел Ее в Святая Святых.</p>
+                        <p><strong>Традиция:</strong> Повсеместное начало пения в храмах рождественских ирмосов («Христос раждается, славите!»), поскольку праздник предвосхищает скорое Рождество Христово.</p>
+                      </div>
+                    </div>
+
+                    {/* 4. Рождество Христово */}
+                    <div className="bg-[#fffdf9] border border-[var(--color-cinnabar)]/20 rounded-xl p-4 shadow-3xs">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 pb-1.5 mb-2">
+                        <h5 className="font-izhitsa text-base sm:text-lg text-[var(--color-cinnabar)] font-semibold">Рождество Господа нашего Иисуса Христа</h5>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] bg-red-50 text-red-700 border border-red-100 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">Господский</span>
+                          <span className="text-[10px] bg-amber-50 text-amber-800 border border-amber-100/80 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">Непереходящий</span>
+                        </div>
+                      </div>
+                      <div className="text-xs sm:text-sm space-y-2 text-stone-700">
+                        <p><strong>Дата:</strong> 7 января (25 декабря по старому стилю).</p>
+                        <p><strong>Суть:</strong> Пришествие в плоти Сына Божия на землю. Рождение Христа в пещере в Вифлееме восстановило связь творения с Творцом.</p>
+                        <p><strong>Традиция:</strong> Предваряется 40-дневным постом. Канун праздника — <span className="font-semibold text-amber-800">Сочельник</span> — проводится в строгом посте «до первой звезды». Празднование продолжается Святками (12 праздничных дней до Крещения) со славлением Христа.</p>
+                      </div>
+                    </div>
+
+                    {/* 5. Крещение Господне */}
+                    <div className="bg-white/40 border border-stone-200/50 hover:border-[var(--color-cinnabar)]/20 transition-all rounded-xl p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 pb-1.5 mb-2">
+                        <h5 className="font-izhitsa text-base sm:text-lg text-[var(--color-cinnabar)]">Крещение Господне (Богоявление)</h5>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] bg-red-50 text-red-700 border border-red-100 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">Господский</span>
+                          <span className="text-[10px] bg-amber-50 text-amber-800 border border-amber-150 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">Непереходящий</span>
+                        </div>
+                      </div>
+                      <div className="text-xs sm:text-sm space-y-2 text-stone-700">
+                        <p><strong>Дата:</strong> 19 января (6 января по старому стилю).</p>
+                        <p><strong>Суть:</strong> Принятие Спасителем крещения от Иоанна Предтечи в реке Иордан. Вода освятилась Его телом. Была явлена вся Пресвятая Троица: Отец свидетельствовал гласом, Сын крестился, Дух Святой сошел в виде голубя.</p>
+                        <p><strong>Традиция:</strong> Великое водоосвящение в канун (в сочельник) и в сам день праздника. Хранение этой святой воды («великая агиасма») как святыни. Традиция купания в ледяных иорданях.</p>
+                      </div>
+                    </div>
+
+                    {/* 6. Сретение Господне */}
+                    <div className="bg-white/40 border border-stone-200/50 hover:border-[var(--color-cinnabar)]/20 transition-all rounded-xl p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 pb-1.5 mb-2">
+                        <h5 className="font-izhitsa text-base sm:text-lg text-[var(--color-cinnabar)]">Сретение Господне</h5>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] bg-red-50 text-red-700 border border-red-100 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">Господский</span>
+                          <span className="text-[10px] bg-amber-50 text-amber-800 border border-amber-150 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">Непереходящий</span>
+                        </div>
+                      </div>
+                      <div className="text-xs sm:text-sm space-y-2 text-stone-700">
+                        <p><strong>Дата:</strong> 15 февраля (2 февраля по старому стилю).</p>
+                        <p><strong>Суть:</strong> Принесение Младенца Иисуса в храм на 40-й день от рождения, встреча Его («сретение») праведным Симеоном Богоприимцем. Символизирует встречу Ветхого Завета с великим Спасителем Нового Завета.</p>
+                        <p><strong>Традиция:</strong> Освящение церковных свечей, символизирующих свет Божественный. Особая благоговейная молитва о вступлении во Храм веры.</p>
+                      </div>
+                    </div>
+
+                    {/* 7. Благовещение */}
+                    <div className="bg-white/40 border border-stone-200/50 hover:border-[var(--color-cinnabar)]/20 transition-all rounded-xl p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 pb-1.5 mb-2">
+                        <h5 className="font-izhitsa text-base sm:text-lg text-[var(--color-cinnabar)]">Благовещение Пресвятой Богородицы</h5>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] bg-sky-50 text-sky-700 border border-sky-100 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">Богородичный</span>
+                          <span className="text-[10px] bg-amber-50 text-amber-800 border border-amber-150 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">Непереходящий</span>
+                        </div>
+                      </div>
+                      <div className="text-xs sm:text-sm space-y-2 text-stone-700">
+                        <p><strong>Дата:</strong> 7 апреля (25 марта по старому стилю).</p>
+                        <p><strong>Суть:</strong> Архангел Гавриил принес Деве Марии весть о том, что Ей предстоит непорочно зачать и родить Мессию. Смиренное согласие Марии («Се, Раба Господня») открыло человеку путь к спасению.</p>
+                        <p><strong>Традиция:</strong> Великое духовное торжество, на которое обычно ослабляется Великий пост (<span className="text-amber-800 font-semibold">разрешается рыба</span>). Древний обычай выпускать на волю птиц как символ освобождения душ во Христе.</p>
+                      </div>
+                    </div>
+
+                    {/* 8. Вход Господень в Иерусалим */}
+                    <div className="bg-white/40 border border-stone-200/50 hover:border-[var(--color-cinnabar)]/20 transition-all rounded-xl p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 pb-1.5 mb-2">
+                        <h5 className="font-izhitsa text-base sm:text-lg text-[var(--color-cinnabar)]">Вход Господень в Иерусалим (Вербное воскресенье)</h5>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] bg-red-50 text-red-700 border border-red-100 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">Господский</span>
+                          <span className="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">Переходящий</span>
+                        </div>
+                      </div>
+                      <div className="text-xs sm:text-sm space-y-2 text-stone-700">
+                        <p><strong>Дата:</strong> Празднуется ровно за одну неделю до Пасхи, перед Страстной Седмицей.</p>
+                        <p><strong>Суть:</strong> Радостное приветствие Христа иудеями, постилавшими пальмовые ветви, за день до предания Его на крестную смерть.</p>
+                        <p><strong>Традиция:</strong> В Росии ветви заменяются распускающейся вербой — символом пробуждения новой жизни. Христиане освящают ветви в субботу вечером и стоят с ними на утрени. Разрешается рыба.</p>
+                      </div>
+                    </div>
+
+                    {/* 9. Вознесение Господне */}
+                    <div className="bg-white/40 border border-stone-200/50 hover:border-[var(--color-cinnabar)]/20 transition-all rounded-xl p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 pb-1.5 mb-2">
+                        <h5 className="font-izhitsa text-base sm:text-lg text-[var(--color-cinnabar)]">Вознесение Господне</h5>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] bg-red-50 text-red-700 border border-red-100 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">Господский</span>
+                          <span className="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">Переходящий</span>
+                        </div>
+                      </div>
+                      <div className="text-xs sm:text-sm space-y-2 text-stone-700">
+                        <p><strong>Дата:</strong> Празднуется на 40-й день после Пасхи, всегда в четверг.</p>
+                        <p><strong>Суть:</strong> Вознесение Христа во плоти на небо в присутствии апостолов. Спаситель вознес саму обоженную человеческую природу Иисуса Христа и пообещал Свое славное Второе пришествие.</p>
+                        <p><strong>Традиция:</strong> Радостное стояние за праздничной трапезой. Спокойствие верующих, ведь Господь открыл путь к небу всем нам.</p>
+                      </div>
+                    </div>
+
+                    {/* 10. Пятидесятница (Троица) */}
+                    <div className="bg-[#fcfdf9] border border-green-200/40 rounded-xl p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 pb-1.5 mb-2">
+                        <h5 className="font-izhitsa text-base sm:text-lg text-green-700">День Святой Троицы (Пятидесятница)</h5>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] bg-red-50 text-red-700 border border-red-100 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">Господский</span>
+                          <span className="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">Переходящий</span>
+                        </div>
+                      </div>
+                      <div className="text-xs sm:text-sm space-y-2 text-stone-700">
+                        <p><strong>Дата:</strong> Воскресенье на 50-й день после Пасхи.</p>
+                        <p><strong>Суть:</strong> Сошествие Святого Духа на апостолов в Сионской горнице. Полнота откровения Святой Троицы. День рождения Христовой Церкви как благодатного общества спасения.</p>
+                        <p><strong>Традиция:</strong> Храмы и дома обильно украшаются свежими зелеными ветвями березы, травой и благоуханными цветами в знак духовного обновления жизни. Читаются особые коленопреклоненные молитвы.</p>
+                      </div>
+                    </div>
+
+                    {/* 11. Преображение Господне */}
+                    <div className="bg-white/40 border border-stone-200/50 hover:border-[var(--color-cinnabar)]/20 transition-all rounded-xl p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 pb-1.5 mb-2">
+                        <h5 className="font-izhitsa text-base sm:text-lg text-[var(--color-cinnabar)]">Преображение Господне</h5>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] bg-red-50 text-red-700 border border-red-100 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">Господский</span>
+                          <span className="text-[10px] bg-amber-50 text-amber-800 border border-amber-150 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">Непереходящий</span>
+                        </div>
+                      </div>
+                      <div className="text-xs sm:text-sm space-y-2 text-stone-700">
+                        <p><strong>Дата:</strong> 19 августа (6 августа по старому стилю).</p>
+                        <p><strong>Суть:</strong> Свидетельство Божественной вечности Христа Его избранным трем ученикам в сиянии нетварного Фаворского Света перед Его добровольными страданиями.</p>
+                        <p><strong>Традиция:</strong> Освящение винограда, яблок и прочих садовых плодов нового урожая («Яблочный Спас»).</p>
+                      </div>
+                    </div>
+
+                    {/* 12. Успенский праздник */}
+                    <div className="bg-white/40 border border-stone-200/50 hover:border-[var(--color-cinnabar)]/20 transition-all rounded-xl p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 pb-1.5 mb-2">
+                        <h5 className="font-izhitsa text-base sm:text-lg text-[var(--color-cinnabar)]">Успение Пресвятой Богородицы</h5>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] bg-sky-50 text-sky-700 border border-sky-100 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">Богородичный</span>
+                          <span className="text-[10px] bg-amber-50 text-amber-800 border border-amber-150 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">Непереходящий</span>
+                        </div>
+                      </div>
+                      <div className="text-xs sm:text-sm space-y-2 text-stone-700">
+                        <p><strong>Дата:</strong> 28 августа (15 августа по старому стилю).</p>
+                        <p><strong>Суть:</strong> Мирная кончина («успение») Пресвятой Девы Марии, Её восстание из гроба силой Её Божественного Сына и переселение в вечность духом и прославленным телом.</p>
+                        <p><strong>Традиция:</strong> Предваряется двухнедельным Успенским постом. Вынос Плащаницы Богородицы в храмах.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {holidayTab === 'great' && (
+                <div className="space-y-4 font-sans">
+                  <div className="p-3 bg-stone-50 border border-stone-200/60 rounded-xl text-xs sm:text-sm text-stone-600">
+                    Недвунадесятые великие праздники — это пять особо торжественных праздников, почитаемых всей полнотой Православной Церкви. Службы этих дней совершаются по чину всенощного бдения.
+                  </div>
+
+                  <div className="space-y-3">
+                    {/* 1. Обрезание */}
+                    <div className="bg-white/40 border border-stone-200/50 hover:border-[var(--color-cinnabar)]/20 transition-all rounded-xl p-4">
+                      <div className="flex items-center justify-between gap-2 border-b border-stone-100 pb-1.5 mb-2">
+                        <h5 className="font-izhitsa text-base sm:text-lg text-[var(--color-cinnabar)]">Обрезание Господне и память свт. Василия Великого</h5>
+                        <span className="text-[10px] bg-amber-50 text-amber-800 border border-amber-150 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">14 января</span>
+                      </div>
+                      <div className="text-xs sm:text-sm space-y-1.5 text-stone-700">
+                        <p><strong>Суть:</strong> Господь принял обрезание на 8-й день после Рождества по закону Моисееву, явив пример великого смирения, и принял имя Иисус (Спаситель). В эту же дату чтится память вселенского учителя Василия Великого.</p>
+                      </div>
+                    </div>
+
+                    {/* 2. Рождество Иоанна Предтечи */}
+                    <div className="bg-white/40 border border-stone-200/50 hover:border-[var(--color-cinnabar)]/20 transition-all rounded-xl p-4">
+                      <div className="flex items-center justify-between gap-2 border-b border-stone-100 pb-1.5 mb-2">
+                        <h5 className="font-izhitsa text-base sm:text-lg text-[var(--color-cinnabar)]">Рождество честного славного Пророка и Крестителя Иоанна</h5>
+                        <span className="text-[10px] bg-amber-50 text-amber-800 border border-amber-150 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">7 июля</span>
+                      </div>
+                      <div className="text-xs sm:text-sm space-y-1.5 text-stone-700">
+                        <p><strong>Суть:</strong> Чудесное рождение Предтечи Христова у престарелых Захарии и Елисаветы. Из рожденных женами святой Иоанн стал величайшим праведником.</p>
+                      </div>
+                    </div>
+
+                    {/* 3. Петра и Павла */}
+                    <div className="bg-white/40 border border-stone-200/50 hover:border-[var(--color-cinnabar)]/20 transition-all rounded-xl p-4">
+                      <div className="flex items-center justify-between gap-2 border-b border-stone-100 pb-1.5 mb-2">
+                        <h5 className="font-izhitsa text-base sm:text-lg text-[var(--color-cinnabar)]">Святых первоверховных апостолов Петра и Павла</h5>
+                        <span className="text-[10px] bg-amber-50 text-amber-800 border border-amber-150 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">12 июля</span>
+                      </div>
+                      <div className="text-xs sm:text-sm space-y-1.5 text-stone-700">
+                        <p><strong>Суть:</strong> Прославление подвигов двух великих апостолов, основателей новозаветного христианского благовестия, мученически скончавшихся в один день в Риме при императоре Нероне.</p>
+                        <p><strong>Значение:</strong> Завершает собой Апостольский (Петров) пост.</p>
+                      </div>
+                    </div>
+
+                    {/* 4. Усекновение главы */}
+                    <div className="bg-white/40 border border-stone-200/50 hover:border-[var(--color-cinnabar)]/20 transition-all rounded-xl p-4">
+                      <div className="flex items-center justify-between gap-2 border-b border-stone-100 pb-1.5 mb-2">
+                        <h5 className="font-izhitsa text-base sm:text-lg text-[var(--color-cinnabar)]">Усекновение главы Пророка и Крестителя Господня Иоанна</h5>
+                        <span className="text-[10px] bg-red-50 text-red-700 border border-red-100 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">11 сентября</span>
+                      </div>
+                      <div className="text-xs sm:text-sm space-y-1.5 text-stone-700">
+                        <p><strong>Суть:</strong> Скорбный день памяти коварного усекновения главы величайшего пророка по прихоти Иродиады и приказу Ирода Антипы во время пира.</p>
+                        <p><strong>Традиция:</strong> <span className="text-red-700 font-semibold">Строгий однодневный пост</span> в память скорби и великого воздержания святого Иоанна.</p>
+                      </div>
+                    </div>
+
+                    {/* 5. Покров */}
+                    <div className="bg-white/40 border border-stone-200/50 hover:border-[var(--color-cinnabar)]/20 transition-all rounded-xl p-4">
+                      <div className="flex items-center justify-between gap-2 border-b border-stone-100 pb-1.5 mb-2">
+                        <h5 className="font-izhitsa text-base sm:text-lg text-[var(--color-cinnabar)]">Покров Пресвятой Владычицы нашей Богородицы</h5>
+                        <span className="text-[10px] bg-amber-50 text-amber-800 border border-amber-150 rounded-full px-2 py-0.5 font-bold uppercase tracking-wider">14 октября</span>
+                      </div>
+                      <div className="text-xs sm:text-sm space-y-1.5 text-stone-700">
+                        <p><strong>Суть:</strong> Чудесное явление Пресвятой Богородицы юродивому Андрею во Влахернском храме в Константинополе во время нашествия врагов. Богородица распростерла Свой сияющий омофор (покров) над всеми молящимися, защитив их.</p>
+                        <p><strong>Традиция:</strong> Особо чтимый на Руси осенний праздник. Покровитель семейной жизни.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {holidayTab === 'traditions' && (
+                <div className="space-y-4 text-xs sm:text-sm text-stone-700 leading-relaxed font-sans">
+                  <div className="bg-[#fefcf8] border border-[var(--color-cinnabar)]/10 p-4 rounded-xl space-y-3">
+                    <h5 className="font-izhitsa text-base sm:text-lg text-[var(--color-cinnabar)] border-b border-stone-100 pb-1">
+                      Духовное наполнение христианского праздника
+                    </h5>
+                    <p>
+                      В православной традиции празднование — это не безумное забавление плоти, а обновление духа и благоговейный союз с Господом. Праздничные даты установлены для того, чтобы помочь нам оторваться от земной суеты и устремить ум к Вечности.
+                    </p>
+                    
+                    <div className="space-y-2 mt-2">
+                      <p>
+                        <strong>1. Участие в Литургии и Таинствах</strong> — это сердце любого церковного праздника. Православный христианин спешит в храм не просто поставить свечу, а исповедаться и причаститься Святых Божественных Таин в день торжества, соединяясь с Воскресшим Христом.
+                      </p>
+                      <p>
+                        <strong>2. Дела милосердия и любви</strong> (<em>«Вера без дел мертва»</em>) — неотъемлемая часть традиций праздника. Принято делиться радостью с бедными, больными, одинокими людьми, помогать нуждающимся и даровать утешение ближним.
+                      </p>
+                      <p>
+                        <strong>3. Отложение тяжелого физического труда</strong> — церковный закон призывает освободить праздничный день от тяжелой житейской работы и бытовой суеты не ради праздности или безделья, а ради того, чтобы уделить время молитве, посещению храма, чтению Священного Писания и духовному общению в семье.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           </div>
