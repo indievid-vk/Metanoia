@@ -62,6 +62,37 @@ const isFishAllowed = (fasting: { fasting: string; description: string | null } 
   return false;
 };
 
+const PROXIES = [
+  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+];
+
+const fetchWithProxyFallback = async (originalUrl: string): Promise<string> => {
+  let lastError: Error | null = null;
+  for (const getProxyUrl of PROXIES) {
+    const proxyUrl = getProxyUrl(originalUrl);
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 7000); // 7 seconds timeout
+
+      const res = await fetch(proxyUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const text = await res.text();
+        if (text && text.trim().length > 100 && !text.includes('Too Many Requests') && !text.includes('Rate limit exceeded')) {
+          return text;
+        }
+      }
+    } catch (e) {
+      console.warn(`Proxy failed for ${originalUrl} via ${proxyUrl}:`, e);
+      lastError = e instanceof Error ? e : new Error(String(e));
+    }
+  }
+  throw lastError || new Error('Все доступные CORS-прокси вернули ошибку или недоступны.');
+};
+
 export default function Calendar() {
   const [data, setData] = useState<AzbykaResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -143,11 +174,24 @@ export default function Calendar() {
 
         // Fetch calendar data if not cached
         if (!isDayLoaded) {
-          const res = await fetch(`/api/calendar?date=${dateStr}`);
-          if (!res.ok) {
-            throw new Error(`Ошибка загрузки календаря с сервера: ${res.status}`);
+          let json: any = null;
+          try {
+            const res = await fetch(`/api/calendar?date=${dateStr}`);
+            if (!res.ok) {
+              throw new Error(`Ошибка сервера: ${res.status}`);
+            }
+            json = await res.json();
+          } catch (apiError) {
+            console.warn("Failed to fetch calendar from server API, attempting client-side fallback proxy:", apiError);
+            try {
+              const calendarHtml = await fetchWithProxyFallback(`https://azbyka.ru/days/api/day/${dateStr}.json`);
+              json = JSON.parse(calendarHtml);
+            } catch (fallbackError) {
+              console.error("Both server API and client-side proxies failed to fetch calendar:", fallbackError);
+              throw new Error(`Не удалось загрузить данные календаря: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`);
+            }
           }
-          const json = await res.json();
+
           setData(json);
           currentDayData = json;
           safeLocalStorageSet(cacheKeyDay, JSON.stringify(json));
@@ -164,11 +208,27 @@ export default function Calendar() {
                      date.getFullYear() === today.getFullYear();
             };
             const isSelectedToday = isToday(currentDate);
-            const res = await fetch(`/api/bible?date=${dateStr}&today=${isSelectedToday ? 'true' : 'false'}`);
-            if (!res.ok) {
-              throw new Error(`Ошибка загрузки чтений с сервера: ${res.status}`);
+
+            // Fetch Bible readings with proxy fallback
+            let html = '';
+            try {
+              const res = await fetch(`/api/bible?date=${dateStr}&today=${isSelectedToday ? 'true' : 'false'}`);
+              if (!res.ok) {
+                throw new Error(`Ошибка сервера: ${res.status}`);
+              }
+              html = await res.text();
+            } catch (apiError) {
+              console.warn("Failed to fetch Bible readings from server API, attempting client-side fallback proxy", apiError);
+              try {
+                const bibleUrl = isSelectedToday 
+                  ? 'https://azbyka.ru/biblia/days' 
+                  : `https://azbyka.ru/biblia/days/${dateStr}`;
+                html = await fetchWithProxyFallback(bibleUrl);
+              } catch (fallbackError) {
+                console.error("Both server API and client-side proxies failed to fetch Bible readings:", fallbackError);
+                throw new Error(`Не удалось загрузить богослужебные чтения: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`);
+              }
             }
-            const html = await res.text();
 
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
