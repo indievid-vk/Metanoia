@@ -433,11 +433,28 @@ const PROXIES = [
 
 const fetchWithProxyFallback = async (originalUrl: string): Promise<string> => {
   let lastError: Error | null = null;
+  
+  // Try direct fetch first (without proxies). In some environments (e.g., cordova, capacitor, or relaxed CORS), this works perfectly.
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 seconds limit for direct fetch
+    const res = await fetch(originalUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (res.ok) {
+      const text = await res.text();
+      if (text && text.trim().length > 100 && !text.includes('<!DOCTYPE html') && !text.includes('<html')) {
+        return text;
+      }
+    }
+  } catch (e) {
+    console.warn(`Direct fetch to ${originalUrl} failed or was blocked by CORS. Resorting to proxies:`, e);
+  }
+
   for (const getProxyUrl of PROXIES) {
     const proxyUrl = getProxyUrl(originalUrl);
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 7000); // 7 seconds timeout
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout for proxy calls
 
       const res = await fetch(proxyUrl, { signal: controller.signal });
       clearTimeout(timeoutId);
@@ -545,7 +562,18 @@ export default function Calendar() {
             if (!res.ok) {
               throw new Error(`Ошибка сервера: ${res.status}`);
             }
-            json = await res.json();
+            const contentType = res.headers.get("content-type");
+            if (contentType && !contentType.includes("application/json")) {
+              throw new Error("Ответ сервера не содержит JSON. Возможно, бэкенд отсутствует (статический хостинг).");
+            }
+            const textResult = await res.text();
+            if (textResult.includes("<!DOCTYPE html") || textResult.includes("<html")) {
+              throw new Error("Запрос API вернул HTML-страницу. Вероятно, активный Node.js сервер недоступен.");
+            }
+            json = JSON.parse(textResult);
+            if (!json || typeof json !== 'object') {
+              throw new Error("Неверный формат ответа.");
+            }
           } catch (apiError) {
             console.warn("Failed to fetch calendar from server API, attempting client-side fallback proxy:", apiError);
             try {
@@ -582,7 +610,16 @@ export default function Calendar() {
               if (!res.ok) {
                 throw new Error(`Ошибка сервера: ${res.status}`);
               }
-              html = await res.text();
+              const contentType = res.headers.get("content-type");
+              if (contentType && contentType.includes("text/html")) {
+                const text = await res.text();
+                if (text.includes("<!DOCTYPE html") || text.includes("<html")) {
+                  throw new Error("Запрос API вернул HTML. Вероятно, активный Node.js сервер недоступен.");
+                }
+                html = text;
+              } else {
+                html = await res.text();
+              }
             } catch (apiError) {
               console.warn("Failed to fetch Bible readings from server API, attempting client-side fallback proxy", apiError);
               try {
@@ -809,7 +846,7 @@ export default function Calendar() {
                 </div>
               </div>
               <a
-                href={`https://azbyka.ru/days/api/day/${dateStr}.json`}
+                href="https://azbyka.ru/days/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-izhitsa rounded-lg transition-colors text-xs shadow-xs cursor-pointer"
