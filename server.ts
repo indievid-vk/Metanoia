@@ -45,10 +45,10 @@ async function startServer() {
 
   // 2. Bible Readings API proxy
   app.get("/api/bible", async (req, res) => {
-    const { date, today } = req.query;
+    const { date } = req.query;
     
     let bibleUrl = "https://azbyka.ru/biblia/days";
-    if (today !== "true" && date && typeof date === "string") {
+    if (date && typeof date === "string") {
       bibleUrl = `https://azbyka.ru/biblia/days/${date}`;
     }
 
