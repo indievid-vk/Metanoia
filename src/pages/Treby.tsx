@@ -1,8 +1,26 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import trebyData from '../data/treby.json';
 import { DecorativeDivider } from '../components/DecorativeDivider';
 
 export default function Treby() {
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const secId = searchParams.get('sec');
+    if (secId) {
+      setTimeout(() => {
+        const el = document.getElementById(secId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          el.classList.add('bg-amber-100/40', 'transition-all', 'duration-1000');
+          setTimeout(() => {
+            el.classList.remove('bg-amber-100/40');
+          }, 3000);
+        }
+      }, 400);
+    }
+  }, [searchParams]);
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-12 px-4">
       <div className="pb-8">

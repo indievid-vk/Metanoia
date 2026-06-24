@@ -442,7 +442,7 @@ const fetchWithProxyFallback = async (originalUrl: string): Promise<string> => {
     clearTimeout(timeoutId);
     if (res.ok) {
       const text = await res.text();
-      if (text && text.trim().length > 100 && !text.includes('<!DOCTYPE html') && !text.includes('<html')) {
+      if (text && text.trim().length > 100 && !text.includes('id="root"')) {
         return text;
       }
     }
@@ -613,8 +613,8 @@ export default function Calendar() {
               const contentType = res.headers.get("content-type");
               if (contentType && contentType.includes("text/html")) {
                 const text = await res.text();
-                if (text.includes("<!DOCTYPE html") || text.includes("<html")) {
-                  throw new Error("Запрос API вернул HTML. Вероятно, активный Node.js сервер недоступен.");
+                if (text.includes('id="root"')) {
+                  throw new Error("Запрос API вернул HTML нашей SPA-системы. Вероятно, активный Node.js сервер недоступен.");
                 }
                 html = text;
               } else {

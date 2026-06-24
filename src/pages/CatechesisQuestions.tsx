@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ChevronDown, ChevronUp, HelpCircle, Search, X } from 'lucide-react';
 import { BackToTopButton } from '../components/BackToTopButton';
 import questionsData from '../data/catechesisQuestions.json';
@@ -21,6 +22,42 @@ export default function CatechesisQuestions() {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [isLoaded, setIsLoaded] = useState(false);
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const qParam = searchParams.get('q');
+    if (qParam && isLoaded) {
+      const qLower = decodeURIComponent(qParam).toLowerCase();
+      let foundCatIdx = -1;
+      let foundItemIdx = -1;
+      
+      for (let c = 0; c < categories.length; c++) {
+        const itemIdx = categories[c].items.findIndex(item => item.q.toLowerCase() === qLower);
+        if (itemIdx !== -1) {
+          foundCatIdx = c;
+          foundItemIdx = itemIdx;
+          break;
+        }
+      }
+      
+      if (foundCatIdx !== -1 && foundItemIdx !== -1) {
+        setExpandedCategory(foundCatIdx);
+        setExpandedIndex({ cat: foundCatIdx, item: foundItemIdx });
+        
+        setTimeout(() => {
+          const elId = `q-item-${foundCatIdx}-${foundItemIdx}`;
+          const el = document.getElementById(elId);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('bg-amber-100/40', 'transition-all', 'duration-1000');
+            setTimeout(() => {
+              el.classList.remove('bg-amber-100/40');
+            }, 3000);
+          }
+        }, 400);
+      }
+    }
+  }, [searchParams, isLoaded, categories]);
 
   // Debounce search query
   useEffect(() => {
@@ -147,7 +184,8 @@ export default function CatechesisQuestions() {
                         return (
                           <div 
                             key={itemIdx} 
-                            className={`border rounded-lg transition-all duration-300 ${isExpanded ? 'border-[var(--color-cinnabar)]/30 bg-white/60 shadow-md' : 'border-[var(--color-ink)]/10 bg-white/30 hover:bg-white/50'}`}
+                            id={`q-item-${catIdx}-${itemIdx}`}
+                            className={`border rounded-lg transition-all duration-300 scroll-mt-24 ${isExpanded ? 'border-[var(--color-cinnabar)]/30 bg-white/60 shadow-md' : 'border-[var(--color-ink)]/10 bg-white/30 hover:bg-white/50'}`}
                           >
                             <button
                               onClick={() => toggleQuestion(catIdx, itemIdx)}

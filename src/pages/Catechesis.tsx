@@ -1,5 +1,5 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import catechesisData from '../data/catechesis.json';
 import { BackToTopButton } from '../components/BackToTopButton';
 import { DecorativeDivider } from '../components/DecorativeDivider';
@@ -12,7 +12,24 @@ interface Video {
 
 export default function Catechesis() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const videos: Video[] = catechesisData;
+
+  useEffect(() => {
+    const videoId = searchParams.get('id');
+    if (videoId) {
+      setTimeout(() => {
+        const el = document.getElementById(videoId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.add('bg-amber-100/40', 'transition-all', 'duration-1000');
+          setTimeout(() => {
+            el.classList.remove('bg-amber-100/40');
+          }, 3000);
+        }
+      }, 400);
+    }
+  }, [searchParams]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-12 px-4">
@@ -44,7 +61,8 @@ export default function Catechesis() {
         {videos.map((video, index) => (
           <div 
             key={video.id} 
-            className="flex flex-col lg:flex-row gap-8 items-start bg-white/50 p-6 rounded-xl border border-[var(--color-ink)]/10 shadow-sm hover:shadow-md transition-shadow"
+            id={video.id}
+            className="flex flex-col lg:flex-row gap-8 items-start bg-white/50 p-6 rounded-xl border border-[var(--color-ink)]/10 shadow-sm hover:shadow-md transition-shadow scroll-mt-24"
           >
             {/* Video Player */}
             <div className="w-full lg:w-3/5 aspect-video bg-black rounded-lg overflow-hidden shadow-lg border border-[var(--color-ink)]/20">

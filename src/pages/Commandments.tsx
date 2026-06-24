@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Bookmark, BookMarked } from 'lucide-react';
 import commandmentsData from '../data/commandments.json';
 import { BackToTopButton } from '../components/BackToTopButton';
@@ -23,6 +24,23 @@ export default function Commandments() {
   const PAGE_KEY = 'commandments';
   const currentBookmark = getBookmark(PAGE_KEY);
   const [showContinue, setShowContinue] = useState(false);
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const targetId = searchParams.get('id');
+    if (targetId) {
+      setTimeout(() => {
+        const el = document.getElementById(targetId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          el.classList.add('bg-amber-100/40', 'transition-all', 'duration-1000');
+          setTimeout(() => {
+            el.classList.remove('bg-amber-100/40');
+          }, 3000);
+        }
+      }, 400);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (currentBookmark) {

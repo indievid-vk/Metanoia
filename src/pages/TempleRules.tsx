@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ArrowUp, Maximize2, Minimize2 } from 'lucide-react';
 import templeRulesData from '../data/templeRules.json';
 import { BackToTopButton } from '../components/BackToTopButton';
@@ -8,6 +9,23 @@ import { DecorativeDivider } from '../components/DecorativeDivider';
 export default function TempleRules() {
   const [activeSection, setActiveSection] = useState<string>('');
   const [isSchemaExpanded, setIsSchemaExpanded] = useState(false);
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const secId = searchParams.get('sec');
+    if (secId) {
+      setTimeout(() => {
+        const el = document.getElementById(secId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          el.classList.add('bg-amber-100/40', 'transition-all', 'duration-1000');
+          setTimeout(() => {
+            el.classList.remove('bg-amber-100/40');
+          }, 3000);
+        }
+      }, 400);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(

@@ -1,4 +1,10 @@
 import { ALL_SINS } from '../data/sins';
+import templeRulesData from '../data/templeRules.json';
+import catechesisData from '../data/catechesis.json';
+import trebyData from '../data/treby.json';
+import prayersData from '../data/prayers.json';
+import commandmentsData from '../data/commandments.json';
+import questionsData from '../data/catechesisQuestions.json';
 
 export interface SearchResult {
   id: string;
@@ -122,7 +128,7 @@ const STATIC_INDEX: IndexItem[] = [
     category: 'В Храм',
     snippet: 'Как правильно подавать записки за здравие и упокой, что такое молебен, панихида, сорокоуст.',
     url: '/temple/treby',
-    keywords: ['требы', 'записки', 'поминовение', 'молебен', 'панихида', 'сорокоуст', 'проскомидия', 'за здравие', 'за упокой']
+    keywords: ['treby', 'записки', 'поминовение', 'молебен', 'панихида', 'сорокоуст', 'проскомидия', 'за здравие', 'за упокой']
   },
   {
     id: 'prosphora',
@@ -222,6 +228,21 @@ const STATIC_INDEX: IndexItem[] = [
   }
 ];
 
+const PRAYER_TITLES: Record<string, string> = {
+  'morning': 'Молитвы утренние',
+  'evening': 'Молитвы на сон грядущим',
+  'canon-repentance': 'Канон покаянный ко Господу',
+  'canon-theotokos': 'Канон ко Пресвятой Богородице',
+  'canon-guardian-angel': 'Канон Ангелу-Хранителю',
+  'communion-prayers': 'Последование пред Причащением',
+  'thanksgiving': 'Благодарственные молитвы',
+  'sick': 'Молитвы о болящих',
+  'children': 'Молитвы о детях',
+  'theotokos-various': 'Молитвы ко Богородице',
+  'homeland': 'Молитвы за Отечество',
+  'spiritual-warfare': 'Молитвы на брань духовную'
+};
+
 export function performGlobalSearch(query: string): SearchResult[] {
   const trimmed = query.trim().toLowerCase();
   if (!trimmed) return [];
@@ -236,7 +257,6 @@ export function performGlobalSearch(query: string): SearchResult[] {
     const keywordMatch = item.keywords.some(kw => kw.includes(trimmed));
 
     if (titleMatch || categoryMatch || snippetMatch || keywordMatch) {
-      // Determine match strength
       results.push({
         id: item.id,
         title: item.title,
@@ -248,8 +268,221 @@ export function performGlobalSearch(query: string): SearchResult[] {
     }
   }
 
-  // 2. Search in Sins database dynamically
-  // If the query is relevant to sins/confession (or is 3+ characters)
+  // 2. Search in templeRulesData (sections & subsections)
+  if (templeRulesData && Array.isArray(templeRulesData.sections)) {
+    for (const section of templeRulesData.sections) {
+      const secTitleLower = section.title.toLowerCase();
+      const contentText = Array.isArray(section.content) ? section.content.join(' ') : '';
+      const contentTextLower = contentText.toLowerCase();
+
+      if (secTitleLower.includes(trimmed) || contentTextLower.includes(trimmed)) {
+        let snippet = section.content && section.content[0] ? section.content[0] : '';
+        if (trimmed.length > 2) {
+          const matchParagraph = section.content?.find(p => p.toLowerCase().includes(trimmed));
+          if (matchParagraph) snippet = matchParagraph;
+        }
+        snippet = snippet.replace(/<[^>]*>/g, '');
+        if (snippet.length > 160) snippet = snippet.slice(0, 160) + '...';
+
+        results.push({
+          id: `rule_${section.id}`,
+          title: `Правила: ${section.title}`,
+          category: 'В Храм',
+          snippet: snippet || 'Правила благочестивого поведения в православном храме.',
+          url: `/temple/rules?sec=${section.id}`,
+          type: 'page'
+        });
+      }
+
+      if (Array.isArray(section.subsections)) {
+        for (const sub of section.subsections) {
+          const subTitleLower = sub.title.toLowerCase();
+          const subContentText = Array.isArray(sub.content) ? sub.content.join(' ') : '';
+          const subContentTextLower = subContentText.toLowerCase();
+
+          if (subTitleLower.includes(trimmed) || subContentTextLower.includes(trimmed)) {
+            let snippet = sub.content && sub.content[0] ? sub.content[0] : '';
+            if (trimmed.length > 2) {
+              const matchParagraph = sub.content?.find(p => p.toLowerCase().includes(trimmed));
+              if (matchParagraph) snippet = matchParagraph;
+            }
+            snippet = snippet.replace(/<[^>]*>/g, '');
+            if (snippet.length > 160) snippet = snippet.slice(0, 160) + '...';
+
+            results.push({
+              id: `rule_${sub.id}`,
+              title: `Правила: ${section.title} → ${sub.title}`,
+              category: 'В Храм',
+              snippet: snippet || 'Правила благочестивого поведения в православном храме.',
+              url: `/temple/rules?sec=${sub.id}`,
+              type: 'page'
+            });
+          }
+        }
+      }
+    }
+  }
+
+  // 3. Search in trebyData (sections & subsections)
+  if (trebyData && Array.isArray(trebyData.sections)) {
+    for (const section of trebyData.sections) {
+      const secTitleLower = section.title.toLowerCase();
+      const contentText = Array.isArray(section.content) ? section.content.join(' ') : '';
+      const contentTextLower = contentText.toLowerCase();
+
+      if (secTitleLower.includes(trimmed) || contentTextLower.includes(trimmed)) {
+        let snippet = section.content && section.content[0] ? section.content[0] : '';
+        if (trimmed.length > 2) {
+          const matchParagraph = section.content?.find(p => p.toLowerCase().includes(trimmed));
+          if (matchParagraph) snippet = matchParagraph;
+        }
+        snippet = snippet.replace(/<[^>]*>/g, '');
+        if (snippet.length > 160) snippet = snippet.slice(0, 160) + '...';
+
+        results.push({
+          id: `treby_${section.id}`,
+          title: `Записка церковная: ${section.title}`,
+          category: 'В Храм',
+          snippet: snippet || 'О церковных записках, поминовениях и службах.',
+          url: `/temple/treby?sec=${section.id}`,
+          type: 'page'
+        });
+      }
+
+      if (Array.isArray(section.subsections)) {
+        for (const sub of section.subsections) {
+          const subTitleLower = sub.title.toLowerCase();
+          const subContentText = Array.isArray(sub.content) ? sub.content.join(' ') : '';
+          const subContentTextLower = subContentText.toLowerCase();
+
+          if (subTitleLower.includes(trimmed) || subContentTextLower.includes(trimmed)) {
+            let snippet = sub.content && sub.content[0] ? sub.content[0] : '';
+            if (trimmed.length > 2) {
+              const matchParagraph = sub.content?.find(p => p.toLowerCase().includes(trimmed));
+              if (matchParagraph) snippet = matchParagraph;
+            }
+            snippet = snippet.replace(/<[^>]*>/g, '');
+            if (snippet.length > 160) snippet = snippet.slice(0, 160) + '...';
+
+            results.push({
+              id: `treby_${sub.id}`,
+              title: `Записка церковная: ${sub.title}`,
+              category: 'В Храм',
+              snippet: snippet || 'Подробности о правилах и значении церковного поминовения.',
+              url: `/temple/treby?sec=${sub.id}`,
+              type: 'page'
+            });
+          }
+        }
+      }
+    }
+  }
+
+  // 4. Search in catechesisData (video items)
+  if (Array.isArray(catechesisData)) {
+    for (const video of catechesisData) {
+      const titleLower = video.title.toLowerCase();
+      const descLower = video.description.toLowerCase();
+
+      if (titleLower.includes(trimmed) || descLower.includes(trimmed)) {
+        let snippet = video.description;
+        if (snippet.length > 160) snippet = snippet.slice(0, 160) + '...';
+
+        results.push({
+          id: `cat_${video.id}`,
+          title: `Оглашение: ${video.title.replace(/\n/g, ' ')}`,
+          category: 'Оглашение',
+          snippet: snippet,
+          url: `/gospel-life/catechesis?id=${video.id}`,
+          type: 'catechesis'
+        });
+      }
+    }
+  }
+
+  // 5. Search in commandmentsData (commandments sections)
+  if (Array.isArray(commandmentsData)) {
+    commandmentsData.forEach((cmd, idx) => {
+      const titleLower = cmd.title.toLowerCase();
+      const contentLower = (cmd.content || '').toLowerCase();
+
+      if (titleLower.includes(trimmed) || contentLower.includes(trimmed)) {
+        let snippet = cmd.content || '';
+        if (snippet.length > 160) snippet = snippet.slice(0, 160) + '...';
+
+        results.push({
+          id: `cmd_${idx}`,
+          title: `Заповеди: ${cmd.title}`,
+          category: 'Евангелие',
+          snippet: snippet || 'Наставления Спасителя и святых отцов о заповедях.',
+          url: `/gospel-life/commandments?id=cmd-${idx}`,
+          type: 'page'
+        });
+      }
+    });
+  }
+
+  // 6. Search in prayersData
+  if (prayersData && typeof prayersData === 'object') {
+    for (const [key, list] of Object.entries(prayersData)) {
+      if (Array.isArray(list)) {
+        let currentHeader = '';
+        list.forEach((item, idx) => {
+          if (item.type === 'header') {
+            currentHeader = item.text || item.slavonic || '';
+          } else {
+            const slavonicLower = (item.slavonic || '').toLowerCase();
+            const russianLower = (item.russian || '').toLowerCase();
+
+            if (slavonicLower.includes(trimmed) || russianLower.includes(trimmed)) {
+              let snippet = item.russian || item.slavonic || '';
+              if (snippet.length > 160) snippet = snippet.slice(0, 160) + '...';
+
+              const catTitle = PRAYER_TITLES[key] || 'Молитвослов';
+              const prayerTitle = currentHeader ? `${catTitle}: ${currentHeader}` : `${catTitle}: Молитва`;
+
+              results.push({
+                id: `prayer_${key}_${idx}`,
+                title: prayerTitle.replace(/\n/g, ' '),
+                category: 'Молитвы',
+                snippet: snippet,
+                url: `/prayer-book/${key}?id=prayer-item-${idx}`,
+                type: 'prayer'
+              });
+            }
+          }
+        });
+      }
+    }
+  }
+
+  // 7. Search in questionsData
+  if (Array.isArray(questionsData)) {
+    questionsData.forEach((group, groupIdx) => {
+      if (Array.isArray(group.items)) {
+        group.items.forEach((qItem, qIdx) => {
+          const qLower = qItem.q.toLowerCase();
+          const aLower = qItem.a.toLowerCase();
+
+          if (qLower.includes(trimmed) || aLower.includes(trimmed)) {
+            let snippet = qItem.a;
+            if (snippet.length > 160) snippet = snippet.slice(0, 160) + '...';
+
+            results.push({
+              id: `q_${groupIdx}_${qIdx}`,
+              title: `Вопрос: ${qItem.q}`,
+              category: 'Оглашение (Вопросы)',
+              snippet: snippet,
+              url: `/gospel-life/catechesis/questions?q=${encodeURIComponent(qItem.q)}`,
+              type: 'catechesis'
+            });
+          }
+        });
+      }
+    });
+  }
+
+  // 8. Search in Sins database dynamically
   if (trimmed.length >= 3) {
     const matchingSins = ALL_SINS.filter(sin => {
       const titleMatch = sin.title.toLowerCase().includes(trimmed);
@@ -258,14 +491,13 @@ export function performGlobalSearch(query: string): SearchResult[] {
       return titleMatch || descMatch || passionMatch;
     });
 
-    // Add up to 8 matched sins to results so we don't overflow
     matchingSins.slice(0, 8).forEach((sin) => {
       results.push({
         id: `sin_${sin.id}`,
         title: `${sin.passion}: ${sin.title}`,
         category: 'Исповедь (Дневник)',
         snippet: sin.description,
-        url: '/temple/confession',
+        url: `/temple/confession?passion=${encodeURIComponent(sin.passion)}&sinId=${sin.id}`,
         type: 'sin'
       });
     });

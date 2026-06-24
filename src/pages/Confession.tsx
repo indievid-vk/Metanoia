@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ChevronDown, ChevronUp, Plus, Check, Trash2, X, Minimize2, ArrowUp } from 'lucide-react';
 import { useSinsStore, Passion, SinSeverity } from '../store';
 import { PASSIONS, MOCK_SINS } from '../data/constants';
@@ -12,6 +13,32 @@ export default function Confession() {
   const [expandedSin, setExpandedSin] = useState<string | null>(null);
   const [expandedSelectedSin, setExpandedSelectedSin] = useState<string | null>(null);
   const [expandedReportPassions, setExpandedReportPassions] = useState<Passion[]>([]);
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const passionParam = searchParams.get('passion');
+    const sinIdParam = searchParams.get('sinId');
+    if (passionParam) {
+      const decodedPassion = decodeURIComponent(passionParam) as Passion;
+      if (PASSIONS.includes(decodedPassion)) {
+        setExpandedPassion(decodedPassion);
+      }
+    }
+    if (sinIdParam) {
+      setExpandedSin(sinIdParam);
+      setTimeout(() => {
+        const elId = `sin-${sinIdParam}`;
+        const el = document.getElementById(elId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.add('bg-amber-100/40', 'transition-all', 'duration-1000');
+          setTimeout(() => {
+            el.classList.remove('bg-amber-100/40');
+          }, 3000);
+        }
+      }, 500);
+    }
+  }, [searchParams]);
   
   // Custom sin modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -224,7 +251,7 @@ export default function Confession() {
                     const isSelected = !!selectedSins[sin.id];
                     
                     return (
-                      <div key={sin.id} className={`border rounded-md transition-colors ${isSelected ? 'border-[var(--color-cinnabar)]/50 bg-[var(--color-cinnabar)]/5' : 'border-[var(--color-ink)]/10 bg-white/50'}`}>
+                      <div key={sin.id} id={`sin-${sin.id}`} className={`border rounded-md transition-colors scroll-mt-24 ${isSelected ? 'border-[var(--color-cinnabar)]/50 bg-[var(--color-cinnabar)]/5' : 'border-[var(--color-ink)]/10 bg-white/50'}`}>
                         <div className="flex items-start p-3">
                           <button 
                             onClick={() => toggleSin(sin.id)}

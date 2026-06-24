@@ -39,6 +39,27 @@ export default function PrayerViewer() {
     setViewMode(searchParams.get('mode') === 'easter' ? 'easter' : 'normal');
   }, [searchParams]);
 
+  useEffect(() => {
+    const targetId = searchParams.get('id');
+    if (targetId && targetId.startsWith('prayer-item-')) {
+      const idxStr = targetId.replace('prayer-item-', '');
+      const idx = parseInt(idxStr, 10);
+      if (!isNaN(idx)) {
+        setExpandedItems(prev => ({ ...prev, [idx]: true }));
+        setTimeout(() => {
+          const el = document.getElementById(targetId);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('bg-amber-100/40', 'rounded-xl', 'p-4', 'transition-all', 'duration-1000');
+            setTimeout(() => {
+              el.classList.remove('bg-amber-100/40');
+            }, 3000);
+          }
+        }, 400);
+      }
+    }
+  }, [searchParams]);
+
   const allPrayers: PrayerItem[] = useMemo(() => id ? (prayersData as any)[id] || [] : [], [id]);
   
   // Find where Paschal Hours start - more robust search
@@ -138,7 +159,7 @@ export default function PrayerViewer() {
           const isExpanded = !!expandedItems[index];
 
           return (
-            <div key={index} className="group pb-8">
+            <div key={index} id={`prayer-item-${index}`} className="group pb-8 scroll-mt-24">
               <div 
                 className={`transition-colors ${item.russian ? 'cursor-pointer' : ''}`}
                 onClick={() => item.russian && toggleItem(index)}
