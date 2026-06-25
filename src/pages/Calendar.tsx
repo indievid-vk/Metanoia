@@ -34,7 +34,7 @@ const safeLocalStorageSet = (key: string, value: string) => {
     try {
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
-        if (k && (k.startsWith('ortho_cal_v1_') || k.startsWith('ortho_cal_v2_'))) {
+        if (k && k.startsWith('ortho_cal_')) {
           localStorage.removeItem(k);
           i--;
         }
@@ -506,7 +506,7 @@ export default function Calendar() {
       const dateStr = `${year}-${month}-${day}`;
       
       const cacheKeyDay = `ortho_cal_v2_day_${dateStr}`;
-      const cacheKeyBible = `ortho_cal_v2_bible_${dateStr}`;
+      const cacheKeyBible = `ortho_cal_v3_bible_${dateStr}`;
 
       const cachedDay = localStorage.getItem(cacheKeyDay);
       const cachedBible = localStorage.getItem(cacheKeyBible);
@@ -623,9 +623,7 @@ export default function Calendar() {
             } catch (apiError) {
               console.warn("Failed to fetch Bible readings from server API, attempting client-side fallback proxy", apiError);
               try {
-                const bibleUrl = isSelectedToday 
-                  ? 'https://azbyka.ru/biblia/days' 
-                  : `https://azbyka.ru/biblia/days/${dateStr}`;
+                const bibleUrl = `https://azbyka.ru/biblia/days/${dateStr}`;
                 html = await fetchWithProxyFallback(bibleUrl);
               } catch (fallbackError) {
                 console.warn("Both server API and client-side proxies failed to fetch Bible readings. Engaging local Scripture fallbacks:", fallbackError);
