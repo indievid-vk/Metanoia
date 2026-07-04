@@ -539,11 +539,33 @@ export async function requestNotificationPermission(): Promise<boolean> {
   if (!('Notification' in window)) {
     return false;
   }
+
+  // Safe iframe check
+  try {
+    if (window.self !== window.top) {
+      console.warn("Notification request blocked: running inside an iframe");
+      return false;
+    }
+  } catch (e) {
+    // If we get a security error trying to access window.top, we are definitely in a cross-origin iframe
+    console.warn("Notification request blocked due to iframe security constraints:", e);
+    return false;
+  }
+
   try {
     const permission = await Notification.requestPermission();
     return permission === 'granted';
   } catch (err) {
-    console.error("Error requesting permission", err);
-    return false;
+    // Fallback to callback-based request (e.g. older Safari or mobile environments)
+    return new Promise((resolve) => {
+      try {
+        Notification.requestPermission((permission) => {
+          resolve(permission === 'granted');
+        });
+      } catch (callbackErr) {
+        console.error("Error requesting permission via callback", callbackErr);
+        resolve(false);
+      }
+    });
   }
 }

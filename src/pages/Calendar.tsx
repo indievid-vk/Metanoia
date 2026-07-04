@@ -515,6 +515,7 @@ export default function Calendar() {
     'Notification' in window ? Notification.permission : 'denied'
   );
   const [upcomingReminders, setUpcomingReminders] = useState<OrthodoxHoliday[]>([]);
+  const [notificationFeedback, setNotificationFeedback] = useState<string | null>(null);
 
   // Load upcoming week's reminders on mount
   useEffect(() => {
@@ -568,10 +569,48 @@ export default function Calendar() {
 
   // Request browser permissions
   const handleRequestPermission = async () => {
-    const granted = await requestNotificationPermission();
-    setPermissionStatus(granted ? 'granted' : 'denied');
-    if (granted) {
-      handleToggleSetting('enabled', true);
+    setNotificationFeedback(null);
+    
+    if (!('Notification' in window)) {
+      setNotificationFeedback('Ваш браузер не поддерживает системные уведомления.');
+      return;
+    }
+    
+    let isIframe = false;
+    try {
+      isIframe = window.self !== window.top;
+    } catch (e) {
+      isIframe = true;
+    }
+    
+    if (isIframe) {
+      setNotificationFeedback(
+        'Запрос заблокирован: приложение запущено внутри фрейма предварительного просмотра. Пожалуйста, откройте приложение в новой вкладке (кнопка в правом верхнем углу экрана) и нажмите кнопку разрешения уведомлений там.'
+      );
+      return;
+    }
+    
+    if (Notification.permission === 'denied') {
+      setNotificationFeedback(
+        'Уведомления заблокированы в настройках вашего браузера для этого сайта. Пожалуйста, нажмите на иконку «замочка» или «настроек» слева от адреса сайта в адресной строке вашего браузера, переключите разрешение на «Разрешить» и обновите страницу.'
+      );
+      return;
+    }
+    
+    try {
+      const granted = await requestNotificationPermission();
+      setPermissionStatus(granted ? 'granted' : 'denied');
+      if (granted) {
+        handleToggleSetting('enabled', true);
+        setNotificationFeedback('Уведомления успешно включены! Теперь вы будете получать напоминания о праздниках с колокольным звоном.');
+      } else {
+        setNotificationFeedback(
+          'Запрос отклонен или заблокирован. Пожалуйста, проверьте настройки уведомлений в вашем браузере.'
+        );
+      }
+    } catch (err) {
+      setNotificationFeedback('Произошла ошибка при запросе разрешения на уведомления.');
+      console.error(err);
     }
   };
 
@@ -1069,6 +1108,15 @@ export default function Calendar() {
                         >
                           Разрешить уведомления в браузере
                         </button>
+                        
+                        {notificationFeedback && (
+                          <div className="mt-2.5 p-2 bg-white/90 border border-[var(--color-cinnabar)]/20 rounded-lg text-[11px] leading-relaxed text-stone-800 font-sans shadow-2xs">
+                            <p className="font-semibold text-[var(--color-cinnabar)] flex items-center gap-1">
+                              <span>ℹ️</span> Инфо-сообщение:
+                            </p>
+                            <p className="mt-0.5">{notificationFeedback}</p>
+                          </div>
+                        )}
                       </div>
                     )}
 
