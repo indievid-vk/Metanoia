@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { ChevronLeft, Loader2, Info, Search } from 'lucide-react';
+import { ChevronLeft, Loader2, Info, Search, Bell } from 'lucide-react';
+import { getHolidaysForDate, playBellChime } from '../utils/reminderEngine';
 import { getAssetPath } from '../utils';
 import InstallPrompt from './InstallPrompt';
 import UpdatePopup from './UpdatePopup';
@@ -13,12 +14,36 @@ export default function Layout() {
   const location = useLocation();
   const [showSearch, setShowSearch] = useState(false);
 
+  const [todayHolidays, setTodayHolidays] = useState<any[]>([]);
+  const [bannerDismissed, setBannerDismissed] = useState<boolean>(false);
+
   useEffect(() => {
     const mainElement = document.querySelector('main');
     if (mainElement) {
       mainElement.scrollTop = 0;
     }
   }, [location.pathname]);
+
+  useEffect(() => {
+    const holidays = getHolidaysForDate(new Date());
+    setTodayHolidays(holidays);
+    
+    const lastDismissed = localStorage.getItem('holiday_banner_dismissed_date');
+    const todayStr = new Date().toDateString();
+    if (lastDismissed === todayStr) {
+      setBannerDismissed(true);
+    }
+  }, [location.pathname]);
+
+  const handleDismissBanner = () => {
+    setBannerDismissed(true);
+    localStorage.setItem('holiday_banner_dismissed_date', new Date().toDateString());
+  };
+
+  const handlePlayHolidayBell = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    playBellChime();
+  };
 
   const isHome = location.pathname === '/';
 
@@ -71,6 +96,51 @@ export default function Layout() {
           </div>
         </div>
       </header>
+
+      {/* Holiday Banner */}
+      <AnimatePresence>
+        {todayHolidays.length > 0 && !bannerDismissed && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="bg-amber-50/95 border-b border-[var(--color-cinnabar)]/20 px-4 py-2 flex items-center justify-between gap-3 relative z-20 shadow-xs overflow-hidden"
+          >
+            <div className="flex items-center gap-2.5 flex-1 min-w-0">
+              <button
+                onClick={handlePlayHolidayBell}
+                className="p-1.5 rounded-full bg-[var(--color-cinnabar)]/10 text-[var(--color-cinnabar)] hover:bg-[var(--color-cinnabar)]/20 active:scale-95 transition-all cursor-pointer flex-shrink-0 animate-pulse"
+                title="Послушать благовест колокола"
+              >
+                <Bell size={18} className="animate-bounce" />
+              </button>
+              <div className="text-left leading-tight min-w-0">
+                <span className="text-[9px] bg-[var(--color-cinnabar)] text-amber-50 px-1.5 py-0.5 rounded-full uppercase font-bold tracking-wider font-sans inline-block mb-0.5">
+                  Сегодня праздник
+                </span>
+                <h5 className="font-izhitsa text-xs sm:text-sm text-[var(--color-ink)] truncate max-w-[190px] sm:max-w-[240px]">
+                  {todayHolidays[0].name}
+                </h5>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                onClick={() => navigate('/calendar')}
+                className="text-[10px] sm:text-xs font-izhitsa text-[var(--color-cinnabar)] hover:underline cursor-pointer bg-white/60 px-2 py-1 rounded-lg border border-[var(--color-cinnabar)]/10"
+              >
+                Подробнее
+              </button>
+              <button
+                onClick={handleDismissBanner}
+                className="text-stone-400 hover:text-stone-600 p-1 rounded-md text-xs cursor-pointer font-sans"
+                title="Скрыть"
+              >
+                ✕
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Global Search Dialog */}
       <SearchOverlay isOpen={showSearch} onClose={() => setShowSearch(false)} />

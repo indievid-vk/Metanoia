@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, BookOpen, Info, Image as ImageIcon, Users, ChevronLeft, ChevronRight, Sparkles, Award } from 'lucide-react';
+import { Calendar as CalendarIcon, BookOpen, Info, Image as ImageIcon, Users, ChevronLeft, ChevronRight, Sparkles, Award, Bell, BellOff, Volume2, VolumeX, Settings } from 'lucide-react';
 import { DecorativeDivider } from '../components/DecorativeDivider';
+import { motion, AnimatePresence } from 'motion/react';
+import { 
+  getReminderSettings, 
+  saveReminderSettings, 
+  checkDailyReminders, 
+  playBellChime, 
+  requestNotificationPermission, 
+  getHolidaysForDate, 
+  OrthodoxHoliday, 
+  ReminderSettings 
+} from '../utils/reminderEngine';
 
 type AzbykaResponse = {
   saints: {
@@ -497,6 +508,74 @@ export default function Calendar() {
   const [bibleLoading, setBibleLoading] = useState(false);
   const [bibleError, setBibleError] = useState<string | null>(null);
 
+  // Reminders States
+  const [showReminderSettings, setShowReminderSettings] = useState(false);
+  const [reminderSettings, setReminderSettingsState] = useState<ReminderSettings>(getReminderSettings());
+  const [permissionStatus, setPermissionStatus] = useState<string>(
+    'Notification' in window ? Notification.permission : 'denied'
+  );
+  const [upcomingReminders, setUpcomingReminders] = useState<OrthodoxHoliday[]>([]);
+
+  // Load upcoming week's reminders on mount
+  useEffect(() => {
+    const today = new Date();
+    const list: OrthodoxHoliday[] = [];
+    for (let i = 0; i < 7; i++) {
+      const futureDate = new Date(today);
+      futureDate.setDate(today.getDate() + i);
+      const dayHolidays = getHolidaysForDate(futureDate);
+      dayHolidays.forEach(h => {
+        if (!list.some(existing => existing.name.includes(h.name))) {
+          const dateStr = futureDate.toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
+          list.push({
+            ...h,
+            name: `${dateStr}: ${h.name}`
+          });
+        }
+      });
+    }
+    setUpcomingReminders(list);
+  }, [reminderSettings]);
+
+  // Handle setting updates
+  const handleToggleSetting = (key: keyof ReminderSettings, value: any) => {
+    const updated = { ...reminderSettings, [key]: value };
+    setReminderSettingsState(updated);
+    saveReminderSettings(updated);
+  };
+
+  // Test notification & sound
+  const handleTestBell = () => {
+    playBellChime();
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification('Тестовое уведомление: Пасхальное благословение', {
+          body: 'Система напоминаний о праздниках работает исправно! Слышен колокольный звон.',
+          icon: '/icon.png'
+        });
+      } catch (e) {
+        console.warn("Could not trigger test desktop notification", e);
+      }
+    }
+  };
+
+  // Request browser permissions
+  const handleRequestPermission = async () => {
+    const granted = await requestNotificationPermission();
+    setPermissionStatus(granted ? 'granted' : 'denied');
+    if (granted) {
+      handleToggleSetting('enabled', true);
+    }
+  };
+
+  // Run the reminder check on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      checkDailyReminders(false);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [currentDate]);
+
   useEffect(() => {
     const fetchCalendar = async () => {
       setIsOfflineMode(false);
@@ -769,6 +848,174 @@ export default function Calendar() {
         <h2 className="font-izhitsa text-3xl text-[var(--color-cinnabar)]">Православный календарь</h2>
         <DecorativeDivider className="mb-4" />
         <p className="text-xs text-[var(--color-ink)] opacity-60 mt-1">(по материалам сайта azbyka.ru)</p>
+      </div>
+
+      {/* Reminder System Quick Control */}
+      <div className="mb-6 bg-amber-50/60 border border-[var(--color-cinnabar)]/15 rounded-2xl p-4 shadow-xs relative overflow-hidden max-w-xl mx-auto">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className={`p-2.5 rounded-full ${reminderSettings.enabled ? 'bg-[var(--color-cinnabar)]/10 text-[var(--color-cinnabar)]' : 'bg-stone-100 text-stone-400'}`}>
+              {reminderSettings.enabled ? <Bell size={22} className="animate-bounce" /> : <BellOff size={22} />}
+            </div>
+            <div className="text-left">
+              <h4 className="font-izhitsa text-base sm:text-lg text-[var(--color-ink)]">Напоминания о праздниках</h4>
+              <p className="text-xs text-[var(--color-ink)]/60 font-sans">
+                {reminderSettings.enabled ? 'Включены уведомления и звон' : 'Уведомления отключены'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowReminderSettings(!showReminderSettings)}
+            className="px-4 py-1.5 rounded-xl border border-[var(--color-cinnabar)]/20 text-xs sm:text-sm font-izhitsa text-[var(--color-cinnabar)] bg-white/80 hover:bg-white hover:shadow-xs transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer"
+          >
+            <Settings size={15} />
+            {showReminderSettings ? 'Свернуть' : 'Настроить'}
+          </button>
+        </div>
+
+        <AnimatePresence>
+          {showReminderSettings && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden mt-4 pt-4 border-t border-[var(--color-cinnabar)]/10"
+            >
+              <div className="space-y-4 font-sans text-xs sm:text-sm text-left">
+                {/* Main Switch */}
+                <div className="flex items-center justify-between bg-white/50 p-2.5 rounded-xl border border-[var(--color-cinnabar)]/5">
+                  <span className="font-semibold text-stone-800">Получать уведомления</span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={reminderSettings.enabled} 
+                      onChange={(e) => handleToggleSetting('enabled', e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-cinnabar)]"></div>
+                  </label>
+                </div>
+
+                {reminderSettings.enabled && (
+                  <>
+                    {/* Timing Selector */}
+                    <div className="space-y-1.5">
+                      <span className="font-semibold text-stone-700 block text-xs uppercase tracking-wider">Когда напоминать:</span>
+                      <div className="grid grid-cols-3 gap-2 bg-white/40 p-1 rounded-xl border border-stone-200/50 text-center font-medium">
+                        {(['today', 'eve', 'both'] as const).map((timingOption) => (
+                          <button
+                            key={timingOption}
+                            onClick={() => handleToggleSetting('timing', timingOption)}
+                            className={`py-1.5 rounded-lg text-[10px] sm:text-xs transition-all cursor-pointer ${
+                              reminderSettings.timing === timingOption
+                                ? 'bg-[var(--color-cinnabar)] text-white font-semibold shadow-xs'
+                                : 'text-stone-600 hover:bg-white/40'
+                            }`}
+                          >
+                            {timingOption === 'today' ? 'В день праздника' : timingOption === 'eve' ? 'Накануне' : 'Все'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Sound Option & Test Button */}
+                    <div className="flex items-center justify-between bg-white/50 p-2.5 rounded-xl border border-[var(--color-cinnabar)]/5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-stone-800">Колокольный звон</span>
+                        <span className="text-[10px] text-stone-500 font-normal">(при празднике)</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={handleTestBell}
+                          title="Проверить звук колокола"
+                          className="p-1.5 rounded-lg bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors cursor-pointer"
+                        >
+                          <Volume2 size={16} />
+                        </button>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input 
+                            type="checkbox" 
+                            checked={reminderSettings.soundEnabled} 
+                            onChange={(e) => handleToggleSetting('soundEnabled', e.target.checked)}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-cinnabar)]"></div>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Holiday Types Preferences */}
+                    <div className="space-y-2 bg-white/30 p-3 rounded-xl border border-stone-200/50">
+                      <span className="font-semibold text-stone-700 block text-xs uppercase tracking-wider">Типы событий:</span>
+                      
+                      <div className="space-y-2 text-stone-700">
+                        <label className="flex items-center justify-between cursor-pointer">
+                          <span>Двунадесятые праздники</span>
+                          <input 
+                            type="checkbox" 
+                            checked={reminderSettings.twelveFeasts} 
+                            onChange={(e) => handleToggleSetting('twelveFeasts', e.target.checked)}
+                            className="rounded border-stone-300 text-[var(--color-cinnabar)] focus:ring-[var(--color-cinnabar)]"
+                          />
+                        </label>
+                        <label className="flex items-center justify-between cursor-pointer">
+                          <span>Великие праздники</span>
+                          <input 
+                            type="checkbox" 
+                            checked={reminderSettings.greatFeasts} 
+                            onChange={(e) => handleToggleSetting('greatFeasts', e.target.checked)}
+                            className="rounded border-stone-300 text-[var(--color-cinnabar)] focus:ring-[var(--color-cinnabar)]"
+                          />
+                        </label>
+                        <label className="flex items-center justify-between cursor-pointer">
+                          <span>Многодневные и строгие посты</span>
+                          <input 
+                            type="checkbox" 
+                            checked={reminderSettings.fasts} 
+                            onChange={(e) => handleToggleSetting('fasts', e.target.checked)}
+                            className="rounded border-stone-300 text-[var(--color-cinnabar)] focus:ring-[var(--color-cinnabar)]"
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Browser Notification Permission request block */}
+                    {permissionStatus !== 'granted' && (
+                      <div className="p-3 bg-red-50/50 border border-[var(--color-cinnabar)]/10 rounded-xl text-stone-700 space-y-2 text-left">
+                        <p className="text-xs">Для получения всплывающих пуш-уведомлений на рабочем столе или телефоне разрешите отправку уведомлений:</p>
+                        <button
+                          onClick={handleRequestPermission}
+                          className="w-full py-1.5 bg-[var(--color-cinnabar)] hover:bg-[#912525] text-white text-xs font-izhitsa rounded-lg transition-colors cursor-pointer"
+                        >
+                          Разрешить уведомления в браузере
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Upcoming Week Preview */}
+                    {upcomingReminders.length > 0 && (
+                      <div className="space-y-1.5 mt-2 text-left">
+                        <span className="font-semibold text-stone-700 block text-xs uppercase tracking-wider">Предстоящие на этой неделе:</span>
+                        <div className="space-y-1 bg-white/50 p-2.5 rounded-xl border border-stone-200/50 max-h-36 overflow-y-auto">
+                          {upcomingReminders.map((r, idx) => (
+                            <div key={idx} className="flex items-start gap-1.5 py-1 border-b border-stone-100 last:border-0 text-xs">
+                              <span className="text-[var(--color-cinnabar)]">✙</span>
+                              <div className="flex-1 text-left">
+                                <span className="font-semibold text-stone-800">{r.name}</span>
+                                <p className="text-stone-500 text-[10px] sm:text-xs leading-normal mt-0.5">{r.description}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Date Navigation */}
