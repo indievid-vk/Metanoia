@@ -524,7 +524,14 @@ export default function Calendar() {
       const futureDate = new Date(today);
       futureDate.setDate(today.getDate() + i);
       const dayHolidays = getHolidaysForDate(futureDate);
-      dayHolidays.forEach(h => {
+      const filtered = dayHolidays.filter(h => {
+        if (h.type === 'twelve' && reminderSettings.twelveFeasts) return true;
+        if (h.type === 'great' && reminderSettings.greatFeasts) return true;
+        if (h.type === 'fast' && reminderSettings.fasts) return true;
+        return false;
+      });
+
+      filtered.forEach(h => {
         if (!list.some(existing => existing.name.includes(h.name))) {
           const dateStr = futureDate.toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
           list.push({
@@ -900,49 +907,118 @@ export default function Calendar() {
                 {reminderSettings.enabled && (
                   <>
                     {/* Timing Selector */}
-                    <div className="space-y-1.5">
-                      <span className="font-semibold text-stone-700 block text-xs uppercase tracking-wider">Когда напоминать:</span>
-                      <div className="grid grid-cols-3 gap-2 bg-white/40 p-1 rounded-xl border border-stone-200/50 text-center font-medium">
-                        {(['today', 'eve', 'both'] as const).map((timingOption) => (
-                          <button
-                            key={timingOption}
-                            onClick={() => handleToggleSetting('timing', timingOption)}
-                            className={`py-1.5 rounded-lg text-[10px] sm:text-xs transition-all cursor-pointer ${
-                              reminderSettings.timing === timingOption
-                                ? 'bg-[var(--color-cinnabar)] text-white font-semibold shadow-xs'
-                                : 'text-stone-600 hover:bg-white/40'
-                            }`}
-                          >
-                            {timingOption === 'today' ? 'В день праздника' : timingOption === 'eve' ? 'Накануне' : 'Все'}
-                          </button>
-                        ))}
+                    <div className="space-y-2 bg-white/30 p-3 rounded-xl border border-stone-200/50">
+                      <span className="font-semibold text-stone-700 block text-xs uppercase tracking-wider">Когда присылать напоминания:</span>
+                      
+                      <div className="space-y-2 text-stone-700">
+                        <label className="flex items-center justify-between cursor-pointer">
+                          <div className="flex flex-col text-left">
+                            <span>В день праздника</span>
+                            <span className="text-[10px] text-stone-500 font-normal">Оповещение непосредственно в день торжества</span>
+                          </div>
+                          <input 
+                            type="checkbox" 
+                            checked={reminderSettings.notifyToday} 
+                            onChange={(e) => handleToggleSetting('notifyToday', e.target.checked)}
+                            className="rounded border-stone-300 text-[var(--color-cinnabar)] focus:ring-[var(--color-cinnabar)] cursor-pointer"
+                          />
+                        </label>
+                        <label className="flex items-center justify-between cursor-pointer">
+                          <div className="flex flex-col text-left">
+                            <span>Накануне (за 1 день)</span>
+                            <span className="text-[10px] text-stone-500 font-normal">Заблаговременное извещение за день до праздника</span>
+                          </div>
+                          <input 
+                            type="checkbox" 
+                            checked={reminderSettings.notify1Day} 
+                            onChange={(e) => handleToggleSetting('notify1Day', e.target.checked)}
+                            className="rounded border-stone-300 text-[var(--color-cinnabar)] focus:ring-[var(--color-cinnabar)] cursor-pointer"
+                          />
+                        </label>
+                        <label className="flex items-center justify-between cursor-pointer">
+                          <div className="flex flex-col text-left">
+                            <span>За 3 дня до праздника</span>
+                            <span className="text-[10px] text-stone-500 font-normal">Полезно для подготовки к великим праздникам</span>
+                          </div>
+                          <input 
+                            type="checkbox" 
+                            checked={reminderSettings.notify3Days} 
+                            onChange={(e) => handleToggleSetting('notify3Days', e.target.checked)}
+                            className="rounded border-stone-300 text-[var(--color-cinnabar)] focus:ring-[var(--color-cinnabar)] cursor-pointer"
+                          />
+                        </label>
+                        <label className="flex items-center justify-between cursor-pointer">
+                          <div className="flex flex-col text-left">
+                            <span>За неделю (за 7 дней)</span>
+                            <span className="text-[10px] text-stone-500 font-normal">Для глубокого планирования постов и поездок</span>
+                          </div>
+                          <input 
+                            type="checkbox" 
+                            checked={reminderSettings.notify7Days} 
+                            onChange={(e) => handleToggleSetting('notify7Days', e.target.checked)}
+                            className="rounded border-stone-300 text-[var(--color-cinnabar)] focus:ring-[var(--color-cinnabar)] cursor-pointer"
+                          />
+                        </label>
                       </div>
                     </div>
 
                     {/* Sound Option & Test Button */}
-                    <div className="flex items-center justify-between bg-white/50 p-2.5 rounded-xl border border-[var(--color-cinnabar)]/5">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-stone-800">Колокольный звон</span>
-                        <span className="text-[10px] text-stone-500 font-normal">(при празднике)</span>
+                    <div className="bg-white/50 p-2.5 rounded-xl border border-[var(--color-cinnabar)]/5 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-stone-800">Колокольный звон</span>
+                          <span className="text-[10px] text-stone-500 font-normal">(при празднике)</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={handleTestBell}
+                            title="Проверить звук колокола"
+                            className="p-1.5 rounded-lg bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors cursor-pointer"
+                          >
+                            <Volume2 size={16} />
+                          </button>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              checked={reminderSettings.soundEnabled} 
+                              onChange={(e) => handleToggleSetting('soundEnabled', e.target.checked)}
+                              className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-cinnabar)]"></div>
+                          </label>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={handleTestBell}
-                          title="Проверить звук колокола"
-                          className="p-1.5 rounded-lg bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors cursor-pointer"
-                        >
-                          <Volume2 size={16} />
-                        </button>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input 
-                            type="checkbox" 
-                            checked={reminderSettings.soundEnabled} 
-                            onChange={(e) => handleToggleSetting('soundEnabled', e.target.checked)}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-cinnabar)]"></div>
-                        </label>
-                      </div>
+
+                      {reminderSettings.soundEnabled && (
+                        <div className="space-y-1.5 mt-2 bg-amber-50/40 p-2 rounded-lg border border-[var(--color-cinnabar)]/5">
+                          <span className="font-semibold text-stone-700 block text-[10px] uppercase tracking-wider">Выберите мелодию:</span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 font-medium">
+                            {[
+                              { id: 'blagovest', name: 'Благовест (Торжественный)' },
+                              { id: 'prazdnichny', name: 'Праздничный перезвон' },
+                              { id: 'trezvon', name: 'Пасхальный трезвон' },
+                              { id: 'soft', name: 'Тихий хрустальный' },
+                              { id: 'bilo', name: 'Монашеское било' }
+                            ].map((soundOpt) => (
+                              <button
+                                key={soundOpt.id}
+                                onClick={() => {
+                                  handleToggleSetting('soundType', soundOpt.id);
+                                  playBellChime(soundOpt.id as any);
+                                }}
+                                className={`px-2 py-1.5 rounded-lg text-[10px] text-left transition-all cursor-pointer flex items-center justify-between ${
+                                  reminderSettings.soundType === soundOpt.id
+                                    ? 'bg-[var(--color-cinnabar)] text-white font-semibold shadow-xs'
+                                    : 'bg-white/50 text-stone-700 hover:bg-white border border-stone-200/40'
+                                }`}
+                              >
+                                <span>{soundOpt.name}</span>
+                                <Volume2 size={11} className={reminderSettings.soundType === soundOpt.id ? 'opacity-100 animate-pulse' : 'opacity-40'} />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Holiday Types Preferences */}
@@ -983,7 +1059,10 @@ export default function Calendar() {
                     {/* Browser Notification Permission request block */}
                     {permissionStatus !== 'granted' && (
                       <div className="p-3 bg-red-50/50 border border-[var(--color-cinnabar)]/10 rounded-xl text-stone-700 space-y-2 text-left">
-                        <p className="text-xs">Для получения всплывающих пуш-уведомлений на рабочем столе или телефоне разрешите отправку уведомлений:</p>
+                        <p className="text-xs font-semibold text-[var(--color-cinnabar)]">Обратите внимание:</p>
+                        <p className="text-[11px] leading-relaxed">
+                          Браузер блокирует запрос уведомлений внутри фрейма предварительного просмотра. Для включения уведомлений откройте приложение в <strong>отдельной вкладке</strong> (кнопка сверху справа) и нажмите кнопку ниже снова!
+                        </p>
                         <button
                           onClick={handleRequestPermission}
                           className="w-full py-1.5 bg-[var(--color-cinnabar)] hover:bg-[#912525] text-white text-xs font-izhitsa rounded-lg transition-colors cursor-pointer"

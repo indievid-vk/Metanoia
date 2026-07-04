@@ -9,7 +9,11 @@ export interface ReminderSettings {
   greatFeasts: boolean;
   fasts: boolean;
   soundEnabled: boolean;
-  timing: 'today' | 'eve' | 'both';
+  soundType: 'blagovest' | 'prazdnichny' | 'trezvon' | 'soft' | 'bilo';
+  notifyToday: boolean;
+  notify1Day: boolean;
+  notify3Days: boolean;
+  notify7Days: boolean;
   lastNotifiedDate: string; // YYYY-MM-DD
 }
 
@@ -26,7 +30,11 @@ const DEFAULT_SETTINGS: ReminderSettings = {
   greatFeasts: true,
   fasts: true,
   soundEnabled: true,
-  timing: 'today',
+  soundType: 'blagovest',
+  notifyToday: true,
+  notify1Day: true,
+  notify3Days: false,
+  notify7Days: false,
   lastNotifiedDate: '',
 };
 
@@ -47,43 +55,132 @@ const getJulianPascha = (year: number): Date => {
 
 /**
  * Play a synthesized, rich, multi-harmonic church bell chime using Web Audio API.
+ * Supports different beautiful, authentic sounding presets chosen by the user.
  */
-export function playBellChime() {
+export function playBellChime(customType?: 'blagovest' | 'prazdnichny' | 'trezvon' | 'soft' | 'bilo') {
   try {
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContext) return;
     const ctx = new AudioContext();
-    const now = ctx.currentTime;
+    
+    const settings = getReminderSettings();
+    const type = customType || settings.soundType || 'blagovest';
 
-    // Church bell harmonics frequencies
-    // Real bronze bells have sub-tones (hum), octave, and multiple metallic partials
-    const frequencies = [120, 240, 360, 480, 600, 720, 840, 960];
-    const gains = [0.9, 1.0, 0.7, 0.5, 0.35, 0.2, 0.1, 0.05];
-    const decays = [4.5, 3.5, 2.5, 2.0, 1.5, 1.2, 0.9, 0.6];
+    const startAudio = () => {
+      const now = ctx.currentTime;
 
-    const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(0.25, now);
-    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 5.0);
-    masterGain.connect(ctx.destination);
+      const playSingleBell = (baseFreq: number, volume: number, startTime: number, duration: number) => {
+        const frequencies = [baseFreq, baseFreq * 2, baseFreq * 3, baseFreq * 4.2, baseFreq * 5.4, baseFreq * 6.8];
+        const gains = [1.0, 0.8, 0.6, 0.4, 0.2, 0.1];
+        const decays = [duration, duration * 0.8, duration * 0.6, duration * 0.4, duration * 0.3, duration * 0.2];
 
-    frequencies.forEach((freq, idx) => {
-      const osc = ctx.createOscillator();
-      const gainNode = ctx.createGain();
+        const bellGain = ctx.createGain();
+        bellGain.gain.setValueAtTime(volume * 0.3, startTime);
+        bellGain.gain.linearRampToValueAtTime(volume * 0.01, startTime + duration - 0.2);
+        bellGain.gain.linearRampToValueAtTime(0, startTime + duration);
+        bellGain.connect(ctx.destination);
 
-      osc.type = 'sine';
-      // Introduce minor organic detuning for a rich acoustic vibe
-      const detune = (Math.random() - 0.5) * 1.5;
-      osc.frequency.setValueAtTime(freq + detune, now);
+        frequencies.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const partialGain = ctx.createGain();
 
-      gainNode.gain.setValueAtTime(gains[idx] * 0.35, now);
-      gainNode.gain.exponentialRampToValueAtTime(0.0001, now + decays[idx]);
+          osc.type = 'sine';
+          const detune = (Math.random() - 0.5) * 2;
+          osc.frequency.setValueAtTime(freq + detune, startTime);
 
-      osc.connect(gainNode);
-      gainNode.connect(masterGain);
+          partialGain.gain.setValueAtTime(gains[idx], startTime);
+          partialGain.gain.linearRampToValueAtTime(0, startTime + decays[idx]);
 
-      osc.start(now);
-      osc.stop(now + decays[idx]);
-    });
+          osc.connect(partialGain);
+          partialGain.connect(bellGain);
+
+          osc.start(startTime);
+          osc.stop(startTime + decays[idx]);
+        });
+      };
+
+      if (type === 'blagovest') {
+        // 1. Благовест (Blagovest) - Slow, solemn, deep bells
+        playSingleBell(98, 1.0, now, 6.0);
+        playSingleBell(98, 0.7, now + 2.5, 4.5);
+      } 
+      else if (type === 'prazdnichny') {
+        // 2. Праздничный перезвон (Festive) - Rhythmic alternation of medium and high-pitched bells
+        playSingleBell(130, 0.8, now, 4.0);
+        playSingleBell(260, 0.5, now + 0.4, 2.0);
+        playSingleBell(390, 0.4, now + 0.8, 1.5);
+        
+        playSingleBell(130, 0.8, now + 1.2, 4.0);
+        playSingleBell(260, 0.5, now + 1.6, 2.0);
+        playSingleBell(390, 0.4, now + 2.0, 1.5);
+
+        playSingleBell(98, 0.9, now + 2.5, 5.0);
+      }
+      else if (type === 'trezvon') {
+        // 3. Пасхальный трезвон (Trezvon) - Cascading, rapid joyful peal
+        const notes = [440, 554, 659, 880];
+        for (let i = 0; i < 12; i++) {
+          const time = now + i * 0.25;
+          const note = notes[i % notes.length];
+          playSingleBell(note / 2, 0.4, time, 1.5);
+        }
+        playSingleBell(110, 0.9, now + 3.0, 5.0);
+      }
+      else if (type === 'soft') {
+        // 4. Тихий хрустальный перезвон (Soft) - Peaceful, soothing meditative high-pitch chime
+        playSingleBell(523.25, 0.6, now, 3.5);
+        playSingleBell(659.25, 0.5, now + 0.8, 3.0);
+        playSingleBell(783.99, 0.5, now + 1.6, 2.5);
+        playSingleBell(1046.5, 0.4, now + 2.4, 2.0);
+      }
+      else if (type === 'bilo') {
+        // 5. Монашеское било (Bilo) - Rhythmic, dry resonant wooden semantron with metallic overtones
+        const playBiloStroke = (time: number, vol: number) => {
+          // High fundamental, low harmonics, short duration, square-ish/triangle oscillator blend
+          const osc1 = ctx.createOscillator();
+          const osc2 = ctx.createOscillator();
+          const gainNode = ctx.createGain();
+
+          osc1.type = 'triangle';
+          osc1.frequency.setValueAtTime(180, time);
+          
+          osc2.type = 'sine';
+          osc2.frequency.setValueAtTime(320, time);
+
+          gainNode.gain.setValueAtTime(vol * 0.4, time);
+          gainNode.gain.exponentialRampToValueAtTime(0.0001, time + 0.35);
+
+          osc1.connect(gainNode);
+          osc2.connect(gainNode);
+          gainNode.connect(ctx.destination);
+
+          osc1.start(time);
+          osc1.stop(time + 0.4);
+          osc2.start(time);
+          osc2.stop(time + 0.4);
+        };
+
+        // Play accelerando rhythm
+        let accumTime = now;
+        let delay = 0.4;
+        for (let i = 0; i < 10; i++) {
+          playBiloStroke(accumTime, 0.8);
+          accumTime += delay;
+          delay *= 0.82; // speed up
+        }
+      }
+    };
+
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(() => {
+        startAudio();
+      }).catch(err => {
+        console.warn("Could not resume AudioContext, playing immediately anyway as fallback", err);
+        startAudio();
+      });
+    } else {
+      startAudio();
+    }
   } catch (err) {
     console.warn("Could not play synthesized bell chime", err);
   }
@@ -315,7 +412,17 @@ export function getReminderSettings(): ReminderSettings {
   try {
     const raw = localStorage.getItem('ortho_holiday_reminders_v1');
     if (raw) {
-      return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+      const parsed = JSON.parse(raw);
+      // Migration from old timing field if present
+      if ('timing' in parsed) {
+        const oldTiming = parsed.timing;
+        parsed.notifyToday = oldTiming === 'today' || oldTiming === 'both';
+        parsed.notify1Day = oldTiming === 'eve' || oldTiming === 'both';
+        parsed.notify3Days = false;
+        parsed.notify7Days = false;
+        delete parsed.timing;
+      }
+      return { ...DEFAULT_SETTINGS, ...parsed };
     }
   } catch (err) {
     console.error("Failed to parse settings", err);
@@ -347,13 +454,6 @@ export function checkDailyReminders(silent = false): OrthodoxHoliday[] {
   const day = String(today.getDate()).padStart(2, '0');
   const dateStr = `${year}-${month}-${day}`;
 
-  const todayHolidays = getHolidaysForDate(today);
-  
-  // Calculate tomorrow's holidays for "eve" reminders
-  const tomorrow = new Date(today);
-  tomorrow.setDate(today.getDate() + 1);
-  const tomorrowHolidays = getHolidaysForDate(tomorrow);
-
   const activeReminders: OrthodoxHoliday[] = [];
 
   // Filter based on user preferences
@@ -366,21 +466,41 @@ export function checkDailyReminders(silent = false): OrthodoxHoliday[] {
     });
   };
 
-  const filteredToday = filterHolidays(todayHolidays);
-  const filteredTomorrow = filterHolidays(tomorrowHolidays);
-
-  if (settings.timing === 'today' || settings.timing === 'both') {
-    activeReminders.push(...filteredToday);
-  }
-  if (settings.timing === 'eve' || settings.timing === 'both') {
-    // Label tomorrow's as "Накануне"
-    filteredTomorrow.forEach(h => {
-      activeReminders.push({
-        ...h,
-        name: `Накануне: ${h.name}`,
-        description: `Завтра празднуется: ${h.description}`
-      });
+  const addRemindersWithOffset = (offsetDays: number, prefix: string) => {
+    const checkDate = new Date(today);
+    checkDate.setDate(today.getDate() + offsetDays);
+    const found = getHolidaysForDate(checkDate);
+    const filtered = filterHolidays(found);
+    
+    filtered.forEach(h => {
+      if (offsetDays === 0) {
+        activeReminders.push(h);
+      } else {
+        let label = '';
+        if (offsetDays === 1) label = 'Завтра празднуется';
+        else if (offsetDays === 3) label = 'Через 3 дня празднуется';
+        else if (offsetDays === 7) label = 'Через неделю празднуется';
+        
+        activeReminders.push({
+          ...h,
+          name: `${prefix}: ${h.name}`,
+          description: `${label}: ${h.description}`
+        });
+      }
     });
+  };
+
+  if (settings.notifyToday) {
+    addRemindersWithOffset(0, '');
+  }
+  if (settings.notify1Day) {
+    addRemindersWithOffset(1, 'Накануне (за 1 день)');
+  }
+  if (settings.notify3Days) {
+    addRemindersWithOffset(3, 'За 3 дня');
+  }
+  if (settings.notify7Days) {
+    addRemindersWithOffset(7, 'За неделю');
   }
 
   // If we should actively trigger alerts and we haven't alerted for today's date yet
