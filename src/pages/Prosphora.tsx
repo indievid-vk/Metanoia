@@ -5,6 +5,7 @@ import { DecorativeDivider } from '../components/DecorativeDivider';
 
 export default function Prosphora() {
   const [zoomedImage, setZoomedImage] = useState<{ src: string, alt: string } | null>(null);
+  const [zoomScale, setZoomScale] = useState<number>(100);
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-12 px-4">
@@ -45,7 +46,10 @@ export default function Prosphora() {
             <div className="flex flex-col sm:flex-row gap-4 mb-4">
               <div 
                 className="sm:w-1/2 w-full relative cursor-pointer group"
-                onClick={() => setZoomedImage({ src: getAssetPath("/images/Prosfora_collage.webp"), alt: "Виды просфор" })}
+                onClick={() => {
+                  setZoomedImage({ src: getAssetPath("/images/Prosfora_collage.webp"), alt: "Виды просфор" });
+                  setZoomScale(100);
+                }}
               >
                 <div className="absolute top-2 right-2 text-white bg-black/40 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
                   <Maximize2 size={16} />
@@ -54,7 +58,10 @@ export default function Prosphora() {
               </div>
               <div 
                 className="sm:w-1/2 w-full relative cursor-pointer group"
-                onClick={() => setZoomedImage({ src: getAssetPath("/images/prosfori_proskomidiya1.webp"), alt: "Просфоры на проскомидии" })}
+                onClick={() => {
+                  setZoomedImage({ src: getAssetPath("/images/prosfori_proskomidiya1.webp"), alt: "Просфоры на проскомидии" });
+                  setZoomScale(100);
+                }}
               >
                 <div className="absolute top-2 right-2 text-white bg-black/40 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
                   <Maximize2 size={16} />
@@ -67,70 +74,127 @@ export default function Prosphora() {
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 <div className="flex gap-4 items-start bg-white/60 p-3 rounded-md border border-[var(--color-ink)]/5">
-                  <img src={getAssetPath("/images/Prosfora_Agnechnaya.webp")} alt="Агничная" className="w-20 h-20 rounded object-contain border border-[var(--color-ink)]/10 shrink-0 bg-white/50" />
+                  <img 
+                    src={getAssetPath("/images/Prosfora_Agnechnaya.webp")} 
+                    alt="Агничная" 
+                    className="w-20 h-20 rounded object-contain border border-[var(--color-ink)]/10 shrink-0 bg-white/50 cursor-pointer hover:opacity-85 transition-all duration-300 hover:scale-105" 
+                    onClick={() => {
+                      setZoomedImage({ src: getAssetPath("/images/Prosfora_Agnechnaya.webp"), alt: "Агничная просфора" });
+                      setZoomScale(100);
+                    }}
+                  />
                   <div>
                     <h4 className="text-[var(--color-cinnabar)]">Агничная</h4>
-                    <p className="text-sm">Самая большая просфора with крестом. Из ее центра вырезается кубическая часть — Святой Агнец.</p>
+                    <p className="text-sm">Самая большая просфора с крестом. Из ее центра вырезается кубическая часть — Святой Агнец.</p>
                   </div>
                 </div>
-
+ 
                 <div className="flex gap-4 items-start bg-white/60 p-3 rounded-md border border-[var(--color-ink)]/5">
-                  <img src={getAssetPath("/images/Prosfora_Bogorodichnaya.webp")} alt="Богородичная" className="w-20 h-20 rounded object-contain border border-[var(--color-ink)]/10 shrink-0 bg-white/50" />
+                  <img 
+                    src={getAssetPath("/images/Prosfora_Bogorodichnaya.webp")} 
+                    alt="Богородичная" 
+                    className="w-20 h-20 rounded object-contain border border-[var(--color-ink)]/10 shrink-0 bg-white/50 cursor-pointer hover:opacity-85 transition-all duration-300 hover:scale-105" 
+                    onClick={() => {
+                      setZoomedImage({ src: getAssetPath("/images/Prosfora_Bogorodichnaya.webp"), alt: "Богородичная просфора" });
+                      setZoomScale(100);
+                    }}
+                  />
                   <div>
                     <h4 className="text-[var(--color-cinnabar)]">Богородичная</h4>
                     <p className="text-sm">С печатью МАРИЯ или образом Божией Матери. Из нее вынимается частица в честь Пресвятой Богородицы.</p>
                   </div>
                 </div>
-
+ 
                 <div className="flex gap-4 items-start bg-white/60 p-3 rounded-md border border-[var(--color-ink)]/5">
-                  <img src={getAssetPath("/images/Prosfora_9.webp")} alt="Девятичинная" className="w-20 h-20 rounded object-contain border border-[var(--color-ink)]/10 shrink-0 bg-white/50" />
+                  <img 
+                    src={getAssetPath("/images/Prosfora_9.webp")} 
+                    alt="Девятичинная" 
+                    className="w-20 h-20 rounded object-contain border border-[var(--color-ink)]/10 shrink-0 bg-white/50 cursor-pointer hover:opacity-85 transition-all duration-300 hover:scale-105" 
+                    onClick={() => {
+                      setZoomedImage({ src: getAssetPath("/images/Prosfora_9.webp"), alt: "Девятичинная просфора" });
+                      setZoomScale(100);
+                    }}
+                  />
                   <div>
                     <h4 className="text-[var(--color-cinnabar)]">Девятичинная</h4>
                     <p className="text-sm">Посвящена всем святым. Из нее вынимается 9 частиц в честь девяти чинов святых.</p>
                   </div>
                 </div>
-
+ 
                 <div className="flex gap-4 items-start bg-white/60 p-3 rounded-md border border-[var(--color-ink)]/5">
-                  <img src={getAssetPath("/images/Prosfora_Zdravie.webp")} alt="Заздравная" className="w-20 h-20 rounded object-contain border border-[var(--color-ink)]/10 shrink-0 bg-white/50" />
+                  <img 
+                    src={getAssetPath("/images/Prosfora_Zdravie.webp")} 
+                    alt="Заздравная" 
+                    className="w-20 h-20 rounded object-contain border border-[var(--color-ink)]/10 shrink-0 bg-white/50 cursor-pointer hover:opacity-85 transition-all duration-300 hover:scale-105" 
+                    onClick={() => {
+                      setZoomedImage({ src: getAssetPath("/images/Prosfora_Zdravie.webp"), alt: "Заздравная просфора" });
+                      setZoomScale(100);
+                    }}
+                  />
                   <div>
                     <h4 className="text-[var(--color-cinnabar)]">Заздравная</h4>
                     <p className="text-sm">Из нее вынимаются две частицы за всех участников Литургии и всех живых.</p>
                   </div>
                 </div>
-
+ 
                 <div className="flex gap-4 items-start bg-white/60 p-3 rounded-md border border-[var(--color-ink)]/5">
-                  <img src={getAssetPath("/images/Prosfora_Upokoenie.webp")} alt="Заупокойная" className="w-20 h-20 rounded object-contain border border-[var(--color-ink)]/10 shrink-0 bg-white/50" />
+                  <img 
+                    src={getAssetPath("/images/Prosfora_Upokoenie.webp")} 
+                    alt="Заупокойная" 
+                    className="w-20 h-20 rounded object-contain border border-[var(--color-ink)]/10 shrink-0 bg-white/50 cursor-pointer hover:opacity-85 transition-all duration-300 hover:scale-105" 
+                    onClick={() => {
+                      setZoomedImage({ src: getAssetPath("/images/Prosfora_Upokoenie.webp"), alt: "Заупокойная просфора" });
+                      setZoomScale(100);
+                    }}
+                  />
                   <div>
                     <h4 className="text-[var(--color-cinnabar)]">Заупокойная</h4>
                     <p className="text-sm">Из нее вынимается частица за всех усопших православных христиан.</p>
                   </div>
                 </div>
-
+ 
                 <div className="flex gap-4 items-start bg-white/60 p-3 rounded-md border border-[var(--color-cinnabar)]/20 shadow-sm">
-                  <img src={getAssetPath("/images/Prosfora_malaya.webp")} alt="Малая просфора" className="w-20 h-20 rounded object-contain border border-[var(--color-ink)]/10 shrink-0 bg-white/50" />
+                  <img 
+                    src={getAssetPath("/images/Prosfora_malaya.webp")} 
+                    alt="Малая просфора" 
+                    className="w-20 h-20 rounded object-contain border border-[var(--color-ink)]/10 shrink-0 bg-white/50 cursor-pointer hover:opacity-85 transition-all duration-300 hover:scale-105" 
+                    onClick={() => {
+                      setZoomedImage({ src: getAssetPath("/images/Prosfora_malaya.webp"), alt: "Малая (поминальная) просфора" });
+                      setZoomScale(100);
+                    }}
+                  />
                   <div>
                     <h4 className="text-[var(--color-cinnabar)]">Малая (поминальная)</h4>
                     <p className="text-sm">Раздается верующим. Частицы из нее вынимаются при поминовении имен о здравии или упокоении.</p>
                   </div>
                 </div>
               </div>
-
+ 
               <p className="pt-4 text-sm italic border-t border-[var(--color-ink)]/10">
                 В конце Литургии все вынутые из этих просфор мелкие частицы ссыпаются в Потир со Святой Кровью со словами: <em>«Отмый, Господи, грехи поминавшихся зде Кровию Твоею Честною...»</em>
               </p>
             </div>
           </section>
-
+ 
           <section className="space-y-4">
             <h2 className="font-izhitsa text-2xl text-[var(--color-cinnabar)] border-b border-[var(--color-cinnabar)]/20 pb-2">
               Антидор: «Вместо Дара»
             </h2>
             <div className="font-izhitsa leading-relaxed space-y-4">
-              <div className="sm:float-right sm:w-1/3 sm:ml-6 mb-4">
-                <img src={getAssetPath("/images/Antidor_min.webp")} alt="Антидор" className="w-full rounded-lg object-contain shadow-sm border border-[var(--color-ink)]/10 bg-white/50 p-1" />
+              <div 
+                className="sm:float-right sm:w-1/3 sm:ml-6 mb-4 cursor-pointer group relative"
+                onClick={() => {
+                  setZoomedImage({ src: getAssetPath("/images/Antidor_min.webp"), alt: "Антидор" });
+                  setZoomScale(100);
+                }}
+              >
+                <div className="absolute top-2 right-2 text-white bg-black/40 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  <Maximize2 size={16} />
+                </div>
+                <img src={getAssetPath("/images/Antidor_min.webp")} alt="Антидор" className="w-full rounded-lg object-contain shadow-sm border border-[var(--color-ink)]/10 bg-white/50 p-1 transition-transform group-hover:scale-[1.02]" />
               </div>
               <p>
-                Антидо́р (греч. ἀντίδωρον — «вместо дара») — это остатки главной Агничной просфоры, из которой был вырезан Агнец для Причастия. Поскольку эта просфора участвовала в важнейшем тайнодействии, она исполнена особой Божией благодати.
+                Антидо́р (греч. ἀντίδωрон — «вместо дара») — это остатки главной Агничной просфоры, из которой был вырезан Агнец для Причастия. Поскольку эта просфора участвовала в важнейшем тайнодействии, она исполнена особой Божией благодати.
               </p>
               <p>
                 По древнему уставу антидор раздается в конце Литургии тем верующим, которые готовились, постились, но по какой-то причине не смогли причаститься Святых Тайн, чтобы и они получили духовное утешение и освящение. Принимать антидор могут только крещеные люди и строго натощак. В храме его едят благоговейно, сложив ладони крестообразно, следя за тем, чтобы ни одна крошка не упала на пол.
@@ -138,14 +202,23 @@ export default function Prosphora() {
             </div>
             <div className="clear-both"></div>
           </section>
-
+ 
           <section className="space-y-4">
             <h2 className="font-izhitsa text-2xl text-[var(--color-cinnabar)] border-b border-[var(--color-cinnabar)]/20 pb-2">
               Артос: Хлеб Воскресения
             </h2>
             <div className="font-izhitsa leading-relaxed space-y-4">
-              <div className="sm:float-right sm:w-1/3 sm:ml-6 mb-4">
-                <img src={getAssetPath("/images/Artos.webp")} alt="Артос" className="w-full rounded-lg object-contain shadow-sm border border-[var(--color-ink)]/10 bg-white/50 p-1" />
+              <div 
+                className="sm:float-right sm:w-1/3 sm:ml-6 mb-4 cursor-pointer group relative"
+                onClick={() => {
+                  setZoomedImage({ src: getAssetPath("/images/Artos.webp"), alt: "Артос" });
+                  setZoomScale(100);
+                }}
+              >
+                <div className="absolute top-2 right-2 text-white bg-black/40 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  <Maximize2 size={16} />
+                </div>
+                <img src={getAssetPath("/images/Artos.webp")} alt="Артос" className="w-full rounded-lg object-contain shadow-sm border border-[var(--color-ink)]/10 bg-white/50 p-1 transition-transform group-hover:scale-[1.02]" />
               </div>
               <p>
                 А́ртос (греч. «квасной хлеб») — особый всецелый хлеб, освящаемый в день Святой Пасхи. В русской традиции это большая высокая просфора цилиндрической формы с изображением Креста или Воскресения Христова. Артос символизирует Самого Христа — Хлеб Вечной Жизни.
@@ -269,17 +342,42 @@ export default function Prosphora() {
       {/* Image Zoom Modal */}
       {zoomedImage && (
         <div 
-          className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 cursor-zoom-out"
+          className="fixed inset-0 z-[100] bg-black/95 overflow-auto flex items-start justify-center p-4 cursor-zoom-out animate-in fade-in duration-300"
           onClick={() => setZoomedImage(null)}
         >
-          <button className="fixed top-4 right-4 text-white bg-white/10 p-3 rounded-full hover:bg-white/20 transition-colors backdrop-blur-md z-[110]">
+          <button className="fixed top-4 right-4 text-white bg-white/10 p-3 rounded-full hover:bg-white/20 transition-colors backdrop-blur-md z-[110]" title="Закрыть">
             <X size={24} />
           </button>
-          <div className="w-full h-full flex items-center justify-center">
+          
+          {/* Zoom Control Slider */}
+          <div 
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[110] bg-black/70 backdrop-blur-md py-2.5 px-5 rounded-full flex items-center gap-3 border border-white/10 shadow-lg text-white"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span className="text-xs font-sans tracking-wide">Размер:</span>
+            <input 
+              type="range" 
+              min="50" 
+              max="300" 
+              value={zoomScale} 
+              onChange={(e) => setZoomScale(Number(e.target.value))}
+              className="w-32 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-[var(--color-cinnabar)]"
+            />
+            <span className="text-xs font-mono min-w-[36px] text-right">{zoomScale}%</span>
+            <button 
+              onClick={() => setZoomScale(100)} 
+              className="text-[10px] uppercase font-sans font-bold bg-white/10 hover:bg-white/20 px-2 py-1 rounded transition-colors ml-1"
+            >
+              Сброс
+            </button>
+          </div>
+
+          <div className="w-max min-w-full min-h-full py-12 flex items-center justify-center">
             <img 
               src={zoomedImage.src} 
               alt={zoomedImage.alt} 
-              className="max-w-full max-h-full object-contain shadow-2xl animate-in fade-in zoom-in-95 duration-300"
+              style={{ width: `${zoomScale}%`, maxWidth: 'none' }}
+              className="h-auto object-contain shadow-2xl transition-all duration-100 ease-out rounded-lg"
               onClick={(e) => e.stopPropagation()}
             />
           </div>
