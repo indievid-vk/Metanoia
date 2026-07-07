@@ -8,8 +8,10 @@ export default function UpdatePopup() {
   const rSW = useRegisterSW({
     onRegistered(r) {
       if (r) {
+        // Trigger update check immediately upon registration
+        r.update().catch(err => console.warn('PWA immediate update check failed:', err));
         setInterval(() => {
-          r.update();
+          r.update().catch(err => console.warn('PWA background update check failed:', err));
         }, 60 * 60 * 1000);
       }
     }
@@ -19,19 +21,78 @@ export default function UpdatePopup() {
   const [needUpdate, setNeedUpdate] = (rSW && rSW.needUpdate) || [false, () => {}];
   const updateServiceWorker = (rSW && rSW.updateServiceWorker) || ((reload?: boolean) => { if (reload) window.location.reload(); });
 
-  const CURRENT_VERSION = '1.1.8'; 
+  const CURRENT_VERSION = '1.1.9'; 
 
   useEffect(() => {
+    // 1. Check for updates immediately when the app mounts/boots
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (const registration of registrations) {
+          registration.update().catch(err => console.warn('SW registration update failed:', err));
+        }
+      }).catch(err => {
+        console.warn('Failed to get SW registrations:', err);
+      });
+    }
+
+    // 2. Also check for updates when switching back to the app (visibility change)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.ready.then(reg => reg.update());
+          navigator.serviceWorker.ready.then(reg => {
+            reg.update().catch(err => console.warn('SW ready update failed:', err));
+          }).catch(err => console.warn('SW ready check failed:', err));
         }
       }
     };
     window.addEventListener('visibilitychange', handleVisibilityChange);
     return () => window.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
+
+  // 3. Robust listener for service worker state changes (e.g. if already waiting or finishes installing)
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(reg => {
+        // Check if there is already a waiting service worker
+        if (reg.waiting) {
+          if (typeof setNeedUpdate === 'function') {
+            setNeedUpdate(true);
+          }
+        }
+
+        // If a service worker is currently installing, listen for its state changes
+        if (reg.installing) {
+          const sw = reg.installing;
+          const handleStateChange = () => {
+            if (sw.state === 'installed') {
+              if (typeof setNeedUpdate === 'function') {
+                setNeedUpdate(true);
+              }
+            }
+          };
+          sw.addEventListener('statechange', handleStateChange);
+        }
+
+        // Monitor any incoming updates
+        const handleUpdateFound = () => {
+          const sw = reg.installing;
+          if (sw) {
+            const handleStateChange = () => {
+              if (sw.state === 'installed') {
+                if (typeof setNeedUpdate === 'function') {
+                  setNeedUpdate(true);
+                }
+              }
+            };
+            sw.addEventListener('statechange', handleStateChange);
+          }
+        };
+        reg.addEventListener('updatefound', handleUpdateFound);
+      }).catch(err => {
+        console.warn('SW ready check failed in listener:', err);
+      });
+    }
+  }, [setNeedUpdate]);
 
   const [show, setShow] = useState(false);
   const [type, setType] = useState<'update' | 'offline' | 'new-version'>('update');

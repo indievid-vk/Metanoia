@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, Loader2, Info, Search, Bell } from 'lucide-react';
-import { getHolidaysForDate, playBellChime } from '../utils/reminderEngine';
+import { getHolidaysForDate, playBellChime, checkDailyReminders, getReminderSettings } from '../utils/reminderEngine';
 import { getAssetPath } from '../utils';
 import InstallPrompt from './InstallPrompt';
 import UpdatePopup from './UpdatePopup';
@@ -25,8 +25,29 @@ export default function Layout() {
   }, [location.pathname]);
 
   useEffect(() => {
-    const holidays = getHolidaysForDate(new Date());
-    setTodayHolidays(holidays);
+    // 1. Run full reminder check (system notification + bell sound if first time today) on app start
+    const timer = setTimeout(() => {
+      checkDailyReminders(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    // 2. Load holidays for the in-app banner respecting flexible settings
+    const settings = getReminderSettings();
+    let active: any[] = [];
+    if (settings.enabled) {
+      active = checkDailyReminders(true); // Silent check based on user settings
+    }
+    
+    if (active && active.length > 0) {
+      setTodayHolidays(active);
+    } else {
+      // Fallback: if no reminders are enabled/configured or none triggered, show today's holiday by default
+      const defaultHolidays = getHolidaysForDate(new Date());
+      setTodayHolidays(defaultHolidays);
+    }
     
     const lastDismissed = localStorage.getItem('holiday_banner_dismissed_date');
     const todayStr = new Date().toDateString();
@@ -116,7 +137,7 @@ export default function Layout() {
               </button>
               <div className="text-left leading-tight min-w-0">
                 <span className="text-[9px] bg-[var(--color-cinnabar)] text-amber-50 px-1.5 py-0.5 rounded-full uppercase font-bold tracking-wider font-sans inline-block mb-0.5">
-                  Сегодня праздник
+                  {todayHolidays[0].name.startsWith('Накануне') || todayHolidays[0].name.startsWith('За 3 дня') || todayHolidays[0].name.startsWith('За неделю') ? 'Напоминание' : 'Сегодня праздник'}
                 </span>
                 <h5 className="font-izhitsa text-xs sm:text-sm text-[var(--color-ink)] truncate max-w-[190px] sm:max-w-[240px]">
                   {todayHolidays[0].name}
