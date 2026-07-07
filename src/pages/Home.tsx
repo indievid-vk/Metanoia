@@ -88,6 +88,9 @@ export default function Home() {
       // Allow display in standalone mode OR during development preview so developers/assessors can test it
       if (!isStandalone && !import.meta.env.DEV) return;
 
+      // Prevent showing if PWA update/offline popup is active or visible
+      if ((window as any).pwaPopupVisible) return;
+
       try {
         const hasSeen = sessionStorage.getItem('beatitudesSeen');
         if (!hasSeen) {
@@ -182,6 +185,34 @@ export default function Home() {
       window.removeEventListener('pwa-popup-closed', showBeatitudes);
     };
   }, []);
+
+  // Synchronize Beatitudes popup with the global PWA update popup
+  useEffect(() => {
+    const handleOpened = () => {
+      // If our Beatitudes popup is currently open, hide it and remember that we should restore it later
+      if (showPopup) {
+        setShowPopup(false);
+        sessionStorage.setItem('beatitudesInterruptedByPwa', 'true');
+      }
+    };
+
+    const handleClosed = () => {
+      // If we were interrupted, restore the Beatitudes popup
+      const wasInterrupted = sessionStorage.getItem('beatitudesInterruptedByPwa') === 'true';
+      if (wasInterrupted) {
+        setShowPopup(true);
+        sessionStorage.removeItem('beatitudesInterruptedByPwa');
+      }
+    };
+
+    window.addEventListener('pwa-popup-opened', handleOpened);
+    window.addEventListener('pwa-popup-closed', handleClosed);
+
+    return () => {
+      window.removeEventListener('pwa-popup-opened', handleOpened);
+      window.removeEventListener('pwa-popup-closed', handleClosed);
+    };
+  }, [showPopup]);
 
   const currentGroup = commandmentGroups[currentGroupIdx] || [];
 

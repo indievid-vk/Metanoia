@@ -21,7 +21,7 @@ export default function UpdatePopup() {
   const [needUpdate, setNeedUpdate] = (rSW && rSW.needUpdate) || [false, () => {}];
   const updateServiceWorker = (rSW && rSW.updateServiceWorker) || ((reload?: boolean) => { if (reload) window.location.reload(); });
 
-  const CURRENT_VERSION = '1.1.9'; 
+  const CURRENT_VERSION = '1.2.0'; 
 
   useEffect(() => {
     // 1. Check for updates immediately when the app mounts/boots
@@ -99,6 +99,11 @@ export default function UpdatePopup() {
 
   useEffect(() => {
     (window as any).pwaPopupVisible = show;
+    if (show) {
+      window.dispatchEvent(new CustomEvent('pwa-popup-opened'));
+    } else {
+      window.dispatchEvent(new CustomEvent('pwa-popup-closed'));
+    }
     return () => {
       (window as any).pwaPopupVisible = false;
     };
@@ -136,6 +141,8 @@ export default function UpdatePopup() {
   useEffect(() => {
     return () => {
       (window as any).pwaPopupActive = false;
+      (window as any).pwaPopupVisible = false;
+      window.dispatchEvent(new CustomEvent('pwa-popup-closed'));
     };
   }, []);
 
