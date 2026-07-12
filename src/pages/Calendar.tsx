@@ -888,6 +888,18 @@ export default function Calendar() {
     setSelectedItem({ title, url: fullUrl });
   };
 
+  const featuredReminder = upcomingReminders[0] || (() => {
+    const todayHolidays = getHolidaysForDate(new Date());
+    if (todayHolidays.length > 0) {
+      const dStr = new Date().toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
+      return {
+        ...todayHolidays[0],
+        name: `${dStr}: ${todayHolidays[0].name}`
+      };
+    }
+    return null;
+  })();
+
   return (
     <div className="pb-12 px-4 max-w-4xl mx-auto">
       <div className="text-center mb-6">
@@ -898,24 +910,42 @@ export default function Calendar() {
 
       {/* Reminder System Quick Control */}
       <div className="mb-6 bg-amber-50/60 border border-[var(--color-cinnabar)]/15 rounded-2xl p-4 shadow-xs relative overflow-hidden max-w-xl mx-auto">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className={`p-2.5 rounded-full ${reminderSettings.enabled ? 'bg-[var(--color-cinnabar)]/10 text-[var(--color-cinnabar)]' : 'bg-stone-100 text-stone-400'}`}>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            <div className={`p-2.5 rounded-full shrink-0 ${reminderSettings.enabled ? 'bg-[var(--color-cinnabar)]/10 text-[var(--color-cinnabar)]' : 'bg-stone-100 text-stone-400'}`}>
               {reminderSettings.enabled ? <Bell size={22} className="animate-bounce" /> : <BellOff size={22} />}
             </div>
-            <div className="text-left">
-              <h4 className="font-izhitsa text-base sm:text-lg text-[var(--color-ink)]">Напоминания о праздниках</h4>
-              <p className="text-xs text-[var(--color-ink)]/60 font-sans">
-                {reminderSettings.enabled ? 'Включены уведомления и звон' : 'Уведомления отключены'}
-              </p>
+            <div className="text-left flex-1 min-w-0">
+              {featuredReminder ? (
+                <>
+                  <span className="text-[10px] bg-[var(--color-cinnabar)] text-amber-50 px-2 py-0.5 rounded-full uppercase font-bold tracking-wider font-sans inline-block mb-1.5">
+                    Праздник
+                  </span>
+                  <h4 className="font-izhitsa text-base sm:text-lg text-[var(--color-ink)] leading-snug">
+                    {featuredReminder.name}
+                  </h4>
+                  {featuredReminder.description && (
+                    <p className="text-xs text-[var(--color-ink)]/75 font-sans mt-1.5 leading-relaxed">
+                      {featuredReminder.description}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <h4 className="font-izhitsa text-base sm:text-lg text-[var(--color-ink)]">Напоминания о праздниках</h4>
+                  <p className="text-xs text-[var(--color-ink)]/60 font-sans mt-0.5">
+                    {reminderSettings.enabled ? 'Включены уведомления и звон' : 'Уведомления отключены'}
+                  </p>
+                </>
+              )}
             </div>
           </div>
           <button
             onClick={() => setShowReminderSettings(!showReminderSettings)}
-            className="px-4 py-1.5 rounded-xl border border-[var(--color-cinnabar)]/20 text-xs sm:text-sm font-izhitsa text-[var(--color-cinnabar)] bg-white/80 hover:bg-white hover:shadow-xs transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer"
+            className="p-2 rounded-xl border border-[var(--color-cinnabar)]/20 text-[var(--color-cinnabar)] bg-white/80 hover:bg-white hover:shadow-xs transition-all active:scale-95 flex items-center justify-center cursor-pointer shrink-0 mt-1"
+            title={showReminderSettings ? 'Свернуть' : 'Настройки'}
           >
-            <Settings size={15} />
-            {showReminderSettings ? 'Свернуть' : 'Настроить'}
+            <Settings size={18} />
           </button>
         </div>
 
