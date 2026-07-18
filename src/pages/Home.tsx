@@ -4,9 +4,6 @@ import { motion } from 'motion/react';
 import gospelCommandmentsData from '../data/commandments.json';
 import { getAssetPath } from '../utils';
 import { DecorativeDivider } from '../components/DecorativeDivider';
-import AsceticsContent from '../components/AsceticsContent';
-import { TemptationTracker } from '../components/TemptationTracker';
-import { BookOpen, Flame } from 'lucide-react';
 
 interface InteractiveButtonProps {
   onClick: () => void;
@@ -70,71 +67,10 @@ const BEATITUDES = [
 
 export default function Home() {
   const navigate = useNavigate();
-  const [showPopup, setShowPopup] = useState(false);
-  const [popupTab, setPopupTab] = useState<'guide' | 'temptations'>('guide');
   const [currentGroupIdx, setCurrentGroupIdx] = useState(0);
   const [commandmentGroups, setCommandmentGroups] = useState<any[][]>([]);
 
   useEffect(() => {
-    let handlePwaPopupClosed: (() => void) | null = null;
-    let fallbackTimer: NodeJS.Timeout | null = null;
-
-    const showBeatitudes = () => {
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                           (window.navigator as any).standalone ||
-                           document.referrer.includes('android-app://') ||
-                           window.location.search.includes('mode=standalone');
-      
-      // Allow display in standalone mode OR during development preview so developers/assessors can test it
-      if (!isStandalone && !import.meta.env.DEV) return;
-
-      // Prevent showing if PWA update/offline popup is active or visible
-      if ((window as any).pwaPopupVisible) return;
-
-      try {
-        const hasSeen = sessionStorage.getItem('beatitudesSeen');
-        if (!hasSeen) {
-          setShowPopup(true);
-          sessionStorage.setItem('beatitudesSeen', 'true');
-        }
-      } catch (e) {
-        console.warn('SessionStorage access failed:', e);
-      }
-    };
-
-    const checkAndShow = () => {
-      // If PWA setup has made the update/offline popup visible, wait till it closes completely
-      if ((window as any).pwaPopupVisible) {
-        handlePwaPopupClosed = () => {
-          showBeatitudes();
-        };
-        window.addEventListener('pwa-popup-closed', handlePwaPopupClosed, { once: true });
-        return;
-      }
-
-      // Check both global flag and if needUpdate/offlineReady would be true
-      if ((window as any).pwaPopupActive) {
-        fallbackTimer = setTimeout(() => {
-          if (handlePwaPopupClosed) {
-            window.removeEventListener('pwa-popup-closed', handlePwaPopupClosed);
-          }
-          showBeatitudes();
-        }, 4000);
-
-        handlePwaPopupClosed = () => {
-          if (fallbackTimer) clearTimeout(fallbackTimer);
-          showBeatitudes();
-        };
-
-        window.addEventListener('pwa-popup-closed', handlePwaPopupClosed, { once: true });
-      } else {
-        showBeatitudes();
-      }
-    };
-
-    // Wait longer to allow PWA check to initialize and signal its presence
-    const timer = setTimeout(checkAndShow, 2000);
-
     // Process commandments into groups of 3 individual verses/quotes
     const gospelCommandmentsInput = Array.isArray(gospelCommandmentsData) 
       ? gospelCommandmentsData 
@@ -175,44 +111,7 @@ export default function Home() {
         setCurrentGroupIdx(0);
       }
     }
-
-    return () => {
-      clearTimeout(timer);
-      if (fallbackTimer) clearTimeout(fallbackTimer);
-      if (handlePwaPopupClosed) {
-        window.removeEventListener('pwa-popup-closed', handlePwaPopupClosed);
-      }
-      window.removeEventListener('pwa-popup-closed', showBeatitudes);
-    };
   }, []);
-
-  // Synchronize Beatitudes popup with the global PWA update popup
-  useEffect(() => {
-    const handleOpened = () => {
-      // If our Beatitudes popup is currently open, hide it and remember that we should restore it later
-      if (showPopup) {
-        setShowPopup(false);
-        sessionStorage.setItem('beatitudesInterruptedByPwa', 'true');
-      }
-    };
-
-    const handleClosed = () => {
-      // If we were interrupted, restore the Beatitudes popup
-      const wasInterrupted = sessionStorage.getItem('beatitudesInterruptedByPwa') === 'true';
-      if (wasInterrupted) {
-        setShowPopup(true);
-        sessionStorage.removeItem('beatitudesInterruptedByPwa');
-      }
-    };
-
-    window.addEventListener('pwa-popup-opened', handleOpened);
-    window.addEventListener('pwa-popup-closed', handleClosed);
-
-    return () => {
-      window.removeEventListener('pwa-popup-opened', handleOpened);
-      window.removeEventListener('pwa-popup-closed', handleClosed);
-    };
-  }, [showPopup]);
 
   const currentGroup = commandmentGroups[currentGroupIdx] || [];
 
@@ -222,76 +121,6 @@ export default function Home() {
       <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden mix-blend-multiply opacity-20">
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
       </div>
-
-      {showPopup && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[var(--color-parchment)] border-2 border-[var(--color-cinnabar)]/50 p-4 sm:p-6 rounded-[2rem] max-w-2xl w-full shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden">
-            <button 
-              onClick={() => setShowPopup(false)}
-              className="absolute top-2 right-4 text-3xl font-light text-[var(--color-ink)]/50 hover:text-[var(--color-ink)] z-15 cursor-pointer"
-            >
-              ×
-            </button>
-            <div className="shrink-0">
-              <h2 className="font-izhitsa text-xl sm:text-3xl text-center text-[var(--color-cinnabar)] mb-1 uppercase tracking-wide">Аскетика дня. Практика</h2>
-              <DecorativeDivider />
-            </div>
-
-            {/* Tab Switcher inside the popup */}
-            <div className="flex bg-white/50 border border-[var(--color-cinnabar)]/10 rounded-lg p-1.5 max-w-md w-full mx-auto shadow-sm mt-3 shrink-0 font-izhitsa z-20 relative">
-              <button
-                onClick={() => setPopupTab('guide')}
-                className={`flex-1 flex items-center justify-center gap-2 py-1.5 px-3 text-xs sm:text-sm rounded-md transition-all cursor-pointer ${
-                  popupTab === 'guide'
-                    ? 'bg-[var(--color-cinnabar)] text-[var(--color-parchment)] shadow-sm font-semibold'
-                    : 'text-[var(--color-ink)]/70 hover:text-[var(--color-cinnabar)] hover:bg-white/30'
-                }`}
-              >
-                <BookOpen size={14} />
-                Руководство
-              </button>
-              <button
-                onClick={() => setPopupTab('temptations')}
-                className={`flex-1 flex items-center justify-center gap-2 py-1.5 px-3 text-xs sm:text-sm rounded-md transition-all cursor-pointer ${
-                  popupTab === 'temptations'
-                    ? 'bg-[var(--color-cinnabar)] text-[var(--color-parchment)] shadow-sm font-semibold'
-                    : 'text-[var(--color-ink)]/70 hover:text-[var(--color-cinnabar)] hover:bg-white/30'
-                }`}
-              >
-                <Flame size={14} />
-                Борьба с искушениями
-              </button>
-            </div>
-            
-            <div className="relative flex-1 min-h-0 overflow-hidden flex flex-col mt-4">
-              {/* Top scroll shadow */}
-              <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-[var(--color-ink)]/10 to-transparent z-10 pointer-events-none shadow-[inset_0_10px_10px_-10px_rgba(0,0,0,0.2)]" />
-              
-              <div className="overflow-y-auto flex-1 pr-1 sm:pr-2 py-4 relative scroll-smooth custom-scrollbar">
-                {popupTab === 'guide' ? (
-                  <AsceticsContent />
-                ) : (
-                  <TemptationTracker />
-                )}
-              </div>
-              
-              {/* Bottom scroll shadow */}
-              <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-[var(--color-ink)]/10 to-transparent z-10 pointer-events-none shadow-[inset_0_-10px_10px_-10px_rgba(0,0,0,0.2)]" />
-            </div>
-
-            <div className="shrink-0 mt-3">
-              <DecorativeDivider />
-              <div className="mb-3" />
-              <button 
-                onClick={() => setShowPopup(false)}
-                className="w-full py-3 bg-[var(--color-cinnabar)] hover:bg-[#912525] text-white rounded-2xl font-izhitsa shadow-md hover:brightness-110 transition-all text-lg cursor-pointer"
-              >
-                Закрыть
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Cyclical Commandment Banner */}
       {currentGroup.length > 0 && (

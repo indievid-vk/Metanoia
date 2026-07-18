@@ -21,7 +21,7 @@ export default function UpdatePopup() {
   const [needUpdate, setNeedUpdate] = (rSW && rSW.needUpdate) || [false, () => {}];
   const updateServiceWorker = (rSW && rSW.updateServiceWorker) || ((reload?: boolean) => { if (reload) window.location.reload(); });
 
-  const CURRENT_VERSION = '1.2.0'; 
+  const CURRENT_VERSION = '1.2.1'; 
 
   useEffect(() => {
     // 1. Check for updates immediately when the app mounts/boots
@@ -32,6 +32,11 @@ export default function UpdatePopup() {
         }
       }).catch(err => {
         console.warn('Failed to get SW registrations:', err);
+      });
+
+      // Set a listener for controllerchange so we know when an update has been activated
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        localStorage.setItem('app_just_updated', 'true');
       });
     }
 
@@ -110,6 +115,16 @@ export default function UpdatePopup() {
   }, [show]);
 
   useEffect(() => {
+    const justUpdated = localStorage.getItem('app_just_updated');
+    if (justUpdated === 'true') {
+      localStorage.removeItem('app_just_updated');
+      localStorage.setItem('appVersion', CURRENT_VERSION);
+      setType('new-version');
+      setShow(true);
+      (window as any).pwaPopupActive = true;
+      return;
+    }
+
     // Knowledge Base Section 6: Version-based check
     const storedVersion = localStorage.getItem('appVersion');
     

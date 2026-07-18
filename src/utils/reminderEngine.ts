@@ -512,14 +512,37 @@ export function checkDailyReminders(silent = false): OrthodoxHoliday[] {
 
     // 2. Trigger browser push notifications if allowed
     if ('Notification' in window && Notification.permission === 'granted') {
-      activeReminders.forEach(reminder => {
+      activeReminders.forEach(async (reminder) => {
+        let sentViaServiceWorker = false;
         try {
-          new Notification(reminder.name, {
-            body: reminder.description,
-            icon: '/icon.png', // Fallback to icon
-          });
-        } catch (e) {
-          console.warn("Failed to fire Notification", e);
+          if ('serviceWorker' in navigator) {
+            const reg = await navigator.serviceWorker.ready;
+            if (reg && 'showNotification' in reg) {
+              await reg.showNotification(reminder.name, {
+                body: reminder.description,
+                icon: '/icon_192.png',
+                badge: '/icon_192.png',
+                vibrate: [200, 100, 200],
+                data: { url: './#/calendar' }
+              } as any);
+              sentViaServiceWorker = true;
+              console.log("Fired system notification via ServiceWorker:", reminder.name);
+            }
+          }
+        } catch (swErr) {
+          console.warn("Failed to send notification via service worker, falling back to legacy Notification", swErr);
+        }
+
+        if (!sentViaServiceWorker) {
+          try {
+            new Notification(reminder.name, {
+              body: reminder.description,
+              icon: '/icon_192.png',
+            });
+            console.log("Fired legacy system notification:", reminder.name);
+          } catch (e) {
+            console.warn("Failed to fire legacy Notification", e);
+          }
         }
       });
     }
