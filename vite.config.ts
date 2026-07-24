@@ -68,7 +68,7 @@ export default defineConfig(({mode}) => {
         devOptions: {
           enabled: true
         },
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'icon_192.png', 'icon_512.png', 'manifest.json'],
+        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'icon_192.png', 'icon_512.png', 'manifest.json', 'version.json'],
         manifest: {
           name: 'Помощь кающимся',
           short_name: 'Кающимся',

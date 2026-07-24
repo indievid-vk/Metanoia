@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Download, Share, PlusSquare, MoreVertical, Loader2, Smartphone, Monitor } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+import confetti from 'canvas-confetti';
 import { toast } from '../hooks/useToast';
 
 export default function InstallPrompt() {
@@ -34,9 +35,18 @@ export default function InstallPrompt() {
 
     // If installed and launched in standalone mode, check for one-time Welcome Popup
     if (standalone) {
-      const welcomeShown = localStorage.getItem('installed_welcome_shown');
+      const welcomeShown = localStorage.getItem('hasSeenWelcome') || localStorage.getItem('installed_welcome_shown');
       if (!welcomeShown) {
         setShowWelcomeInstalled(true);
+        try {
+          confetti({
+            particleCount: 80,
+            spread: 70,
+            origin: { y: 0.6 }
+          });
+        } catch (e) {
+          console.warn('Confetti effect error:', e);
+        }
       }
       return;
     }
@@ -229,6 +239,7 @@ export default function InstallPrompt() {
 
             <button
               onClick={() => {
+                localStorage.setItem('hasSeenWelcome', 'true');
                 localStorage.setItem('installed_welcome_shown', 'true');
                 setShowWelcomeInstalled(false);
               }}

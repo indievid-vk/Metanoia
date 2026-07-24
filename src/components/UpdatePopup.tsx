@@ -154,6 +154,32 @@ export default function UpdatePopup() {
   }, []);
 
   useEffect(() => {
+    // Periodic check for version.json when online
+    const checkVersionJson = async () => {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        return; // Skip when offline to ensure unconditional offline work
+      }
+      try {
+        const res = await fetch(`./version.json?cache-bust=${Date.now()}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.version && data.version !== CURRENT_VERSION) {
+            setType('new-version');
+            setShow(true);
+            (window as any).pwaPopupActive = true;
+          }
+        }
+      } catch (err) {
+        // Silently catch network errors
+      }
+    };
+
+    checkVersionJson();
+    const interval = setInterval(checkVersionJson, 15 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
     return () => {
       (window as any).pwaPopupActive = false;
       (window as any).pwaPopupVisible = false;
