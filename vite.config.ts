@@ -63,12 +63,12 @@ export default defineConfig(({mode}) => {
       tailwindcss(), 
       rootAssetsPlugin(),
       VitePWA({
-        registerType: 'prompt',
-        injectRegister: 'auto',
+        registerType: 'autoUpdate',
+        injectRegister: 'script-defer',
         devOptions: {
-          enabled: false
+          enabled: true
         },
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'icon_192.png', 'icon_512.png', 'manifest.json'],
         manifest: {
           name: 'Помощь кающимся',
           short_name: 'Кающимся',
@@ -96,9 +96,42 @@ export default defineConfig(({mode}) => {
           ]
         },
         workbox: {
-          maximumFileSizeToCacheInBytes: 20 * 1024 * 1024,
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,epub,fb2,ttf,woff,woff2}'],
+          clientsClaim: true,
+          skipWaiting: true,
+          maximumFileSizeToCacheInBytes: 30 * 1024 * 1024,
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,epub,fb2,ttf,woff,woff2,json}'],
+          navigateFallback: 'index.html',
+          navigateFallbackDenylist: [/^\/api\//],
           runtimeCaching: [
+            {
+              urlPattern: /^\/api\/.*/i,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'api-cache',
+                networkTimeoutSeconds: 3,
+                expiration: {
+                  maxEntries: 50,
+                  maxAgeSeconds: 60 * 60 * 24 * 30
+                },
+                cacheableResponse: {
+                  statuses: [0, 200]
+                }
+              }
+            },
+            {
+              urlPattern: /\.(?:png|jpg|jpeg|svg|webp|gif|ttf|woff|woff2|epub|fb2)$/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'static-assets-cache',
+                expiration: {
+                  maxEntries: 100,
+                  maxAgeSeconds: 60 * 60 * 24 * 365
+                },
+                cacheableResponse: {
+                  statuses: [0, 200]
+                }
+              }
+            },
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
               handler: 'CacheFirst',
@@ -106,7 +139,7 @@ export default defineConfig(({mode}) => {
                 cacheName: 'google-fonts-cache',
                 expiration: {
                   maxEntries: 10,
-                  maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
+                  maxAgeSeconds: 60 * 60 * 24 * 365
                 },
                 cacheableResponse: {
                   statuses: [0, 200]
@@ -120,7 +153,7 @@ export default defineConfig(({mode}) => {
                 cacheName: 'gstatic-fonts-cache',
                 expiration: {
                   maxEntries: 10,
-                  maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
+                  maxAgeSeconds: 60 * 60 * 24 * 365
                 },
                 cacheableResponse: {
                   statuses: [0, 200]
