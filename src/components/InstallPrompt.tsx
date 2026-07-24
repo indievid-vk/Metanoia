@@ -13,6 +13,8 @@ export default function InstallPrompt() {
   const [isInstalling, setIsInstalling] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
 
+  const [showWelcomeInstalled, setShowWelcomeInstalled] = useState(false);
+
   useEffect(() => {
     // Detect Platform
     const userAgent = window.navigator.userAgent.toLowerCase();
@@ -20,7 +22,7 @@ export default function InstallPrompt() {
                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const isAndroid = userAgent.includes('android');
     
-    // Check if app is already installed
+    // Check if app is opened in installed standalone mode
     // @ts-ignore
     const standalone = window.matchMedia('(display-mode: standalone)').matches 
       // @ts-ignore
@@ -30,7 +32,14 @@ export default function InstallPrompt() {
 
     setIsStandalone(standalone);
 
-    if (standalone) return;
+    // If installed and launched in standalone mode, check for one-time Welcome Popup
+    if (standalone) {
+      const welcomeShown = localStorage.getItem('installed_welcome_shown');
+      if (!welcomeShown) {
+        setShowWelcomeInstalled(true);
+      }
+      return;
+    }
 
     setPlatform(isIOS ? 'ios' : isAndroid ? 'android' : 'other');
     setShowFAB(true);
@@ -187,7 +196,51 @@ export default function InstallPrompt() {
     }
   };
 
-  if (isStandalone) return null;
+  if (isStandalone) {
+    if (!showWelcomeInstalled) return null;
+    return (
+      <AnimatePresence>
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/25 backdrop-blur-sm"
+          />
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            transition={{ type: "spring", stiffness: 250, damping: 25 }}
+            className="relative bg-white/95 backdrop-blur-xl w-full max-w-[360px] rounded-[3rem] p-8 pb-10 shadow-[0_30px_70px_rgba(0,0,0,0.3)] border border-white/40 flex flex-col items-center text-center gap-6"
+          >
+            <div className="w-20 h-20 rounded-[2rem] bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-2 shadow-inner">
+              <Smartphone size={38} />
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="font-izhitsa text-2xl text-[var(--color-ink)] leading-tight px-2">
+                Поздравляем!
+              </h4>
+              <p className="text-sm text-[var(--color-ink)]/70 font-sans leading-relaxed px-2">
+                Приложение установлено и готово к работе.
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                localStorage.setItem('installed_welcome_shown', 'true');
+                setShowWelcomeInstalled(false);
+              }}
+              className="w-full bg-[var(--color-cinnabar)] text-white px-6 py-4 rounded-2xl font-izhitsa text-lg shadow-lg active:scale-[0.98] transition-all mt-2 cursor-pointer"
+            >
+              Начать
+            </button>
+          </motion.div>
+        </div>
+      </AnimatePresence>
+    );
+  }
 
   return (
     <>

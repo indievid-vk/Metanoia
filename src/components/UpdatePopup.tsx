@@ -252,28 +252,24 @@ export default function UpdatePopup() {
             </div>
             
             <div className="space-y-3">
-              <h4 className="font-izhitsa text-2xl text-[var(--color-ink)] leading-tight px-4">
+              <h4 className="font-izhitsa text-2xl text-[var(--color-ink)] leading-tight px-2">
                 {type === 'offline' 
                   ? 'Готово к работе офлайн' 
-                  : type === 'update' 
-                    ? 'Доступно обновление!' 
-                    : 'Приложение обновлено!'}
+                  : 'Приложение обновилось!'}
               </h4>
-              <p className="text-sm text-[var(--color-ink)]/60 font-sans leading-relaxed px-2">
+              <p className="text-sm text-[var(--color-ink)]/70 font-sans leading-relaxed px-2">
                 {type === 'offline' 
                   ? 'Приложение сохранено в памяти вашего устройства для доступа без интернета.'
-                  : type === 'update'
-                    ? 'Рекомендуем установить новую версию для стабильной работы и получения последних дополнений.'
-                    : 'Службы успешно обновлены. Стало удобнее и исправлены некоторые ошибки.'}
+                  : 'Пользоваться стало еще удобнее'}
               </p>
             </div>
             
             {(type === 'update' || type === 'new-version') && (
               <button
                 onClick={handleUpdate}
-                className="w-full bg-[var(--color-cinnabar)] text-white px-6 py-4 rounded-2xl font-izhitsa text-lg shadow-lg active:scale-[0.98] transition-all mt-2"
+                className="w-full bg-[var(--color-cinnabar)] text-white px-6 py-4 rounded-2xl font-izhitsa text-lg shadow-lg active:scale-[0.98] transition-all mt-2 cursor-pointer"
               >
-                {type === 'update' ? 'Обновить сейчас' : 'Понятно'}
+                Начать
               </button>
             )}
           </motion.div>

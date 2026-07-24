@@ -98,8 +98,9 @@ export default defineConfig(({mode}) => {
         workbox: {
           clientsClaim: true,
           skipWaiting: true,
-          maximumFileSizeToCacheInBytes: 30 * 1024 * 1024,
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,epub,fb2,ttf,woff,woff2,json}'],
+          maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,json,webmanifest}'],
+          globIgnores: ['**/books/**', '**/images/**'],
           navigateFallback: 'index.html',
           navigateFallbackDenylist: [/^\/api\//],
           runtimeCaching: [
@@ -124,7 +125,7 @@ export default defineConfig(({mode}) => {
               options: {
                 cacheName: 'static-assets-cache',
                 expiration: {
-                  maxEntries: 100,
+                  maxEntries: 150,
                   maxAgeSeconds: 60 * 60 * 24 * 365
                 },
                 cacheableResponse: {
