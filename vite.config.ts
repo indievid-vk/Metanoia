@@ -99,7 +99,7 @@ export default defineConfig(({mode}) => {
           clientsClaim: true,
           skipWaiting: true,
           maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,json,webmanifest}'],
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,ttf,woff,woff2,json,webmanifest}'],
           globIgnores: ['**/books/**', '**/images/**'],
           navigateFallback: 'index.html',
           navigateFallbackDenylist: [/^\/api\//],

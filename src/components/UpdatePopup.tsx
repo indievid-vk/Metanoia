@@ -5,13 +5,16 @@ import { X, CheckCircle, RefreshCcw } from 'lucide-react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 export default function UpdatePopup() {
+  const isOnline = () => typeof navigator !== 'undefined' && navigator.onLine;
+
   const rSW = useRegisterSW({
     onRegistered(r) {
-      if (r) {
-        // Trigger update check immediately upon registration
-        r.update().catch(err => console.warn('PWA immediate update check failed:', err));
+      if (r && isOnline()) {
+        r.update().catch(err => console.warn('PWA immediate update check skipped/failed:', err));
         setInterval(() => {
-          r.update().catch(err => console.warn('PWA background update check failed:', err));
+          if (isOnline()) {
+            r.update().catch(err => console.warn('PWA background update check skipped/failed:', err));
+          }
         }, 60 * 60 * 1000);
       }
     }
@@ -22,11 +25,28 @@ export default function UpdatePopup() {
   const updateServiceWorker = (rSW && rSW.updateServiceWorker) || ((reload?: boolean) => { if (reload) window.location.reload(); });
 
   const CURRENT_VERSION = '1.2.1'; 
+  const [show, setShow] = useState(false);
+  const [type, setType] = useState<'update' | 'offline' | 'new-version'>('update');
 
+  // Immediately close popup if device goes offline
   useEffect(() => {
-    // 1. Check for updates immediately when the app mounts/boots
+    const handleOffline = () => {
+      setShow(false);
+      (window as any).pwaPopupActive = false;
+      window.dispatchEvent(new CustomEvent('pwa-popup-closed'));
+    };
+
+    window.addEventListener('offline', handleOffline);
+    return () => window.removeEventListener('offline', handleOffline);
+  }, []);
+
+  // 1. Check for service worker updates ONLY if online
+  useEffect(() => {
+    if (!isOnline()) return;
+
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(registrations => {
+        if (!isOnline()) return;
         for (const registration of registrations) {
           registration.update().catch(err => console.warn('SW registration update failed:', err));
         }
@@ -34,18 +54,20 @@ export default function UpdatePopup() {
         console.warn('Failed to get SW registrations:', err);
       });
 
-      // Set a listener for controllerchange so we know when an update has been activated
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        localStorage.setItem('app_just_updated', 'true');
+        if (isOnline()) {
+          localStorage.setItem('app_just_updated', 'true');
+        }
       });
     }
 
-    // 2. Also check for updates when switching back to the app (visibility change)
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === 'visible' && isOnline()) {
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.ready.then(reg => {
-            reg.update().catch(err => console.warn('SW ready update failed:', err));
+            if (isOnline()) {
+              reg.update().catch(err => console.warn('SW ready update failed:', err));
+            }
           }).catch(err => console.warn('SW ready check failed:', err));
         }
       }
@@ -54,22 +76,24 @@ export default function UpdatePopup() {
     return () => window.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
-  // 3. Robust listener for service worker state changes (e.g. if already waiting or finishes installing)
+  // 2. Service worker state change listener (ONLY act if online)
   useEffect(() => {
+    if (!isOnline()) return;
+
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.ready.then(reg => {
-        // Check if there is already a waiting service worker
+        if (!isOnline()) return;
+
         if (reg.waiting) {
           if (typeof setNeedUpdate === 'function') {
             setNeedUpdate(true);
           }
         }
 
-        // If a service worker is currently installing, listen for its state changes
         if (reg.installing) {
           const sw = reg.installing;
           const handleStateChange = () => {
-            if (sw.state === 'installed') {
+            if (sw.state === 'installed' && isOnline()) {
               if (typeof setNeedUpdate === 'function') {
                 setNeedUpdate(true);
               }
@@ -78,12 +102,11 @@ export default function UpdatePopup() {
           sw.addEventListener('statechange', handleStateChange);
         }
 
-        // Monitor any incoming updates
         const handleUpdateFound = () => {
           const sw = reg.installing;
           if (sw) {
             const handleStateChange = () => {
-              if (sw.state === 'installed') {
+              if (sw.state === 'installed' && isOnline()) {
                 if (typeof setNeedUpdate === 'function') {
                   setNeedUpdate(true);
                 }
@@ -99,9 +122,7 @@ export default function UpdatePopup() {
     }
   }, [setNeedUpdate]);
 
-  const [show, setShow] = useState(false);
-  const [type, setType] = useState<'update' | 'offline' | 'new-version'>('update');
-
+  // Sync state with global flags for UI
   useEffect(() => {
     (window as any).pwaPopupVisible = show;
     if (show) {
@@ -114,7 +135,10 @@ export default function UpdatePopup() {
     };
   }, [show]);
 
+  // 3. Version comparison check (STRICTLY when online)
   useEffect(() => {
+    if (!isOnline()) return;
+
     const justUpdated = localStorage.getItem('app_just_updated');
     if (justUpdated === 'true') {
       localStorage.removeItem('app_just_updated');
@@ -125,45 +149,38 @@ export default function UpdatePopup() {
       return;
     }
 
-    // Knowledge Base Section 6: Version-based check
     const storedVersion = localStorage.getItem('appVersion');
-    
-    // Check if app is already installed
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches 
       || (window.navigator as any).standalone 
       || document.referrer.includes('android-app://')
       || window.location.search.includes('mode=standalone');
 
-    // If version mismatch
     if (storedVersion && storedVersion !== CURRENT_VERSION) {
-      // App updated! Show it in both standalone and browser mode
       setType('new-version');
       setShow(true);
       (window as any).pwaPopupActive = true;
     } else if (!storedVersion) {
       if (isStandalone) {
-        // Installed app updated to version-aware build
         setType('new-version');
         setShow(true);
         (window as any).pwaPopupActive = true;
       } else {
-        // Just update version silently if first visit in browser
         localStorage.setItem('appVersion', CURRENT_VERSION);
       }
     }
   }, []);
 
+  // 4. Periodic check for version.json (STRICTLY when online)
   useEffect(() => {
-    // Periodic check for version.json when online
     const checkVersionJson = async () => {
-      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      if (!isOnline()) {
         return; // Skip when offline to ensure unconditional offline work
       }
       try {
         const res = await fetch(`./version.json?cache-bust=${Date.now()}`);
         if (res.ok) {
           const data = await res.json();
-          if (data && data.version && data.version !== CURRENT_VERSION) {
+          if (data && data.version && data.version !== CURRENT_VERSION && isOnline()) {
             setType('new-version');
             setShow(true);
             (window as any).pwaPopupActive = true;
@@ -174,7 +191,9 @@ export default function UpdatePopup() {
       }
     };
 
-    checkVersionJson();
+    if (isOnline()) {
+      checkVersionJson();
+    }
     const interval = setInterval(checkVersionJson, 15 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
@@ -187,43 +206,19 @@ export default function UpdatePopup() {
     };
   }, []);
 
+  // Show update modal when needUpdate triggers AND online
   useEffect(() => {
-    // Signal that PWA check is in progress
-    if (!(window as any).pwaPopupActive && !show) {
-      (window as any).pwaPopupActive = true;
-      
-      // If after 3 seconds nothing is shown, clear the flag
-      const initialTimer = setTimeout(() => {
-        if (!show && !needUpdate && !offlineReady) {
-          (window as any).pwaPopupActive = false;
-          window.dispatchEvent(new CustomEvent('pwa-popup-closed'));
-        }
-      }, 3000);
-      return () => clearTimeout(initialTimer);
+    if (!isOnline()) {
+      setShow(false);
+      return;
     }
-  }, [show, needUpdate, offlineReady]);
 
-  useEffect(() => {
-    if (needUpdate || offlineReady) {
-      if (needUpdate) {
-        setType('update');
-      } else if (offlineReady) {
-        setType('offline');
-      }
+    if (needUpdate) {
+      setType('update');
       setShow(true);
       (window as any).pwaPopupActive = true;
-      
-      if (offlineReady && !needUpdate) {
-        // Show offline ready for a few seconds then hide and unlock Beatitudes
-        const timer = setTimeout(() => {
-          setShow(false);
-          (window as any).pwaPopupActive = false;
-          window.dispatchEvent(new CustomEvent('pwa-popup-closed'));
-        }, 3000);
-        return () => clearTimeout(timer);
-      }
     }
-  }, [needUpdate, offlineReady]);
+  }, [needUpdate]);
 
   const handleUpdate = () => {
     if (type === 'update') {
@@ -246,6 +241,10 @@ export default function UpdatePopup() {
     (window as any).pwaPopupActive = false;
     window.dispatchEvent(new CustomEvent('pwa-popup-closed'));
   };
+
+  if (!isOnline() || !show) {
+    return null;
+  }
 
   return (
     <AnimatePresence>
@@ -304,3 +303,4 @@ export default function UpdatePopup() {
     </AnimatePresence>
   );
 }
+
