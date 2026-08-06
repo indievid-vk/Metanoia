@@ -64,11 +64,11 @@ export default defineConfig(({mode}) => {
       rootAssetsPlugin(),
       VitePWA({
         registerType: 'autoUpdate',
-        injectRegister: 'script-defer',
+        injectRegister: 'auto',
         devOptions: {
           enabled: true
         },
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'icon_192.png', 'icon_512.png', 'manifest.json', 'version.json'],
+        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
         manifest: {
           name: 'Помощь кающимся',
           short_name: 'Кающимся',
@@ -76,6 +76,10 @@ export default defineConfig(({mode}) => {
           theme_color: '#C33B3B',
           background_color: '#F4EBD8',
           display: 'standalone',
+          orientation: 'portrait',
+          scope: './',
+          start_url: './',
+          id: './',
           icons: [
             {
               src: 'icon_192.png',
@@ -98,10 +102,11 @@ export default defineConfig(({mode}) => {
         workbox: {
           clientsClaim: true,
           skipWaiting: true,
-          maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
+          maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
           globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,ttf,woff,woff2,json,webmanifest}'],
-          globIgnores: ['**/books/**', '**/images/**'],
+          globIgnores: ['**/books/**'],
           navigateFallback: 'index.html',
+          navigateFallbackAllowlist: [/^\/.*$/],
           navigateFallbackDenylist: [/^\/api\//],
           runtimeCaching: [
             {
@@ -125,7 +130,7 @@ export default defineConfig(({mode}) => {
               options: {
                 cacheName: 'static-assets-cache',
                 expiration: {
-                  maxEntries: 150,
+                  maxEntries: 200,
                   maxAgeSeconds: 60 * 60 * 24 * 365
                 },
                 cacheableResponse: {

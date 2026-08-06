@@ -3,6 +3,8 @@
   "short_name": "Кающимся",
   "description": "Помощь кающимся. Дневник для подготовки к исповеди.",
   "start_url": "./",
+  "scope": "./",
+  "id": "./",
   "display": "standalone",
   "background_color": "#F4EBD8",
   "theme_color": "#C33B3B",
