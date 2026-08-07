@@ -221,10 +221,11 @@ export default function UpdatePopup() {
   }, [needUpdate]);
 
   const handleUpdate = () => {
-    if (type === 'update') {
+    localStorage.setItem('appVersion', CURRENT_VERSION);
+    if (needUpdate && typeof updateServiceWorker === 'function') {
       updateServiceWorker(true);
-    } else if (type === 'new-version') {
-      localStorage.setItem('appVersion', CURRENT_VERSION);
+    } else {
+      window.location.reload();
     }
     setShow(false);
     (window as any).pwaPopupActive = false;

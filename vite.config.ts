@@ -63,7 +63,7 @@ export default defineConfig(({mode}) => {
       tailwindcss(), 
       rootAssetsPlugin(),
       VitePWA({
-        registerType: 'autoUpdate',
+        registerType: 'prompt',
         injectRegister: 'auto',
         devOptions: {
           enabled: true
@@ -100,13 +100,13 @@ export default defineConfig(({mode}) => {
           ]
         },
         workbox: {
+          cleanupOutdatedCaches: true,
+          skipWaiting: false,
           clientsClaim: true,
-          skipWaiting: true,
           maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
           globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,ttf,woff,woff2,json,webmanifest}'],
           globIgnores: ['**/books/**'],
           navigateFallback: 'index.html',
-          navigateFallbackAllowlist: [/^\/.*$/],
           navigateFallbackDenylist: [/^\/api\//],
           runtimeCaching: [
             {
@@ -131,34 +131,6 @@ export default defineConfig(({mode}) => {
                 cacheName: 'static-assets-cache',
                 expiration: {
                   maxEntries: 200,
-                  maxAgeSeconds: 60 * 60 * 24 * 365
-                },
-                cacheableResponse: {
-                  statuses: [0, 200]
-                }
-              }
-            },
-            {
-              urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'google-fonts-cache',
-                expiration: {
-                  maxEntries: 10,
-                  maxAgeSeconds: 60 * 60 * 24 * 365
-                },
-                cacheableResponse: {
-                  statuses: [0, 200]
-                }
-              }
-            },
-            {
-              urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'gstatic-fonts-cache',
-                expiration: {
-                  maxEntries: 10,
                   maxAgeSeconds: 60 * 60 * 24 * 365
                 },
                 cacheableResponse: {
