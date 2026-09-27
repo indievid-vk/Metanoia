@@ -56,6 +56,14 @@ export function useSinsStore() {
     setSelectedSins(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const removeSelectedSin = (id: string) => {
+    setSelectedSins(prev => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+
   const updateNote = (id: string, note: string) => {
     setSinNotes(prev => ({ ...prev, [id]: note }));
   };
@@ -96,6 +104,7 @@ export function useSinsStore() {
     sinNotes,
     customSins,
     toggleSin,
+    removeSelectedSin,
     updateNote,
     addCustomSin,
     deleteCustomSin,

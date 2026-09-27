@@ -8,7 +8,7 @@ import { getAssetPath } from '../utils';
 import { DecorativeDivider } from '../components/DecorativeDivider';
 
 export default function Confession() {
-  const { selectedSins, sinNotes, customSins, toggleSin, updateNote, addCustomSin, deleteCustomSin, clearConfession } = useSinsStore();
+  const { selectedSins, sinNotes, customSins, toggleSin, removeSelectedSin, updateNote, addCustomSin, deleteCustomSin, clearConfession } = useSinsStore();
   const [expandedPassion, setExpandedPassion] = useState<Passion | null>(null);
   const [expandedSin, setExpandedSin] = useState<string | null>(null);
   const [expandedSelectedSin, setExpandedSelectedSin] = useState<string | null>(null);
@@ -179,7 +179,21 @@ export default function Confession() {
                                     {sin.severity}
                                   </span>
                                 </div>
-                                {isExpanded ? <ChevronUp size={14} className="text-[var(--color-ink)]/50" /> : <ChevronDown size={14} className="text-[var(--color-ink)]/50" />}
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      removeSelectedSin(sin.id);
+                                    }}
+                                    className="p-1.5 text-[var(--color-ink)]/40 hover:text-[var(--color-cinnabar)] hover:bg-[var(--color-cinnabar)]/10 rounded-md transition-colors"
+                                    title="Удалить из списка выбранных"
+                                    aria-label="Удалить грех из списка выбранных"
+                                  >
+                                    <Trash2 size={15} />
+                                  </button>
+                                  {isExpanded ? <ChevronUp size={14} className="text-[var(--color-ink)]/50" /> : <ChevronDown size={14} className="text-[var(--color-ink)]/50" />}
+                                </div>
                               </div>
                               
                               {isExpanded && (

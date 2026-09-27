@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, BookOpen, Info, Image as ImageIcon, Users, ChevronLeft, ChevronRight, Sparkles, Award, Bell, BellOff, Volume2, VolumeX, Settings } from 'lucide-react';
+import { Calendar as CalendarIcon, BookOpen, Info, Image as ImageIcon, Users, ChevronLeft, ChevronRight, Sparkles, Award, Bell, BellOff, Volume2, VolumeX, Settings, RotateCw } from 'lucide-react';
 import { DecorativeDivider } from '../components/DecorativeDivider';
 import { motion, AnimatePresence } from 'motion/react';
+import { getLiturgicalReadingsForDate } from '../utils/liturgicalLectionary';
 import { 
   getReminderSettings, 
   saveReminderSettings, 
@@ -332,28 +333,8 @@ const generateLocalFallbackCalendarData = (date: Date): AzbykaResponse => {
     });
   });
 
-  const textsList: { text: string }[] = [];
-  // Fallback readings texts depending on the day of week or major feast
-  if (diffDays === 0) {
-    textsList.push({ text: 'И Пасхальные чтения: <b>Деян. 1:1–8</b> (зач. 1), <b>Ин. 1:1–17</b> (зач. 1).' });
-  } else if (fixedFeastsMap[key]) {
-    textsList.push({ text: `Богослужебные чтения праздника: <b>Флп. 2:5–11</b>, <b>Лк. 10:38–42; 11:27–28</b>.` });
-  } else {
-    // Basic day of week reading recommendations
-    const dow = date.getDay();
-    const cycleReadings = [
-      '<b>Мф. 6:22–33</b> (Евангелие дня), <b>Рим. 6:18–23</b> (Апостол дня)', // Sun
-      '<b>Ин. 1:18–28</b>, <b>Деян. 1:12–17, 21–26</b>', // Mon
-      '<b>Ин. 1:35–51</b>, <b>Деян. 2:14–21</b>', // Tue
-      '<b>Ин. 2:1–11</b>, <b>Деян. 2:22–36</b>', // Wed
-      '<b>Ин. 3:1–15</b>, <b>Деян. 2:38–43</b>', // Thu
-      '<b>Ин. 3:22–36</b>, <b>Деян. 3:1–8</b>', // Fri
-      '<b>Ин. 3:16–21</b>, <b>Деян. 3:11–16</b>', // Sat
-    ];
-    textsList.push({
-      text: `Рекомендуемые уставные чтения дня: ${cycleReadings[dow]}.`
-    });
-  }
+  const liturgical = getLiturgicalReadingsForDate(date);
+  const textsList: { text: string }[] = [{ text: liturgical.summaryHtml }];
 
   return {
     saints: saintsList,
@@ -374,66 +355,8 @@ const generateLocalFallbackCalendarData = (date: Date): AzbykaResponse => {
 };
 
 const getFallbackBibleReadingsHTML = (date: Date): string => {
-  const m = date.getMonth() + 1;
-  const d = date.getDate();
-  const key = `${m}-${d}`;
-  const pascha = getJulianPascha(date.getFullYear());
-  const diffDays = Math.round((date.getTime() - pascha.getTime()) / (24 * 60 * 60 * 1000));
-  
-  if (diffDays === 0) {
-    return `
-      <h2>Светлое Христово Воскресение. ПАСХА.</h2>
-      <div class="bible_text">
-        <p><b>Из Деяний святых апостолов (Деян. 1:1–8):</b></p>
-        <p><span class="verse">1</span> Первую книгу написал я к тебе, Феофил, о всем, что Иисус делал и чему учил от начала <span class="verse">2</span> до того дня, в который Он вознесся, дав Святым Духом повеления Апостолам, которых Он избрал...</p>
-        <p><b>Из Евангелия от Иоанна (Ин. 1:1–17):</b></p>
-        <p><span class="verse">1</span> В начале было Слово, и Слово было у Бога, и Слово было Бог. <span class="verse">2</span> Оно было в начале у Бога. <span class="verse">3</span> Все чрез Него начало быть, и без Него ничто не начало быть, что начало быть...</p>
-      </div>
-    `;
-  }
-
-  // General readings
-  const dow = date.getDay();
-  const readingsTextMap = [
-    // Sun
-    `<h2>Воскресное чтение (Евангелие от Матфея 6:22–33)</h2>
-     <div class="bible_text">
-       <p><span class="verse">22</span> Светильник для тела есть око. Итак, если око твое будет чисто, то всё тело твое будет светло; <span class="verse">23</span> если же око твое будет худо, то всё тело твое будет темно...</p>
-       <p><span class="verse">33</span> Ищите же прежде Царства Божия и правды Его, и это всё приложится вам.</p>
-     </div>`,
-    // Mon
-    `<h2>Литургическое чтение (Евангелие от Иоанна 1:18–28)</h2>
-     <div class="bible_text">
-       <p><span class="verse">18</span> Бога не видел никто никогда; Единородный Сын, сущий в недре Отчем, Он явил...</p>
-     </div>`,
-    // Tue
-    `<h2>Литургическое чтение (Евангелие от Иоанна 1:35–51)</h2>
-     <div class="bible_text">
-       <p><span class="verse">35</span> На другой день опять стоял Иоанн и двое из учеников его. <span class="verse">36</span> И, увидев идущего Иисуса, сказал: вот Агнец Божий.</p>
-     </div>`,
-    // Wed
-    `<h2>Литургическое чтение (Евангелие от Иоанна 2:1–11)</h2>
-     <div class="bible_text">
-       <p><span class="verse">1</span> На третий день был брак в Кане Галилейской, и Матерь Иисуса была там. <span class="verse">2</span> Был также зван Иисус и ученики Его на брак...</p>
-     </div>`,
-    // Thu
-    `<h2>Литургическое чтение (Евангелие от Иоанна 3:1–15)</h2>
-     <div class="bible_text">
-       <p><span class="verse">1</span> Между фарисеями был некто, именем Никодим, один из начальников Иудейских. <span class="verse">2</span> Он пришел к Иисусу ночью...</p>
-     </div>`,
-    // Fri
-    `<h2>Литургическое чтение (Евангелие от Иоанна 3:22–36)</h2>
-     <div class="bible_text">
-       <p><span class="verse">22</span> После сего пришел Иисус с учениками Своими в землю Иудейскую и там жил с ними и крестил...</p>
-     </div>`,
-    // Sat
-    `<h2>Литургическое чтение (Евангелие от Иоанна 3:16–21)</h2>
-     <div class="bible_text">
-       <p><span class="verse">16</span> Ибо так возлюбил Бог мир, что отдал Сына Своего Единородного, дабы всякий верующий в Него, не погиб, но имел жизнь вечную.</p>
-     </div>`
-  ];
-
-  return readingsTextMap[dow];
+  const liturgical = getLiturgicalReadingsForDate(date);
+  return liturgical.fullHtml;
 };
 
 const PROXIES = [
@@ -445,6 +368,11 @@ const PROXIES = [
 const fetchWithProxyFallback = async (originalUrl: string): Promise<string> => {
   let lastError: Error | null = null;
   
+  // Check if device is offline to fail fast without hanging on proxies
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    throw new Error('Оффлайн режим (сеть недоступна)');
+  }
+
   // Try direct fetch first (without proxies). In some environments (e.g., cordova, capacitor, or relaxed CORS), this works perfectly.
   try {
     const controller = new AbortController();
@@ -490,6 +418,22 @@ export default function Calendar() {
   const [error, setError] = useState<string | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isOfflineMode, setIsOfflineMode] = useState(false);
+  const [reloadTrigger, setReloadTrigger] = useState(0);
+
+  // Clear legacy caches with old dummy texts on mount
+  useEffect(() => {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && (k.startsWith('ortho_cal_v2_') || k.startsWith('ortho_cal_v3_'))) {
+          localStorage.removeItem(k);
+          i--;
+        }
+      }
+    } catch (e) {
+      console.warn("Could not clean legacy calendar caches", e);
+    }
+  }, []);
   
   // Fasting tab selection
   const [fastingTab, setFastingTab] = useState<'multiday' | 'oneday' | 'weeks'>('multiday');
@@ -630,8 +574,8 @@ export default function Calendar() {
       const day = String(currentDate.getDate()).padStart(2, '0');
       const dateStr = `${year}-${month}-${day}`;
       
-      const cacheKeyDay = `ortho_cal_v2_day_${dateStr}`;
-      const cacheKeyBible = `ortho_cal_v3_bible_${dateStr}`;
+      const cacheKeyDay = `ortho_cal_v4_day_${dateStr}`;
+      const cacheKeyBible = `ortho_cal_v4_bible_${dateStr}`;
 
       const cachedDay = localStorage.getItem(cacheKeyDay);
       const cachedBible = localStorage.getItem(cacheKeyBible);
@@ -642,10 +586,14 @@ export default function Calendar() {
       // 1. Try loading calendar data from cache
       if (cachedDay) {
         try {
-          setData(JSON.parse(cachedDay));
+          const parsed = JSON.parse(cachedDay);
+          setData(parsed);
           setLoading(false);
           setError(null);
-          isDayLoaded = true;
+          // Only treat as fully loaded if it was a real server response, not a temporary fallback
+          if (!parsed._isFallback) {
+            isDayLoaded = true;
+          }
         } catch (e) {
           console.warn("Error parsing cached calendar data:", e);
           localStorage.removeItem(cacheKeyDay);
@@ -654,14 +602,31 @@ export default function Calendar() {
 
       // 2. Try loading bible readings content from cache
       if (cachedBible) {
-        setBibleContent(cachedBible);
-        setBibleLoading(false);
-        setBibleError(null);
-        isBibleLoaded = true;
+        try {
+          const parsedBible = JSON.parse(cachedBible);
+          if (parsedBible && typeof parsedBible === 'object' && parsedBible.html) {
+            setBibleContent(parsedBible.html);
+            setBibleLoading(false);
+            setBibleError(null);
+            if (!parsedBible._isFallback) {
+              isBibleLoaded = true;
+            }
+          } else if (typeof cachedBible === 'string' && !cachedBible.startsWith('{')) {
+            setBibleContent(cachedBible);
+            setBibleLoading(false);
+            setBibleError(null);
+            isBibleLoaded = true;
+          }
+        } catch {
+          setBibleContent(cachedBible);
+          setBibleLoading(false);
+          setBibleError(null);
+        }
       }
 
-      // If both blocks were perfectly restored from the cache, we don't need any network hits!
+      // If both blocks were perfectly restored from real non-fallback cache, no network hit needed
       if (isDayLoaded && isBibleLoaded) {
+        setIsOfflineMode(false);
         return;
       }
 
@@ -674,6 +639,24 @@ export default function Calendar() {
         setBibleLoading(true);
         setBibleError(null);
         setBibleContent(null);
+      }
+
+      // If device is offline, immediately populate from local fallback without network attempts
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        setIsOfflineMode(true);
+        if (!isDayLoaded) {
+          const fallbackData = generateLocalFallbackCalendarData(currentDate);
+          setData(fallbackData);
+          safeLocalStorageSet(cacheKeyDay, JSON.stringify(fallbackData));
+          setLoading(false);
+        }
+        if (!isBibleLoaded) {
+          const localHtml = getFallbackBibleReadingsHTML(currentDate);
+          setBibleContent(localHtml);
+          safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: localHtml, _isFallback: true }));
+          setBibleLoading(false);
+        }
+        return;
       }
 
       try {
@@ -699,14 +682,19 @@ export default function Calendar() {
             if (!json || typeof json !== 'object') {
               throw new Error("Неверный формат ответа.");
             }
+            json._isFallback = false;
+            setIsOfflineMode(false);
           } catch (apiError) {
             console.warn("Failed to fetch calendar from server API, attempting client-side fallback proxy:", apiError);
             try {
               const calendarHtml = await fetchWithProxyFallback(`https://azbyka.ru/days/api/day/${dateStr}.json`);
               json = JSON.parse(calendarHtml);
+              json._isFallback = false;
+              setIsOfflineMode(false);
             } catch (fallbackError) {
               console.error("Both server API and client-side proxies failed to fetch calendar. Activating local liturgical calendar engine:", fallbackError);
               json = generateLocalFallbackCalendarData(currentDate);
+              json._isFallback = true;
               setIsOfflineMode(true);
             }
           }
@@ -756,6 +744,7 @@ export default function Calendar() {
                 setBibleContent(localHtml);
                 setBibleLoading(false);
                 setIsOfflineMode(true);
+                safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: localHtml, _isFallback: true }));
                 // Return to skip parsing process and standard state assignment
                 return;
               }
@@ -833,7 +822,8 @@ export default function Calendar() {
               if (readingBlocks.length > 0) {
                 const finalBibleContent = readingBlocks.join('');
                 setBibleContent(finalBibleContent);
-                safeLocalStorageSet(cacheKeyBible, finalBibleContent);
+                safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: finalBibleContent, _isFallback: false }));
+                setIsOfflineMode(false);
               } else {
                 setBibleError('Тексты чтений на текущий день не найдены в русском Синодальном переводе.');
               }
@@ -855,7 +845,7 @@ export default function Calendar() {
     };
 
     fetchCalendar();
-  }, [currentDate]);
+  }, [currentDate, reloadTrigger]);
 
   const handlePrevDay = () => {
     const newDate = new Date(currentDate);
@@ -1247,14 +1237,33 @@ export default function Calendar() {
                   </p>
                 </div>
               </div>
-              <a
-                href="https://azbyka.ru/days/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-izhitsa rounded-lg transition-colors text-xs shadow-xs cursor-pointer"
-              >
-                Проверить связь ↗
-              </a>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const year = currentDate.getFullYear();
+                    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+                    const day = String(currentDate.getDate()).padStart(2, '0');
+                    const dStr = `${year}-${month}-${day}`;
+                    localStorage.removeItem(`ortho_cal_v4_day_${dStr}`);
+                    localStorage.removeItem(`ortho_cal_v4_bible_${dStr}`);
+                    setReloadTrigger(prev => prev + 1);
+                  }}
+                  className="whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-700 hover:bg-amber-800 text-white font-izhitsa rounded-lg transition-colors text-xs shadow-xs cursor-pointer active:scale-95"
+                  title="Очистить кэш текущего дня и повторно запросить данные с сервера"
+                >
+                  <RotateCw size={13} />
+                  Обновить с сервера
+                </button>
+                <a
+                  href="https://azbyka.ru/days/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-izhitsa rounded-lg transition-colors text-xs shadow-xs cursor-pointer"
+                >
+                  Азбука.ру ↗
+                </a>
+              </div>
             </div>
           )}
           

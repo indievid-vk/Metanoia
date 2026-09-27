@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { useSinsStore, Passion } from '../store';
 import { MOCK_SINS, PASSIONS } from '../data/constants';
 import { DecorativeDivider } from '../components/DecorativeDivider';
 
 export default function MyConfession() {
   const navigate = useNavigate();
-  const { selectedSins, sinNotes, customSins, clearConfession } = useSinsStore();
+  const { selectedSins, sinNotes, customSins, clearConfession, removeSelectedSin } = useSinsStore();
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [expandedSins, setExpandedSins] = useState<Record<string, boolean>>({});
 
@@ -80,8 +80,20 @@ export default function MyConfession() {
                           onClick={() => toggleSin(sin.id)}
                         >
                           <span className="text-[var(--color-ink)]">{sin.title}</span>
-                          <div className="flex items-center">
-                            <span className="text-[10px] uppercase tracking-wider opacity-50 mr-2">{sin.severity}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] uppercase tracking-wider opacity-50 mr-1">{sin.severity}</span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeSelectedSin(sin.id);
+                              }}
+                              className="p-1 text-[var(--color-ink)]/40 hover:text-[var(--color-cinnabar)] hover:bg-[var(--color-cinnabar)]/10 rounded-md transition-colors"
+                              title="Удалить из списка"
+                              aria-label="Удалить грех из списка"
+                            >
+                              <Trash2 size={15} />
+                            </button>
                             {isExpanded ? <ChevronUp size={16} className="opacity-50" /> : <ChevronDown size={16} className="opacity-50" />}
                           </div>
                         </div>

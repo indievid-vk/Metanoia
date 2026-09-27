@@ -64,11 +64,12 @@ export default defineConfig(({mode}) => {
       rootAssetsPlugin(),
       VitePWA({
         registerType: 'prompt',
-        injectRegister: 'auto',
+        injectRegister: 'script',
         devOptions: {
-          enabled: true
+          enabled: true,
+          type: 'module'
         },
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'icon_256.png'],
         manifest: {
           name: 'Помощь кающимся',
           short_name: 'Кающимся',
@@ -84,6 +85,11 @@ export default defineConfig(({mode}) => {
             {
               src: 'icon_192.png',
               sizes: '192x192',
+              type: 'image/png'
+            },
+            {
+              src: 'icon_256.png',
+              sizes: '256x256',
               type: 'image/png'
             },
             {
@@ -116,11 +122,11 @@ export default defineConfig(({mode}) => {
                 cacheName: 'api-cache',
                 networkTimeoutSeconds: 3,
                 expiration: {
-                  maxEntries: 50,
+                  maxEntries: 100,
                   maxAgeSeconds: 60 * 60 * 24 * 30
                 },
                 cacheableResponse: {
-                  statuses: [0, 200]
+                  statuses: [200]
                 }
               }
             },
