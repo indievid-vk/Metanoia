@@ -93,6 +93,14 @@ export default function RouteMap() {
   const [activeLocation, setActiveLocation] = useState<number | null>(null);
   const [hoveredLocation, setHoveredLocation] = useState<number | null>(null);
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
+  const [mapLayer, setMapLayer] = useState<'topo' | 'osm'>('topo');
+
+  const getTileUrl = (z: number, x: number, y: number, layer: 'topo' | 'osm') => {
+    if (layer === 'topo') {
+      return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/${z}/${y}/${x}`;
+    }
+    return `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+  };
 
   // References to keep event listeners perfectly synced (avoiding stale captures)
   const scaleRef = useRef(scale);
@@ -606,8 +614,8 @@ export default function RouteMap() {
                     const subY = tile.y * limit + j;
                     
                     subTiles.push({
-                      key: `${subX}-${subY}-${d}`,
-                      href: `https://basemaps.cartocdn.com/rastertiles/voyager/${9 + d}/${subX}/${subY}@2x.png`,
+                      key: `${subX}-${subY}-${d}-${mapLayer}`,
+                      href: getTileUrl(9 + d, subX, subY, mapLayer),
                       x: posX,
                       y: posY,
                       size: size
@@ -619,7 +627,7 @@ export default function RouteMap() {
                   <g key={`${tile.x}-${tile.y}-group`}>
                     {/* Fallback low-res tile under high-res sub-tiles to eliminate flickers during lazy-loading */}
                     <image
-                      href={`https://basemaps.cartocdn.com/rastertiles/voyager/9/${tile.x}/${tile.y}@2x.png`}
+                      href={getTileUrl(9, tile.x, tile.y, mapLayer)}
                       x={tileXMin}
                       y={tileYMin}
                       width={256}
@@ -641,8 +649,8 @@ export default function RouteMap() {
 
               return (
                 <image
-                  key={`${tile.x}-${tile.y}`}
-                  href={`https://basemaps.cartocdn.com/rastertiles/voyager/9/${tile.x}/${tile.y}@2x.png`}
+                  key={`${tile.x}-${tile.y}-${mapLayer}`}
+                  href={getTileUrl(9, tile.x, tile.y, mapLayer)}
                   x={tileXMin}
                   y={tileYMin}
                   width={256}
@@ -866,6 +874,13 @@ export default function RouteMap() {
             className="p-2 border-t border-stone-100 text-stone-700 hover:bg-amber-50 active:scale-95 transition-all outline-none"
           >
             {isFullScreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+          </button>
+          <button 
+            onClick={() => setMapLayer(prev => prev === 'topo' ? 'osm' : 'topo')}
+            title={mapLayer === 'topo' ? "Переключить на карту OpenStreetMap" : "Переключить на рельеф (Esri Topo)"}
+            className="px-1 py-1.5 border-t border-stone-100 text-[var(--color-cinnabar)] hover:bg-amber-50 active:scale-95 transition-all outline-none font-bold text-[9px] tracking-tight uppercase"
+          >
+            {mapLayer === 'topo' ? 'OSM' : 'Рельеф'}
           </button>
         </div>
 

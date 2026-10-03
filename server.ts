@@ -81,12 +81,49 @@ async function startServer() {
   });
 
   // 2. Bible Readings API proxy with memory caching
+  const BOOK_NAMES: Record<string, string> = {
+    Mt: "Евангелие от Матфея",
+    Mk: "Евангелие от Марка",
+    Lk: "Евангелие от Луки",
+    Jn: "Евангелие от Иоанна",
+    Act: "Деяния святых апостолов",
+    Jas: "Соборное послание святого апостола Иакова",
+    "1Pet": "Первое послание апостола Петра",
+    "2Pet": "Второе послание апостола Петра",
+    "1Jn": "Первое послание апостола Иоанна",
+    "2Jn": "Второе послание апостола Иоанна",
+    "3Jn": "Третье послание апостола Иоанна",
+    Jud: "Послание апостола Иуды",
+    Rom: "Послание к Римлянам",
+    "1Cor": "Первое послание к Коринфянам",
+    "2Cor": "Второе послание к Коринфянам",
+    Gal: "Послание к Галатам",
+    Eph: "Послание к Ефесянам",
+    Phil: "Послание к Филиппийцам",
+    Col: "Послание к Колоссянам",
+    "1Thess": "Первое послание к Фессалоникийцам",
+    "2Thess": "Второе послание к Фессалоникийцам",
+    "1Tim": "Первое послание к Тимофею",
+    "2Tim": "Второе послание к Тимофею",
+    Tit: "Послание к Титу",
+    Phlm: "Послание к Филимону",
+    Heb: "Послание к Евреям",
+    Rev: "Откровение Иоанна Богослова"
+  };
+
+  const BOOK_RU_ABBR: Record<string, string> = {
+    Mt: "Мф.", Mk: "Мк.", Lk: "Лк.", Jn: "Ин.", Act: "Деян.", Jas: "Иак.",
+    "1Pet": "1Пет.", "2Pet": "2Пет.", "1Jn": "1Ин.", "2Jn": "2Ин.", "3Jn": "3Ин.",
+    Jud: "Иуд.", Rom: "Рим.", "1Cor": "1Кор.", "2Cor": "2Кор.", Gal: "Гал.",
+    Eph: "Еф.", Phil: "Флп.", Col: "Кол.", "1Thess": "1Фес.", "2Thess": "2Фес.",
+    "1Tim": "1Тим.", "2Tim": "2Тим.", Tit: "Тит.", Phlm: "Флм.", Heb: "Евр.", Rev: "Откр."
+  };
+
   app.get("/api/bible", async (req, res) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
     const { date } = req.query;
     
     let targetDate = typeof date === "string" && date ? date : new Date().toISOString().split("T")[0];
-    const bibleUrl = `https://azbyka.ru/biblia/days/${targetDate}`;
 
     const cached = bibleCache.get(targetDate);
     if (cached && cached.expiresAt > Date.now()) {
@@ -98,23 +135,110 @@ async function startServer() {
     }
 
     try {
-      const response = await fetchWithRetry(bibleUrl, {
+      // 1. Fetch calendar day metadata to get precise scripture references
+      const dayUrl = `https://azbyka.ru/days/api/day/${targetDate}.json`;
+      const dayResponse = await fetchWithRetry(dayUrl, {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "ru-RU,ru;q=0.9",
+        "Accept": "application/json, text/plain, */*",
         "Referer": "https://azbyka.ru/"
       });
 
-      const html = await response.text();
+      const dayJson = await dayResponse.json();
+      let rawRefs: string[] = dayJson.texts?.[0]?.refs || [];
+
+      // If refs array is empty, attempt to extract from text HTML
+      if (rawRefs.length === 0 && dayJson.texts?.[0]?.text) {
+        const matches = [...(dayJson.texts[0].text as string).matchAll(/href="https:\/\/azbyka\.ru\/biblia\/\?([^"#]+)"/g)];
+        rawRefs = matches.map(m => m[1]);
+      }
+
+      if (rawRefs.length === 0) {
+        throw new Error(`Богослужебные чтения для ${targetDate} не указаны в календаре`);
+      }
+
+      // Deduplicate refs while preserving order, max 4 readings
+      const uniqueRefs = Array.from(new Set(rawRefs)).slice(0, 4);
+      const readingCards: string[] = [];
+
+      for (const ref of uniqueRefs) {
+        try {
+          const bibUrl = `https://azbyka.ru/biblia/?${encodeURIComponent(ref)}`;
+          const bibRes = await fetchWithRetry(bibUrl, {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            "Referer": `https://azbyka.ru/days/${targetDate}`
+          }, 1, 8000);
+
+          const html = await bibRes.text();
+          // Find Russian verses with crossref-verse flag (highlighted passage)
+          const verseDivs = [...html.matchAll(/<div\b([^>]*)class="[^"]*verse\s+lang-r[^"]*crossref-verse[^"]*"([^>]*)>([\s\S]*?)<\/div>/gi)];
+
+          const dotIdx = ref.indexOf(".");
+          const bookCode = dotIdx !== -1 ? ref.slice(0, dotIdx) : ref;
+          const passagePart = dotIdx !== -1 ? ref.slice(dotIdx + 1) : "";
+          const bookTitle = BOOK_NAMES[bookCode] || (bookCode.startsWith("Lk") || bookCode.startsWith("Mt") || bookCode.startsWith("Mk") || bookCode.startsWith("Jn") ? "Святое Евангелие" : "Апостольское чтение");
+          const bookAbbr = BOOK_RU_ABBR[bookCode] || bookCode;
+          const citationDisplay = `${bookAbbr} ${passagePart}`;
+
+          const versesHtml: string[] = [];
+          for (const m of verseDivs) {
+            const attrs = m[1] + " " + m[2];
+            const lineNumMatch = attrs.match(/data-line="([^"]+)"/);
+            const lineNum = lineNumMatch ? lineNumMatch[1] : "";
+            let cleanText = m[3]
+              .replace(/<span[^>]*class="[^"]*checkbox[^"]*"[^>]*><\/span>/gi, "")
+              .replace(/<span[^>]*class="zachala"[^>]*>[\s\S]*?<\/span>/gi, "")
+              .replace(/\[\s*\]/g, "")
+              .replace(/<a[^>]*>([\s\S]*?)<\/a>/gi, "$1")
+              .replace(/<[^>]+>/g, " ")
+              .replace(/\s+/g, " ")
+              .trim();
+
+            if (cleanText) {
+              versesHtml.push(`
+                <p class="mb-3 leading-relaxed text-[var(--color-ink)]/90 text-sm sm:text-base">
+                  <sup class="text-[var(--color-cinnabar)] font-mono font-bold mr-1.5 text-xs align-super">${lineNum}</sup>
+                  <span>${cleanText}</span>
+                </p>
+              `);
+            }
+          }
+
+          if (versesHtml.length > 0) {
+            readingCards.push(`
+              <div class="bg-[#fdfbf6] p-5 rounded-2xl border border-[var(--color-cinnabar)]/10 shadow-sm mb-6 space-y-3 hover:shadow-md transition-shadow">
+                <div class="border-b border-[var(--color-cinnabar)]/10 pb-2 mb-4">
+                  <h4 class="font-izhitsa text-lg sm:text-xl text-[var(--color-cinnabar)] leading-tight">
+                    ${bookTitle}
+                  </h4>
+                  <p class="font-sans text-xs text-[var(--color-ink)]/50 uppercase tracking-wider font-semibold mt-1">
+                    ${citationDisplay}
+                  </p>
+                </div>
+                <div class="space-y-2 font-sans">
+                  ${versesHtml.join("")}
+                </div>
+              </div>
+            `);
+          }
+        } catch (verseErr) {
+          console.warn(`Could not load verses for ref ${ref}:`, verseErr);
+        }
+      }
+
+      if (readingCards.length === 0) {
+        throw new Error("Не удалось извлечь стихи богослужебных чтений");
+      }
+
+      const fullHtml = readingCards.join("\n");
       bibleCache.set(targetDate, {
-        data: html,
+        data: fullHtml,
         expiresAt: Date.now() + CACHE_TTL_MS
       });
 
       res.setHeader("X-Cache", "MISS");
       res.setHeader("Content-Type", "text/html; charset=utf-8");
       res.setHeader("Cache-Control", "public, max-age=86400");
-      res.send(html);
+      res.send(fullHtml);
     } catch (error) {
       console.error(`Error fetching Bible readings for date ${targetDate}:`, error);
       res.status(502).json({
