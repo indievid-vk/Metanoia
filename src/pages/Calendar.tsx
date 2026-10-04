@@ -361,7 +361,7 @@ const getFallbackBibleReadingsHTML = (date: Date): string => {
 
 const PROXIES = [
   (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  (url: string) => `https://corsproxy.org/?url=${encodeURIComponent(url)}`,
   (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
 ];
 
@@ -425,7 +425,7 @@ export default function Calendar() {
     try {
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
-        if (k && (k.startsWith('ortho_cal_v2_') || k.startsWith('ortho_cal_v3_'))) {
+        if (k && (k.startsWith('ortho_cal_v2_') || k.startsWith('ortho_cal_v3_') || k.startsWith('ortho_cal_v4_'))) {
           localStorage.removeItem(k);
           i--;
         }
@@ -574,8 +574,8 @@ export default function Calendar() {
       const day = String(currentDate.getDate()).padStart(2, '0');
       const dateStr = `${year}-${month}-${day}`;
       
-      const cacheKeyDay = `ortho_cal_v4_day_${dateStr}`;
-      const cacheKeyBible = `ortho_cal_v4_bible_${dateStr}`;
+      const cacheKeyDay = `ortho_cal_v5_day_${dateStr}`;
+      const cacheKeyBible = `ortho_cal_v5_bible_${dateStr}`;
 
       const cachedDay = localStorage.getItem(cacheKeyDay);
       const cachedBible = localStorage.getItem(cacheKeyBible);
@@ -608,7 +608,9 @@ export default function Calendar() {
             setBibleContent(parsedBible.html);
             setBibleLoading(false);
             setBibleError(null);
-            isBibleLoaded = true;
+            if (!parsedBible._isFallback) {
+              isBibleLoaded = true;
+            }
           } else if (typeof cachedBible === 'string' && !cachedBible.startsWith('{')) {
             setBibleContent(cachedBible);
             setBibleLoading(false);
@@ -743,7 +745,7 @@ export default function Calendar() {
                 setBibleContent(localHtml);
                 setBibleLoading(false);
                 setIsOfflineMode(true);
-                safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: localHtml, _isFallback: false }));
+                safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: localHtml, _isFallback: true }));
                 return;
               }
             }
@@ -761,7 +763,7 @@ export default function Calendar() {
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
             
-            const titleDivs = doc.querySelectorAll('.days__book-title[id^="reading-"]');
+            const titleDivs = doc.querySelectorAll('.days__book-title');
             
             if (titleDivs.length > 0) {
               const readingBlocks: string[] = [];
@@ -784,10 +786,10 @@ export default function Calendar() {
                 let sibling = titleDiv.nextElementSibling;
                 while (sibling && !sibling.classList.contains('days__book-title')) {
                   if (sibling.classList.contains('tbl-content') || sibling.querySelector('.verse')) {
-                    const russianVerses = sibling.querySelectorAll('.verse[data-lang="r"]');
+                    const russianVerses = sibling.querySelectorAll('.verse[data-lang="r"], .verse.lang-r');
                     russianVerses.forEach((verseEl) => {
-                      // Remove checkmark checkboxes and icons
-                      verseEl.querySelectorAll('.checkbox, .icon-check').forEach(el => el.remove());
+                      // Remove checkmark checkboxes, zachala tags and icons
+                      verseEl.querySelectorAll('.checkbox, .icon-check, .zachala').forEach(el => el.remove());
                       // Expand and inline inner links (like theological lexicon terms) to avoid breaking styles
                       verseEl.querySelectorAll('a').forEach(link => {
                         const span = doc.createElement('span');
@@ -796,7 +798,7 @@ export default function Calendar() {
                       });
                       
                       const lineNum = verseEl.getAttribute('data-line') || '';
-                      const verseText = verseEl.innerHTML.replace(/\s+/g, ' ').trim();
+                      const verseText = verseEl.innerHTML.replace(/\[\s*\]/g, '').replace(/\s+/g, ' ').trim();
                       versesHtml.push(`
                         <p class="mb-3 leading-relaxed text-[var(--color-ink)]/90 text-sm sm:text-base">
                           <sup class="text-[var(--color-cinnabar)] font-mono font-bold mr-1.5 text-xs align-super">${lineNum}</sup>
@@ -835,19 +837,19 @@ export default function Calendar() {
               } else {
                 const localHtml = getFallbackBibleReadingsHTML(currentDate);
                 setBibleContent(localHtml);
-                safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: localHtml, _isFallback: false }));
+                safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: localHtml, _isFallback: true }));
               }
             } else {
               // Gracefully engage authentic liturgical readings
               const localHtml = getFallbackBibleReadingsHTML(currentDate);
               setBibleContent(localHtml);
-              safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: localHtml, _isFallback: false }));
+              safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: localHtml, _isFallback: true }));
             }
           } catch (e) {
             console.error('Error fetching bible text:', e);
             const localHtml = getFallbackBibleReadingsHTML(currentDate);
             setBibleContent(localHtml);
-            safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: localHtml, _isFallback: false }));
+            safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: localHtml, _isFallback: true }));
           } finally {
             setBibleLoading(false);
           }
@@ -1449,7 +1451,7 @@ export default function Calendar() {
                 <h3 className="font-izhitsa text-xl text-[var(--color-cinnabar)]">Богослужебные чтения дня</h3>
               </div>
               <a 
-                href={`https://azbyka.ru/days/${dateStr}#chteniya`} 
+                href={`https://azbyka.ru/biblia/days/${dateStr}`} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-[var(--color-cinnabar)] font-izhitsa hover:underline text-xs"
@@ -1479,17 +1481,28 @@ export default function Calendar() {
                   <span className="font-izhitsa">Загрузка текстов Писания...</span>
                 </div>
               ) : bibleError ? (
-                <div className="p-4 rounded-xl bg-amber-50/40 border border-amber-200/50 text-stone-700 text-sm font-sans">
-                  <p className="font-semibold mb-1 text-[var(--color-cinnabar)] font-izhitsa">Не удалось загрузить тексты напрямую</p>
-                  <p className="opacity-80 mb-3 text-xs">{bibleError}</p>
-                  <a 
-                    href={`https://azbyka.ru/days/${dateStr}#chteniya`} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-[var(--color-cinnabar)] text-white font-izhitsa rounded-lg hover:bg-red-700 transition-colors text-xs"
-                  >
-                    Читать на Азбука.ру ↗
-                  </a>
+                <div className="p-4 rounded-xl bg-amber-50/40 border border-amber-200/50 text-stone-700 text-sm font-sans space-y-3">
+                  <p className="font-semibold text-[var(--color-cinnabar)] font-izhitsa">Не удалось загрузить тексты напрямую</p>
+                  <p className="opacity-80 text-xs">{bibleError}</p>
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <button
+                      onClick={() => {
+                        localStorage.removeItem(`ortho_cal_v5_bible_${dateStr}`);
+                        setReloadTrigger(prev => prev + 1);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-700 hover:bg-stone-800 text-white font-izhitsa rounded-lg transition-colors text-xs cursor-pointer"
+                    >
+                      ↻ Повторить загрузку
+                    </button>
+                    <a 
+                      href={`https://azbyka.ru/biblia/days/${dateStr}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-[var(--color-cinnabar)] text-white font-izhitsa rounded-lg hover:bg-red-700 transition-colors text-xs"
+                    >
+                      Читать на Азбука.ру ↗
+                    </a>
+                  </div>
                 </div>
               ) : bibleContent ? (
                 <div 

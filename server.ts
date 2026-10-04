@@ -108,6 +108,10 @@ async function startServer() {
     Tit: "Послание к Титу",
     Phlm: "Послание к Филимону",
     Heb: "Послание к Евреям",
+    Hebr: "Послание к Евреям",
+    "1Thes": "Первое послание к Фессалоникийцам",
+    "2Thes": "Второе послание к Фессалоникийцам",
+    Apoc: "Откровение Иоанна Богослова",
     Rev: "Откровение Иоанна Богослова"
   };
 
@@ -116,8 +120,17 @@ async function startServer() {
     "1Pet": "1Пет.", "2Pet": "2Пет.", "1Jn": "1Ин.", "2Jn": "2Ин.", "3Jn": "3Ин.",
     Jud: "Иуд.", Rom: "Рим.", "1Cor": "1Кор.", "2Cor": "2Кор.", Gal: "Гал.",
     Eph: "Еф.", Phil: "Флп.", Col: "Кол.", "1Thess": "1Фес.", "2Thess": "2Фес.",
-    "1Tim": "1Тим.", "2Tim": "2Тим.", Tit: "Тит.", Phlm: "Флм.", Heb: "Евр.", Rev: "Откр."
+    "1Thes": "1Фес.", "2Thes": "2Фес.",
+    "1Tim": "1Тим.", "2Tim": "2Тим.", Tit: "Тит.", Phlm: "Флм.", Heb: "Евр.", Hebr: "Евр.",
+    Apoc: "Откр.", Rev: "Откр."
   };
+
+  app.options(["/api/bible", "/api/calendar"], (req, res) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "*");
+    res.sendStatus(204);
+  });
 
   app.get("/api/bible", async (req, res) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -147,7 +160,7 @@ async function startServer() {
         }, 1, 8000);
 
         const html = await response.text();
-        const readingSections = html.split(/<div[^>]*class="[^"]*days__book-title[^"]*"[^>]*id="reading-\d+"[^>]*>/i);
+        const readingSections = html.split(/<div\b(?=[^>]*\bclass="[^"]*days__book-title[^"]*")(?=[^>]*\bid="reading-\d+")[^>]*>/i);
 
         for (let i = 1; i < readingSections.length; i++) {
           const section = readingSections[i];
@@ -161,7 +174,7 @@ async function startServer() {
             titleText = h2.replace(/<span[^>]*class="[^"]*h2-subtitle[^"]*"[^>]*>[\s\S]*?<\/span>/i, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
           }
 
-          const verseDivs = [...section.matchAll(/<div\b([^>]*)class="[^"]*verse\s+lang-r[^"]*"([^>]*)>([\s\S]*?)<\/div>/gi)];
+          const verseDivs = [...section.matchAll(/<div\b([^>]*)class="[^"]*\bverse\b[^"]*\blang-r\b[^"]*"([^>]*)>([\s\S]*?)<\/div>/gi)];
           const versesHtml: string[] = [];
           for (const m of verseDivs) {
             const attrs = m[1] + " " + m[2];
@@ -223,7 +236,7 @@ async function startServer() {
           rawRefs = matches.map(m => m[1]);
         }
 
-        const uniqueRefs = Array.from(new Set(rawRefs)).slice(0, 4);
+        const uniqueRefs = Array.from(new Set(rawRefs)).slice(0, 10);
         for (const ref of uniqueRefs) {
           try {
             const bibUrl = `https://azbyka.ru/biblia/?${encodeURIComponent(ref)}`;
