@@ -135,55 +135,37 @@ async function startServer() {
     }
 
     try {
-      // 1. Fetch calendar day metadata to get precise scripture references
-      const dayUrl = `https://azbyka.ru/days/api/day/${targetDate}.json`;
-      const dayResponse = await fetchWithRetry(dayUrl, {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Accept": "application/json, text/plain, */*",
-        "Referer": "https://azbyka.ru/"
-      });
+      let readingCards: string[] = [];
 
-      const dayJson = await dayResponse.json();
-      let rawRefs: string[] = dayJson.texts?.[0]?.refs || [];
+      // Tier 1: Directly fetch and parse https://azbyka.ru/biblia/days/${targetDate}
+      try {
+        const bibliaDaysUrl = `https://azbyka.ru/biblia/days/${targetDate}`;
+        const response = await fetchWithRetry(bibliaDaysUrl, {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Referer": "https://azbyka.ru/"
+        }, 1, 8000);
 
-      // If refs array is empty, attempt to extract from text HTML
-      if (rawRefs.length === 0 && dayJson.texts?.[0]?.text) {
-        const matches = [...(dayJson.texts[0].text as string).matchAll(/href="https:\/\/azbyka\.ru\/biblia\/\?([^"#]+)"/g)];
-        rawRefs = matches.map(m => m[1]);
-      }
+        const html = await response.text();
+        const readingSections = html.split(/<div[^>]*class="[^"]*days__book-title[^"]*"[^>]*id="reading-\d+"[^>]*>/i);
 
-      if (rawRefs.length === 0) {
-        throw new Error(`Богослужебные чтения для ${targetDate} не указаны в календаре`);
-      }
+        for (let i = 1; i < readingSections.length; i++) {
+          const section = readingSections[i];
+          const h2Match = section.match(/<h2>([\s\S]*?)<\/h2>/i);
+          let titleText = "";
+          let subtitleText = "";
+          if (h2Match) {
+            const h2 = h2Match[1];
+            const subMatch = h2.match(/<span[^>]*class="[^"]*h2-subtitle[^"]*"[^>]*>([\s\S]*?)<\/span>/i);
+            subtitleText = subMatch ? subMatch[1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim() : "";
+            titleText = h2.replace(/<span[^>]*class="[^"]*h2-subtitle[^"]*"[^>]*>[\s\S]*?<\/span>/i, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+          }
 
-      // Deduplicate refs while preserving order, max 4 readings
-      const uniqueRefs = Array.from(new Set(rawRefs)).slice(0, 4);
-      const readingCards: string[] = [];
-
-      for (const ref of uniqueRefs) {
-        try {
-          const bibUrl = `https://azbyka.ru/biblia/?${encodeURIComponent(ref)}`;
-          const bibRes = await fetchWithRetry(bibUrl, {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-            "Referer": `https://azbyka.ru/days/${targetDate}`
-          }, 1, 8000);
-
-          const html = await bibRes.text();
-          // Find Russian verses with crossref-verse flag (highlighted passage)
-          const verseDivs = [...html.matchAll(/<div\b([^>]*)class="[^"]*verse\s+lang-r[^"]*crossref-verse[^"]*"([^>]*)>([\s\S]*?)<\/div>/gi)];
-
-          const dotIdx = ref.indexOf(".");
-          const bookCode = dotIdx !== -1 ? ref.slice(0, dotIdx) : ref;
-          const passagePart = dotIdx !== -1 ? ref.slice(dotIdx + 1) : "";
-          const bookTitle = BOOK_NAMES[bookCode] || (bookCode.startsWith("Lk") || bookCode.startsWith("Mt") || bookCode.startsWith("Mk") || bookCode.startsWith("Jn") ? "Святое Евангелие" : "Апостольское чтение");
-          const bookAbbr = BOOK_RU_ABBR[bookCode] || bookCode;
-          const citationDisplay = `${bookAbbr} ${passagePart}`;
-
+          const verseDivs = [...section.matchAll(/<div\b([^>]*)class="[^"]*verse\s+lang-r[^"]*"([^>]*)>([\s\S]*?)<\/div>/gi)];
           const versesHtml: string[] = [];
           for (const m of verseDivs) {
             const attrs = m[1] + " " + m[2];
-            const lineNumMatch = attrs.match(/data-line="([^"]+)"/);
-            const lineNum = lineNumMatch ? lineNumMatch[1] : "";
+            const lineNum = attrs.match(/data-line="([^"]+)"/)?.[1] || "";
             let cleanText = m[3]
               .replace(/<span[^>]*class="[^"]*checkbox[^"]*"[^>]*><\/span>/gi, "")
               .replace(/<span[^>]*class="zachala"[^>]*>[\s\S]*?<\/span>/gi, "")
@@ -192,7 +174,6 @@ async function startServer() {
               .replace(/<[^>]+>/g, " ")
               .replace(/\s+/g, " ")
               .trim();
-
             if (cleanText) {
               versesHtml.push(`
                 <p class="mb-3 leading-relaxed text-[var(--color-ink)]/90 text-sm sm:text-base">
@@ -203,15 +184,15 @@ async function startServer() {
             }
           }
 
-          if (versesHtml.length > 0) {
+          if (titleText && versesHtml.length > 0) {
             readingCards.push(`
               <div class="bg-[#fdfbf6] p-5 rounded-2xl border border-[var(--color-cinnabar)]/10 shadow-sm mb-6 space-y-3 hover:shadow-md transition-shadow">
                 <div class="border-b border-[var(--color-cinnabar)]/10 pb-2 mb-4">
                   <h4 class="font-izhitsa text-lg sm:text-xl text-[var(--color-cinnabar)] leading-tight">
-                    ${bookTitle}
+                    ${titleText}
                   </h4>
                   <p class="font-sans text-xs text-[var(--color-ink)]/50 uppercase tracking-wider font-semibold mt-1">
-                    ${citationDisplay}
+                    ${subtitleText}
                   </p>
                 </div>
                 <div class="space-y-2 font-sans">
@@ -220,8 +201,90 @@ async function startServer() {
               </div>
             `);
           }
-        } catch (verseErr) {
-          console.warn(`Could not load verses for ref ${ref}:`, verseErr);
+        }
+      } catch (tier1Err) {
+        console.warn(`Direct fetch of /biblia/days/${targetDate} failed, falling back to calendar refs:`, tier1Err);
+      }
+
+      // Tier 2: Fallback to calendar day metadata refs if Tier 1 returned no cards
+      if (readingCards.length === 0) {
+        const dayUrl = `https://azbyka.ru/days/api/day/${targetDate}.json`;
+        const dayResponse = await fetchWithRetry(dayUrl, {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+          "Accept": "application/json, text/plain, */*",
+          "Referer": "https://azbyka.ru/"
+        });
+
+        const dayJson = await dayResponse.json();
+        let rawRefs: string[] = dayJson.texts?.[0]?.refs || [];
+
+        if (rawRefs.length === 0 && dayJson.texts?.[0]?.text) {
+          const matches = [...(dayJson.texts[0].text as string).matchAll(/href="https:\/\/azbyka\.ru\/biblia\/\?([^"#]+)"/g)];
+          rawRefs = matches.map(m => m[1]);
+        }
+
+        const uniqueRefs = Array.from(new Set(rawRefs)).slice(0, 4);
+        for (const ref of uniqueRefs) {
+          try {
+            const bibUrl = `https://azbyka.ru/biblia/?${encodeURIComponent(ref)}`;
+            const bibRes = await fetchWithRetry(bibUrl, {
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+              "Referer": `https://azbyka.ru/days/${targetDate}`
+            }, 1, 8000);
+
+            const html = await bibRes.text();
+            const verseDivs = [...html.matchAll(/<div\b([^>]*)class="[^"]*verse\s+lang-r[^"]*crossref-verse[^"]*"([^>]*)>([\s\S]*?)<\/div>/gi)];
+
+            const dotIdx = ref.indexOf(".");
+            const bookCode = dotIdx !== -1 ? ref.slice(0, dotIdx) : ref;
+            const passagePart = dotIdx !== -1 ? ref.slice(dotIdx + 1) : "";
+            const bookTitle = BOOK_NAMES[bookCode] || (bookCode.startsWith("Lk") || bookCode.startsWith("Mt") || bookCode.startsWith("Mk") || bookCode.startsWith("Jn") ? "Святое Евангелие" : "Апостольское чтение");
+            const bookAbbr = BOOK_RU_ABBR[bookCode] || bookCode;
+            const citationDisplay = `${bookAbbr} ${passagePart}`;
+
+            const versesHtml: string[] = [];
+            for (const m of verseDivs) {
+              const attrs = m[1] + " " + m[2];
+              const lineNum = attrs.match(/data-line="([^"]+)"/)?.[1] || "";
+              let cleanText = m[3]
+                .replace(/<span[^>]*class="[^"]*checkbox[^"]*"[^>]*><\/span>/gi, "")
+                .replace(/<span[^>]*class="zachala"[^>]*>[\s\S]*?<\/span>/gi, "")
+                .replace(/\[\s*\]/g, "")
+                .replace(/<a[^>]*>([\s\S]*?)<\/a>/gi, "$1")
+                .replace(/<[^>]+>/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+
+              if (cleanText) {
+                versesHtml.push(`
+                  <p class="mb-3 leading-relaxed text-[var(--color-ink)]/90 text-sm sm:text-base">
+                    <sup class="text-[var(--color-cinnabar)] font-mono font-bold mr-1.5 text-xs align-super">${lineNum}</sup>
+                    <span>${cleanText}</span>
+                  </p>
+                `);
+              }
+            }
+
+            if (versesHtml.length > 0) {
+              readingCards.push(`
+                <div class="bg-[#fdfbf6] p-5 rounded-2xl border border-[var(--color-cinnabar)]/10 shadow-sm mb-6 space-y-3 hover:shadow-md transition-shadow">
+                  <div class="border-b border-[var(--color-cinnabar)]/10 pb-2 mb-4">
+                    <h4 class="font-izhitsa text-lg sm:text-xl text-[var(--color-cinnabar)] leading-tight">
+                      ${bookTitle}
+                    </h4>
+                    <p class="font-sans text-xs text-[var(--color-ink)]/50 uppercase tracking-wider font-semibold mt-1">
+                      ${citationDisplay}
+                    </p>
+                  </div>
+                  <div class="space-y-2 font-sans">
+                    ${versesHtml.join("")}
+                  </div>
+                </div>
+              `);
+            }
+          } catch (verseErr) {
+            console.warn(`Could not load verses for ref ${ref}:`, verseErr);
+          }
         }
       }
 
@@ -311,18 +374,19 @@ async function startServer() {
     res.status(404).send("icon_256.png not found");
   });
 
-  // Vite middleware for rendering dev build assets
-  if (process.env.NODE_ENV !== "production") {
+  // Vite middleware for rendering dev build assets or static serving for production
+  const hasDist = fs.existsSync(distPath) && fs.existsSync(path.join(distPath, "index.html"));
+  if (process.env.NODE_ENV === "production" && hasDist) {
+    app.use(express.static(distPath));
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
+    });
+  } else {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
     app.use(vite.middlewares);
-  } else {
-    app.use(express.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
   }
 
   app.listen(PORT, "0.0.0.0", () => {

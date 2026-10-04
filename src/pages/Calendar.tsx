@@ -735,7 +735,7 @@ export default function Calendar() {
             } catch (apiError) {
               console.warn("Failed to fetch Bible readings from server API, attempting client-side fallback proxy", apiError);
               try {
-                const bibleUrl = `https://azbyka.ru/days/${dateStr}`;
+                const bibleUrl = `https://azbyka.ru/biblia/days/${dateStr}`;
                 html = await fetchWithProxyFallback(bibleUrl);
               } catch (fallbackError) {
                 console.warn("Both server API and client-side proxies failed to fetch Bible readings. Engaging local Scripture fallbacks:", fallbackError);
