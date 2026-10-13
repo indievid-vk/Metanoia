@@ -3,6 +3,7 @@ import { Calendar as CalendarIcon, BookOpen, Info, Image as ImageIcon, Users, Ch
 import { DecorativeDivider } from '../components/DecorativeDivider';
 import { motion, AnimatePresence } from 'motion/react';
 import { getLiturgicalReadingsForDate } from '../utils/liturgicalLectionary';
+import { fetchReadingsFromRefs, extractRefsFromDayTexts } from '../utils/bollsBible';
 import { 
   getReminderSettings, 
   saveReminderSettings, 
@@ -27,7 +28,7 @@ type AzbykaResponse = {
     title: string;
     uri?: string;
   }[];
-  texts: { text: string }[];
+  texts: { text: string; refs?: string[] }[];
   ikons: { title: string; clean_title?: string }[];
   fasting: {
     type: string;
@@ -582,12 +583,14 @@ export default function Calendar() {
 
       let isDayLoaded = false;
       let isBibleLoaded = false;
+      let currentDayData: any = null;
 
       // 1. Try loading calendar data from cache
       if (cachedDay) {
         try {
           const parsed = JSON.parse(cachedDay);
           setData(parsed);
+          currentDayData = parsed;
           setLoading(false);
           setError(null);
           // Only treat as fully loaded if it was a real server response, not a temporary fallback
@@ -661,7 +664,7 @@ export default function Calendar() {
       }
 
       try {
-        let currentDayData = data;
+        currentDayData = currentDayData || data;
 
         // Fetch calendar data if not cached
         if (!isDayLoaded) {
@@ -717,36 +720,82 @@ export default function Calendar() {
             };
             const isSelectedToday = isToday(currentDate);
 
-            // Fetch Bible readings with proxy fallback
+            // Multi-Tier Fetch for authentic scripture readings
             let html = '';
+            let apiFetchSuccess = false;
+
+            // Tier 1: Try local/proxy server API with timeout
             try {
-              const res = await fetch(`/api/bible?date=${dateStr}&today=${isSelectedToday ? 'true' : 'false'}`);
-              if (!res.ok) {
-                throw new Error(`Ошибка сервера: ${res.status}`);
-              }
-              const contentType = res.headers.get("content-type");
-              if (contentType && contentType.includes("text/html")) {
-                const text = await res.text();
-                if (text.includes('id="root"')) {
-                  throw new Error("Запрос API вернул HTML нашей SPA-системы. Вероятно, активный Node.js сервер недоступен.");
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 8000);
+              const res = await fetch(`/api/bible?date=${dateStr}&today=${isSelectedToday ? 'true' : 'false'}`, {
+                signal: controller.signal
+              });
+              clearTimeout(timeoutId);
+
+              if (res.ok) {
+                const contentType = res.headers.get("content-type");
+                if (contentType && contentType.includes("text/html")) {
+                  const text = await res.text();
+                  if (!text.includes('id="root"') && (text.includes('bg-[#fdfbf6]') || text.includes('font-izhitsa') || text.includes('days__book-title'))) {
+                    html = text;
+                    apiFetchSuccess = true;
+                  }
                 }
-                html = text;
-              } else {
-                html = await res.text();
               }
             } catch (apiError) {
-              console.warn("Failed to fetch Bible readings from server API, attempting client-side fallback proxy", apiError);
+              console.warn("Server API /api/bible unavailable or slow in standalone PWA/mobile:", apiError);
+            }
+
+            // Tier 2: Directly fetch authentic scripture readings via Bolls Bible API (free, open, CORS-enabled Synodal Bible)
+            // This guarantees genuine daily lectionary readings in installed standalone PWAs, mobile devices, or when server proxy is unreachable
+            if (!apiFetchSuccess && currentDayData?.texts) {
+              const authenticRefs = extractRefsFromDayTexts(currentDayData.texts);
+              const summaryText = currentDayData.texts?.[0]?.text || '';
+              if (authenticRefs.length > 0) {
+                try {
+                  const bollsHtml = await fetchReadingsFromRefs(authenticRefs, summaryText);
+                  if (bollsHtml && bollsHtml.trim().length > 100) {
+                    html = bollsHtml;
+                    apiFetchSuccess = true;
+                  }
+                } catch (bollsErr) {
+                  console.warn("Client Bolls Bible fetch error:", bollsErr);
+                }
+              }
+            }
+
+            // Tier 3: Client-side proxy fallback for azbyka biblia/days HTML
+            if (!apiFetchSuccess) {
               try {
                 const bibleUrl = `https://azbyka.ru/biblia/days/${dateStr}`;
                 html = await fetchWithProxyFallback(bibleUrl);
               } catch (fallbackError) {
-                console.warn("Both server API and client-side proxies failed to fetch Bible readings. Engaging local Scripture fallbacks:", fallbackError);
-                const localHtml = getFallbackBibleReadingsHTML(currentDate);
-                setBibleContent(localHtml);
-                setBibleLoading(false);
-                setIsOfflineMode(true);
-                safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: localHtml, _isFallback: true }));
-                return;
+                console.warn("Both server API and client-side proxies failed. Checking Bolls Bible or local lectionary:", fallbackError);
+                let bollsResolved = false;
+                if (currentDayData?.texts) {
+                  const authenticRefs = extractRefsFromDayTexts(currentDayData.texts);
+                  if (authenticRefs.length > 0) {
+                    try {
+                      const bollsHtml = await fetchReadingsFromRefs(authenticRefs, currentDayData.texts?.[0]?.text || '');
+                      if (bollsHtml && bollsHtml.trim().length > 100) {
+                        html = bollsHtml;
+                        bollsResolved = true;
+                      }
+                    } catch (e) {
+                      console.warn("Final Bolls attempt failed:", e);
+                    }
+                  }
+                }
+
+                if (!bollsResolved) {
+                  const localHtml = getFallbackBibleReadingsHTML(currentDate);
+                  setBibleContent(localHtml);
+                  setBibleLoading(false);
+                  setIsOfflineMode(true);
+                  safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: localHtml, _isFallback: true }));
+                  return;
+                }
               }
             }
 
@@ -835,21 +884,76 @@ export default function Calendar() {
                 safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: finalBibleContent, _isFallback: false }));
                 setIsOfflineMode(false);
               } else {
+                let bollsResolved = false;
+                if (currentDayData?.texts) {
+                  const authenticRefs = extractRefsFromDayTexts(currentDayData.texts);
+                  if (authenticRefs.length > 0) {
+                    try {
+                      const bollsHtml = await fetchReadingsFromRefs(authenticRefs, currentDayData.texts[0]?.text || '');
+                      if (bollsHtml && bollsHtml.trim().length > 100) {
+                        setBibleContent(bollsHtml);
+                        safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: bollsHtml, _isFallback: false }));
+                        setIsOfflineMode(false);
+                        bollsResolved = true;
+                      }
+                    } catch (e) {
+                      console.warn("Bolls fallback error:", e);
+                    }
+                  }
+                }
+                if (!bollsResolved) {
+                  const localHtml = getFallbackBibleReadingsHTML(currentDate);
+                  setBibleContent(localHtml);
+                  safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: localHtml, _isFallback: true }));
+                }
+              }
+            } else {
+              // titleDivs.length === 0
+              let bollsResolved = false;
+              if (currentDayData?.texts) {
+                const authenticRefs = extractRefsFromDayTexts(currentDayData.texts);
+                if (authenticRefs.length > 0) {
+                  try {
+                    const bollsHtml = await fetchReadingsFromRefs(authenticRefs, currentDayData.texts[0]?.text || '');
+                    if (bollsHtml && bollsHtml.trim().length > 100) {
+                      setBibleContent(bollsHtml);
+                      safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: bollsHtml, _isFallback: false }));
+                      setIsOfflineMode(false);
+                      bollsResolved = true;
+                    }
+                  } catch (e) {
+                    console.warn("Bolls fallback error:", e);
+                  }
+                }
+              }
+              if (!bollsResolved) {
                 const localHtml = getFallbackBibleReadingsHTML(currentDate);
                 setBibleContent(localHtml);
                 safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: localHtml, _isFallback: true }));
               }
-            } else {
-              // Gracefully engage authentic liturgical readings
+            }
+          } catch (e) {
+            console.error('Error fetching bible text:', e);
+            let bollsResolved = false;
+            if (currentDayData?.texts) {
+              const authenticRefs = extractRefsFromDayTexts(currentDayData.texts);
+              if (authenticRefs.length > 0) {
+                try {
+                  const bollsHtml = await fetchReadingsFromRefs(authenticRefs, currentDayData.texts[0]?.text || '');
+                  if (bollsHtml && bollsHtml.trim().length > 100) {
+                    setBibleContent(bollsHtml);
+                    safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: bollsHtml, _isFallback: false }));
+                    setIsOfflineMode(false);
+                    bollsResolved = true;
+                  }
+                } catch {}
+              }
+            }
+            if (!bollsResolved) {
               const localHtml = getFallbackBibleReadingsHTML(currentDate);
               setBibleContent(localHtml);
               safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: localHtml, _isFallback: true }));
             }
-          } catch (e) {
-            console.error('Error fetching bible text:', e);
-            const localHtml = getFallbackBibleReadingsHTML(currentDate);
-            setBibleContent(localHtml);
-            safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: localHtml, _isFallback: true }));
           } finally {
             setBibleLoading(false);
           }
@@ -1488,6 +1592,10 @@ export default function Calendar() {
                     <button
                       onClick={() => {
                         localStorage.removeItem(`ortho_cal_v5_bible_${dateStr}`);
+                        localStorage.removeItem(`ortho_cal_v5_day_${dateStr}`);
+                        setBibleContent(null);
+                        setBibleError(null);
+                        setBibleLoading(true);
                         setReloadTrigger(prev => prev + 1);
                       }}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-700 hover:bg-stone-800 text-white font-izhitsa rounded-lg transition-colors text-xs cursor-pointer"

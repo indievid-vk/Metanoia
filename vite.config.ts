@@ -120,9 +120,9 @@ export default defineConfig(({mode}) => {
               handler: 'NetworkFirst',
               options: {
                 cacheName: 'api-cache',
-                networkTimeoutSeconds: 3,
+                networkTimeoutSeconds: 15,
                 expiration: {
-                  maxEntries: 100,
+                  maxEntries: 200,
                   maxAgeSeconds: 60 * 60 * 24 * 30
                 },
                 cacheableResponse: {

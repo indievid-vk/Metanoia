@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 import { createServer as createViteServer } from "vite";
+import { fetchReadingsFromRefs, extractRefsFromDayTexts } from "./src/utils/bollsBible";
 
 const calendarCache = new Map<string, { data: any; expiresAt: number }>();
 const bibleCache = new Map<string, { data: string; expiresAt: number }>();
@@ -298,6 +299,27 @@ async function startServer() {
           } catch (verseErr) {
             console.warn(`Could not load verses for ref ${ref}:`, verseErr);
           }
+        }
+      }
+
+      // Tier 3: If Tier 1 & Tier 2 yielded no cards, fetch authentic Synodal lectionary via Bolls Bible
+      if (readingCards.length === 0) {
+        try {
+          const dayUrl = `https://azbyka.ru/days/api/day/${targetDate}.json`;
+          const dayRes = await fetchWithRetry(dayUrl, {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            "Accept": "application/json, text/plain, */*"
+          }, 1, 6000);
+          const dayJson = await dayRes.json();
+          const refs = extractRefsFromDayTexts(dayJson.texts);
+          if (refs.length > 0) {
+            const bollsHtml = await fetchReadingsFromRefs(refs, dayJson.texts?.[0]?.text || "");
+            if (bollsHtml && bollsHtml.trim().length > 100) {
+              readingCards.push(bollsHtml);
+            }
+          }
+        } catch (tier3Err) {
+          console.warn(`Tier 3 Bolls lectionary fetch failed for ${targetDate}:`, tier3Err);
         }
       }
 
