@@ -136,6 +136,9 @@ async function fetchTier1AzbykaDaysHtml(targetDate: string): Promise<string> {
 
     const verseDivs = [...section.matchAll(/<div\b([^>]*)class="[^"]*\bverse\b[^"]*\blang-r\b[^"]*"([^>]*)>([\s\S]*?)<\/div>/gi)];
     const versesHtml: string[] = [];
+    const isCrossChapter = /\d+:\d+\s*[-–]\s*\d+:\d+/.test(subtitleText);
+    let currentCh = isCrossChapter ? parseInt(subtitleText.match(/(\d+):/)?.[1] || "1", 10) : 0;
+
     for (const m of verseDivs) {
       const attrs = m[1] + " " + m[2];
       const lineNum = attrs.match(/data-line="([^"]+)"/)?.[1] || "";
@@ -148,9 +151,19 @@ async function fetchTier1AzbykaDaysHtml(targetDate: string): Promise<string> {
         .replace(/\s+/g, " ")
         .trim();
       if (cleanText) {
-        versesHtml.push(`
+        let chapterHeader = "";
+        if (isCrossChapter && lineNum === "1" && versesHtml.length > 0) {
+          currentCh += 1;
+          chapterHeader = `
+            <div class="pt-3 pb-1 font-izhitsa text-base sm:text-lg text-[var(--color-cinnabar)] border-b border-[var(--color-cinnabar)]/10 mb-2">
+              Глава ${currentCh}
+            </div>
+          `;
+        }
+        const displayLabel = isCrossChapter && currentCh > 0 && !lineNum.includes(":") ? `${currentCh}:${lineNum}` : lineNum;
+        versesHtml.push(`${chapterHeader}
           <p class="mb-3 leading-relaxed text-[var(--color-ink)]/90 text-sm sm:text-base">
-            <sup class="text-[var(--color-cinnabar)] font-mono font-bold mr-1.5 text-xs align-super">${lineNum}</sup>
+            <sup class="text-[var(--color-cinnabar)] font-mono font-bold mr-1.5 text-xs align-super">${displayLabel}</sup>
             <span>${cleanText}</span>
           </p>
         `);

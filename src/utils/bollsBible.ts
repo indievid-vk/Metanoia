@@ -4,6 +4,7 @@
 export interface BibleVerse {
   pk?: number;
   verse: number;
+  chapter?: number;
   text: string;
 }
 
@@ -11,6 +12,7 @@ export interface BookMeta {
   id: number;
   title: string;
   abbr: string;
+  altAbbrs?: string[];
 }
 
 export const BOOK_METAS: Record<string, BookMeta> = {
@@ -21,31 +23,31 @@ export const BOOK_METAS: Record<string, BookMeta> = {
   Jn: { id: 43, title: "Евангелие от Иоанна", abbr: "Ин." },
   Act: { id: 44, title: "Деяния святых апостолов", abbr: "Деян." },
   Rom: { id: 45, title: "Послание к Римлянам", abbr: "Рим." },
-  "1Cor": { id: 46, title: "Первое послание к Коринфянам", abbr: "1Кор." },
-  "2Cor": { id: 47, title: "Второе послание к Коринфянам", abbr: "2Кор." },
+  "1Cor": { id: 46, title: "Первое послание к Коринфянам", abbr: "1Кор.", altAbbrs: ["1 Кор."] },
+  "2Cor": { id: 47, title: "Второе послание к Коринфянам", abbr: "2Кор.", altAbbrs: ["2 Кор."] },
   Gal: { id: 48, title: "Послание к Галатам", abbr: "Гал." },
   Eph: { id: 49, title: "Послание к Ефесянам", abbr: "Еф." },
   Phil: { id: 50, title: "Послание к Филиппийцам", abbr: "Флп." },
   Col: { id: 51, title: "Послание к Колоссянам", abbr: "Кол." },
-  "1Thess": { id: 52, title: "Первое послание к Фессалоникийцам", abbr: "1Фес." },
-  "1Thes": { id: 52, title: "Первое послание к Фессалоникийцам", abbr: "1Фес." },
-  "2Thess": { id: 53, title: "Второе послание к Фессалоникийцам", abbr: "2Фес." },
-  "2Thes": { id: 53, title: "Второе послание к Фессалоникийцам", abbr: "2Фес." },
-  "1Tim": { id: 54, title: "Первое послание к Тимофею", abbr: "1Тим." },
-  "2Tim": { id: 55, title: "Второе послание к Тимофею", abbr: "2Тим." },
+  "1Thess": { id: 52, title: "Первое послание к Фессалоникийцам", abbr: "1Фес.", altAbbrs: ["1Сол.", "1 Сол.", "1 Фес."] },
+  "1Thes": { id: 52, title: "Первое послание к Фессалоникийцам", abbr: "1Фес.", altAbbrs: ["1Сол.", "1 Сол.", "1 Фес."] },
+  "2Thess": { id: 53, title: "Второе послание к Фессалоникийцам", abbr: "2Фес.", altAbbrs: ["2Сол.", "2 Сол.", "2 Фес."] },
+  "2Thes": { id: 53, title: "Второе послание к Фессалоникийцам", abbr: "2Фес.", altAbbrs: ["2Сол.", "2 Сол.", "2 Фес."] },
+  "1Tim": { id: 54, title: "Первое послание к Тимофею", abbr: "1Тим.", altAbbrs: ["1 Тим."] },
+  "2Tim": { id: 55, title: "Второе послание к Тимофею", abbr: "2Тим.", altAbbrs: ["2 Тим."] },
   Tit: { id: 56, title: "Послание к Титу", abbr: "Тит." },
   Phlm: { id: 57, title: "Послание к Филимону", abbr: "Флм." },
   Heb: { id: 58, title: "Послание к Евреям", abbr: "Евр." },
   Hebr: { id: 58, title: "Послание к Евреям", abbr: "Евр." },
   Jas: { id: 59, title: "Соборное послание святого апостола Иакова", abbr: "Иак." },
-  "1Pet": { id: 60, title: "Первое соборное послание святого апостола Петра", abbr: "1Пет." },
-  "2Pet": { id: 61, title: "Второе соборное послание святого апостола Петра", abbr: "2Пет." },
-  "1Jn": { id: 62, title: "Первое соборное послание святого апостола Иоанна", abbr: "1Ин." },
-  "2Jn": { id: 63, title: "Второе соборное послание святого апостола Иоанна", abbr: "2Ин." },
-  "3Jn": { id: 64, title: "Третье соборное послание святого апостола Иоанна", abbr: "3Ин." },
+  "1Pet": { id: 60, title: "Первое соборное послание святого апостола Петра", abbr: "1Пет.", altAbbrs: ["1 Пет."] },
+  "2Pet": { id: 61, title: "Второе соборное послание святого апостола Петра", abbr: "2Пет.", altAbbrs: ["2 Пет."] },
+  "1Jn": { id: 62, title: "Первое соборное послание святого апостола Иоанна", abbr: "1Ин.", altAbbrs: ["1 Ин."] },
+  "2Jn": { id: 63, title: "Второе соборное послание святого апостола Иоанна", abbr: "2Ин.", altAbbrs: ["2 Ин."] },
+  "3Jn": { id: 64, title: "Третье соборное послание святого апостола Иоанна", abbr: "3Ин.", altAbbrs: ["3 Ин."] },
   Jud: { id: 65, title: "Соборное послание святого апостола Иуды", abbr: "Иуд." },
-  Rev: { id: 66, title: "Откровение святого Иоанна Богослова (Апокалипсис)", abbr: "Откр." },
-  Apoc: { id: 66, title: "Откровение святого Иоанна Богослова (Апокалипсис)", abbr: "Откр." },
+  Rev: { id: 66, title: "Откровение святого Иоанна Богослова (Апокалипсис)", abbr: "Откр.", altAbbrs: ["Апок."] },
+  Apoc: { id: 66, title: "Откровение святого Иоанна Богослова (Апокалипсис)", abbr: "Откр.", altAbbrs: ["Апок."] },
   // Old Testament Paremias & Prophecies
   Gen: { id: 1, title: "Книга Бытия", abbr: "Быт." },
   Ex: { id: 2, title: "Книга Исход", abbr: "Исх." },
@@ -55,10 +57,10 @@ export const BOOK_METAS: Record<string, BookMeta> = {
   Josh: { id: 6, title: "Книга Иисуса Навина", abbr: "Нав." },
   Judg: { id: 7, title: "Книга Судей", abbr: "Суд." },
   Ruth: { id: 8, title: "Книга Руфь", abbr: "Руфь" },
-  "1Sam": { id: 9, title: "Первая книга Царств", abbr: "1Цар." },
-  "2Sam": { id: 10, title: "Вторая книга Царств", abbr: "2Цар." },
-  "1Kgs": { id: 11, title: "Третья книга Царств", abbr: "3Цар." },
-  "2Kgs": { id: 12, title: "Четвертая книга Царств", abbr: "4Цар." },
+  "1Sam": { id: 9, title: "Первая книга Царств", abbr: "1Цар.", altAbbrs: ["1 Цар."] },
+  "2Sam": { id: 10, title: "Вторая книга Царств", abbr: "2Цар.", altAbbrs: ["2 Цар."] },
+  "1Kgs": { id: 11, title: "Третья книга Царств", abbr: "3Цар.", altAbbrs: ["3 Цар."] },
+  "2Kgs": { id: 12, title: "Четвертая книга Царств", abbr: "4Цар.", altAbbrs: ["4 Цар."] },
   Job: { id: 18, title: "Книга Иова", abbr: "Иов" },
   Ps: { id: 19, title: "Псалтирь", abbr: "Пс." },
   Prov: { id: 20, title: "Книга притчей Соломоновых", abbr: "Притч." },
@@ -79,6 +81,23 @@ export const BOOK_METAS: Record<string, BookMeta> = {
   Sir: { id: 71, title: "Книга Премудрости Иисуса, сына Сирахова", abbr: "Сир." }
 };
 
+const CANONICAL_BOOK_CODE: Record<string, string> = {
+  "1Thes": "1Thess",
+  "2Thes": "2Thess",
+  Hebr: "Heb",
+  Apoc: "Rev"
+};
+
+export function normalizeScriptureRef(refStr: string): string {
+  const clean = refStr.trim().replace(/[–—]/g, "-").replace(/[*.,;]+$/, "");
+  const dotIdx = clean.indexOf(".");
+  if (dotIdx === -1) return clean;
+  const rawCode = clean.slice(0, dotIdx);
+  const code = CANONICAL_BOOK_CODE[rawCode] || rawCode;
+  const passage = clean.slice(dotIdx + 1).replace(/\s+/g, "");
+  return `${code}.${passage}`;
+}
+
 export interface PassageSegment {
   startCh: number;
   startV: number;
@@ -93,7 +112,7 @@ export interface ParsedRef {
 }
 
 export function parseScriptureRef(refStr: string): ParsedRef | null {
-  const cleanRef = refStr.trim().replace(/[–—]/g, "-").replace(/\*+$/, "");
+  const cleanRef = normalizeScriptureRef(refStr);
   const dotIdx = cleanRef.indexOf(".");
   if (dotIdx === -1) return null;
 
@@ -109,12 +128,15 @@ export function parseScriptureRef(refStr: string): ParsedRef | null {
 
     for (const part of rawParts) {
       if (part.includes(":")) {
-        const [chStr, vRange] = part.split(":");
+        // Split ONLY on the first colon so cross-chapter ranges like "2:20-3:8" keep "20-3:8" intact!
+        const firstColonIdx = part.indexOf(":");
+        const chStr = part.slice(0, firstColonIdx);
+        const vRange = part.slice(firstColonIdx + 1);
         currentChapter = parseInt(chStr, 10) || currentChapter;
         if (vRange.includes("-")) {
           const [startVStr, endVStr] = vRange.split("-");
           if (endVStr.includes(":")) {
-            // cross chapter e.g. 7:26-8:2
+            // cross chapter e.g. 2:20-3:8 or 7:26-8:2
             const [endChStr, realEndV] = endVStr.split(":");
             const endCh = parseInt(endChStr, 10) || currentChapter;
             segments.push({
@@ -172,14 +194,16 @@ export function parseScriptureRef(refStr: string): ParsedRef | null {
   }
 }
 
-// Russian book abbreviation to canonical code map
+// Russian book abbreviation to canonical code map (includes both Фес. and Сол. for Thessalonians)
 export const RU_ABBR_TO_CODE: Record<string, string> = {
   "Мф": "Mt", "Мк": "Mk", "Лк": "Lk", "Ин": "Jn", "Деян": "Act",
   "Иак": "Jas", "1Пет": "1Pet", "2Пет": "2Pet", "1Ин": "1Jn", "2Ин": "2Jn", "3Ин": "3Jn",
   "Иуд": "Jud", "Рим": "Rom", "1Кор": "1Cor", "2Кор": "2Cor", "Гал": "Gal",
-  "Еф": "Eph", "Флп": "Phil", "Кол": "Col", "1Фес": "1Thess", "2Фес": "2Thess",
+  "Еф": "Eph", "Флп": "Phil", "Кол": "Col",
+  "1Фес": "1Thess", "2Фес": "2Thess",
+  "1Сол": "1Thess", "2Сол": "2Thess", "Сол": "1Thess",
   "1Тим": "1Tim", "2Тим": "2Tim", "Тит": "Tit", "Флм": "Phlm", "Евр": "Heb",
-  "Откр": "Rev", "Апок": "Apoc",
+  "Откр": "Rev", "Апок": "Rev",
   "Быт": "Gen", "Исх": "Ex", "Лев": "Lev", "Чис": "Num", "Втор": "Deut",
   "Нав": "Josh", "Суд": "Judg", "Руфь": "Ruth", "1Цар": "1Sam", "2Цар": "2Sam",
   "3Цар": "1Kgs", "4Цар": "2Kgs", "Иов": "Job", "Пс": "Ps", "Притч": "Prov",
@@ -264,16 +288,16 @@ export function extractRefsFromDayTexts(texts?: { text: string; refs?: string[] 
       for (const m of linkMatches) {
         refs.push(decodeURIComponent(m[1]));
       }
-      // 2. Latin abbreviations: e.g. Jn.10:9-16
+      // 2. Latin abbreviations: e.g. Jn.10:9-16, 1Thes.2:20-3:8
       const rawMatches = [...t.text.matchAll(/\b([1-3]?[A-Za-z]+)\.(\d+:\d+(?:[–-]\d+(?::\d+)?)?(?:,\s*\d+(?::\d+(?:[–-]\d+)?)?)*)/g)];
       for (const m of rawMatches) {
         refs.push(`${m[1]}.${m[2].replace(/\s+/g, '')}`);
       }
-      // 3. Russian abbreviations: e.g. Ин. 10:9–16, Гал. 6:11–18, 1Кор. 16:13-24
+      // 3. Russian abbreviations: e.g. 1Сол.2:20-3:8, 1Фес. 2:20–3:8, Ин. 10:9–16
       const cleanPlain = t.text.replace(/&ndash;/g, "-").replace(/&nbsp;/g, " ").replace(/<[^>]+>/g, " ");
-      const ruMatches = [...cleanPlain.matchAll(/(?:^|[\s(;—–-])([1-4]?[А-ЯЁ][а-яё]+)\.\s*(\d+:\d+(?:\s*[–-]\s*\d+(?::\d+)?)?(?:\s*,\s*\d+(?::\d+(?:\s*[–-]\s*\d+)?)?)*)/g)];
+      const ruMatches = [...cleanPlain.matchAll(/(?:^|[\s(;—–-])([1-4]?\s*[А-ЯЁ][а-яё]+)\.\s*(\d+:\d+(?:\s*[–-]\s*\d+(?::\d+)?)?(?:\s*,\s*\d+(?::\d+(?:\s*[–-]\s*\d+)?)?)*)/g)];
       for (const m of ruMatches) {
-        const ruBook = m[1];
+        const ruBook = m[1].replace(/\s+/g, "");
         const code = RU_ABBR_TO_CODE[ruBook];
         if (code) {
           refs.push(`${code}.${m[2].replace(/\s+/g, '')}`);
@@ -282,10 +306,10 @@ export function extractRefsFromDayTexts(texts?: { text: string; refs?: string[] 
     }
   }
 
-  return Array.from(new Set(refs.map(r => r.trim().replace(/[–—]/g, "-").replace(/\*+$/, "")).filter(Boolean)));
+  return Array.from(new Set(refs.map(r => normalizeScriptureRef(r)).filter(Boolean)));
 }
 
-// In-memory cache for fetched reading cards by ref+summary signature
+// In-memory cache for fetched reading cards by normalized ref
 const REF_CARD_MEMORY_CACHE = new Map<string, BibleVerse[]>();
 
 function buildVerseNumbers(startV: number, endV: number): number[] {
@@ -306,12 +330,15 @@ export async function fetchReadingsFromRefs(
   const validParsed: { cleanRef: string; parsed: ParsedRef }[] = [];
 
   for (const rawRef of refs) {
-    const cleanRef = rawRef.trim().replace(/[–—]/g, "-").replace(/\*+$/, "");
+    const cleanRef = normalizeScriptureRef(rawRef);
     if (!cleanRef || seenRefs.has(cleanRef)) continue;
-    seenRefs.add(cleanRef);
 
     const parsed = parseScriptureRef(cleanRef);
     if (parsed) {
+      const dedupKey = `${parsed.bookInfo.id}:${parsed.passageDisplay}`;
+      if (seenRefs.has(dedupKey)) continue;
+      seenRefs.add(cleanRef);
+      seenRefs.add(dedupKey);
       validParsed.push({ cleanRef, parsed });
     }
   }
@@ -336,10 +363,10 @@ export async function fetchReadingsFromRefs(
       return;
     }
 
-    // Check persistent localStorage cache for this specific ref
+    // Check persistent localStorage cache for this specific ref (v2 includes chapter numbers on cross-chapter refs)
     if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
       try {
-        const cached = localStorage.getItem(`ortho_synod_ref_${cleanRef}`);
+        const cached = localStorage.getItem(`ortho_synod_ref_v2_${cleanRef}`);
         if (cached) {
           const parsedVerses: BibleVerse[] = JSON.parse(cached);
           if (Array.isArray(parsedVerses) && parsedVerses.length > 0) {
@@ -423,7 +450,7 @@ export async function fetchReadingsFromRefs(
         const task = batchTasks[taskIdx];
         if (task && Array.isArray(versesArr)) {
           const list = refVersesMap.get(task.refIndex) || [];
-          list.push(...versesArr);
+          list.push(...versesArr.map(v => ({ ...v, chapter: task.chapter })));
           refVersesMap.set(task.refIndex, list);
         }
       });
@@ -435,7 +462,7 @@ export async function fetchReadingsFromRefs(
           REF_CARD_MEMORY_CACHE.set(cleanRef, fetched);
           if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
             try {
-              localStorage.setItem(`ortho_synod_ref_${cleanRef}`, JSON.stringify(fetched));
+              localStorage.setItem(`ortho_synod_ref_v2_${cleanRef}`, JSON.stringify(fetched));
             } catch {
               // ignore storage quota
             }
@@ -453,14 +480,15 @@ export async function fetchReadingsFromRefs(
           for (const seg of parsed.segments) {
             for (let ch = seg.startCh; ch <= seg.endCh; ch++) {
               const chData = await getChapterVerses(parsed.bookInfo.id, ch);
+              const tagged = chData.map(v => ({ ...v, chapter: ch }));
               if (seg.startCh === seg.endCh) {
-                verses.push(...chData.filter(v => v.verse >= seg.startV && v.verse <= seg.endV));
+                verses.push(...tagged.filter(v => v.verse >= seg.startV && v.verse <= seg.endV));
               } else if (ch === seg.startCh) {
-                verses.push(...chData.filter(v => v.verse >= seg.startV));
+                verses.push(...tagged.filter(v => v.verse >= seg.startV));
               } else if (ch === seg.endCh) {
-                verses.push(...chData.filter(v => v.verse <= seg.endV));
+                verses.push(...tagged.filter(v => v.verse <= seg.endV));
               } else {
-                verses.push(...chData);
+                verses.push(...tagged);
               }
             }
           }
@@ -483,33 +511,52 @@ export async function fetchReadingsFromRefs(
 
     const { bookInfo, passageDisplay } = parsed;
 
-    // Extract liturgical subtitle & zachalo if available in day summary
+    // Extract liturgical subtitle & zachalo if available in day summary (supporting both 1Фес. and 1Сол. aliases)
     let subtitle = `${bookInfo.abbr} ${passageDisplay}`;
     if (rawHtmlSummary) {
-      const escapedAbbr = bookInfo.abbr.replace(".", "\\.");
+      const cleanSummary = rawHtmlSummary
+        .replace(/&ndash;/g, "–")
+        .replace(/&nbsp;/g, " ")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ");
+      const abbrCandidates = [bookInfo.abbr, ...(bookInfo.altAbbrs || [])].map(a =>
+        a.replace(".", "\\.").replace(/\s+/g, "\\s*")
+      );
+      const firstCh = parsed.segments[0]?.startCh || 1;
+      const firstV = parsed.segments[0]?.startV || 1;
       const reg = new RegExp(
-        `([^>.;*]+\\b${escapedAbbr}\\s*\\d+:[^<*]+?(?:\\([^)]*зач[^)]*\\))?)`,
+        `((?:(?:Утр|Лит|Веч|Ап|Ев|Рядовое|Мч|Мц|Мчч|Свт|Прп|Прмч|Прмц|Блгв|Сщмч|Апп|Бесср)\\.?\\s*[:–\\-]\\s*)*(?:${abbrCandidates.join("|")})\\s*${firstCh}:${firstV}[\\d:,\\s–\\-]*(?:\\s*\\([^)]*зач[^)]*\\))?)`,
         "i"
       );
-      const match = rawHtmlSummary.match(reg);
+      const match = cleanSummary.match(reg);
       if (match) {
-        subtitle = match[1]
-          .replace(/&ndash;/g, "–")
-          .replace(/<[^>]+>/g, " ")
-          .replace(/\s+/g, " ")
-          .trim();
+        subtitle = match[1].trim();
       }
     }
 
+    const distinctChapters = new Set(verses.map(v => v.chapter).filter(Boolean));
+    const isMultiChapter = distinctChapters.size > 1;
+    let prevChapter: number | undefined = undefined;
+
     const versesHtml = verses
-      .map(
-        v => `
+      .map((v, vIdx) => {
+        let chapterHeader = "";
+        if (isMultiChapter && v.chapter && vIdx > 0 && v.chapter !== prevChapter) {
+          chapterHeader = `
+            <div class="pt-3 pb-1 font-izhitsa text-base sm:text-lg text-[var(--color-cinnabar)] border-b border-[var(--color-cinnabar)]/10 mb-2">
+              Глава ${v.chapter}
+            </div>
+          `;
+        }
+        prevChapter = v.chapter;
+        const verseLabel = isMultiChapter && v.chapter ? `${v.chapter}:${v.verse}` : `${v.verse}`;
+        return `${chapterHeader}
         <p class="mb-3 leading-relaxed text-[var(--color-ink)]/90 text-sm sm:text-base">
-          <sup class="text-[var(--color-cinnabar)] font-mono font-bold mr-1.5 text-xs align-super">${v.verse}</sup>
+          <sup class="text-[var(--color-cinnabar)] font-mono font-bold mr-1.5 text-xs align-super">${verseLabel}</sup>
           <span>${v.text.replace(/<[^>]+>/g, "")}</span>
         </p>
-      `
-      )
+      `;
+      })
       .join("");
 
     cards.push(`
@@ -574,8 +621,11 @@ export interface OrthocalDayInfo {
   refs: string[];
   summaryHtml: string;
   tone: number;
+  voice: number;
   fastLevel: number;
   fastExceptionDesc: string;
+  fastingDesc: string;
+  titles: string[];
 }
 
 const ORTHOCAL_MEMORY_CACHE = new Map<string, OrthocalDayInfo>();
@@ -611,11 +661,11 @@ export async function fetchOrthocalDayInfo(dateObj: Date): Promise<OrthocalDayIn
         const shortDisp: string = r.short_display || "";
         if (!shortDisp) continue;
 
-        // Match book prefix and chapter.verse part e.g. "1 Thess 2.20-3.8" or "Heb 12.6-13, 25-27"
-        const mBook = shortDisp.match(/^([1-4]?\s*[A-Za-z]+)\s+(\d+[\d.,\s\-–;]+)$/);
+        // Match book prefix and chapter.verse part e.g. "1 Thess 2.20-3.8" or "1 Thess. 2.20-3.8"
+        const mBook = shortDisp.match(/^([1-4]?\s*[A-Za-z]+)\.?\s+(\d+[\d.,\s\-–;]+)$/);
         if (!mBook) continue;
 
-        const rawBook = mBook[1].trim();
+        const rawBook = mBook[1].replace(/\s+/g, " ").trim();
         const canonicalCode = ORTHOCAL_BOOK_MAP[rawBook];
         if (!canonicalCode) continue;
 
@@ -627,7 +677,7 @@ export async function fetchOrthocalDayInfo(dateObj: Date): Promise<OrthocalDayIn
           .replace(/;/g, ",")
           .replace(/\s+/g, "");
 
-        const refStr = `${canonicalCode}.${passageColon}`;
+        const refStr = normalizeScriptureRef(`${canonicalCode}.${passageColon}`);
         refs.push(refStr);
 
         const ruDisplay = `${bookMeta.abbr} ${passageColon.replace(/-/g, "–").replace(/,/g, ", ")}`;
@@ -660,12 +710,18 @@ export async function fetchOrthocalDayInfo(dateObj: Date): Promise<OrthocalDayIn
       summaryParts.push(`<i>Веч.:</i> ${vespersList.join("; ")}.`);
     }
 
+    const toneVal = typeof json.tone === "number" ? json.tone : 0;
+    const fastDescVal = String(json.fast_exception_desc || "");
+
     const result: OrthocalDayInfo = {
       refs: Array.from(new Set(refs)),
       summaryHtml: summaryParts.length > 0 ? `<p>${summaryParts.join(" ")}</p>` : "",
-      tone: typeof json.tone === "number" ? json.tone : 0,
+      tone: toneVal,
+      voice: toneVal,
       fastLevel: typeof json.fast_level === "number" ? json.fast_level : 0,
-      fastExceptionDesc: String(json.fast_exception_desc || "")
+      fastExceptionDesc: fastDescVal,
+      fastingDesc: fastDescVal,
+      titles: Array.isArray(json.titles) ? json.titles : []
     };
 
     ORTHOCAL_MEMORY_CACHE.set(key, result);
@@ -688,6 +744,60 @@ function decodeHtmlNumericEntities(str: string): string {
     .replace(/&quot;/g, '"');
 }
 
+function romanToInt(s: string): number {
+  const map: Record<string, number> = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
+  let total = 0;
+  for (let i = 0; i < s.length; i++) {
+    const curr = map[s[i]] || 0;
+    const next = map[s[i + 1]] || 0;
+    if (curr < next) total -= curr;
+    else total += curr;
+  }
+  return total;
+}
+
+function parsePravoslavieChten(chtenBody: string): { refs: string[]; html: string } {
+  if (!chtenBody) return { refs: [], html: "" };
+  const refs: string[] = [];
+
+  const formatted = chtenBody
+    .replace(/<span[^>]*class="[^"]*DAYS_asterix[^"]*"[^>]*>[\s\S]*?<\/span>/gi, "")
+    .replace(/<a\s+[^>]*href="[^"]*\/bible\/[^"]*"[^>]*>([\s\S]*?)<\/a>/gi, (_, inner: string) => {
+      const clean = inner.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+      const m = clean.match(
+        /^([1-4]?\s*[А-ЯЁ][а-яё]+)\.?\s*,\s*(?:(\d+)\s*зач\.\s*(\([^)]+\))?\s*,\s*)?([\s\S]+)$/
+      );
+      if (!m) return clean;
+      const rawBook = m[1].replace(/\s+/g, "");
+      const zachNum = m[2] || "";
+      const zachNote = m[3] ? " " + m[3].replace(/^\(|\)$/g, "") : "";
+      let rest = m[4].trim();
+      const trailingDot = rest.endsWith(".") ? "." : "";
+      rest = rest.replace(/[.,;]+$/, "");
+
+      const passage = rest
+        .replace(/;/g, ",")
+        .replace(/\b([IVXLCDM]+)\s*,\s*(\d+)/g, (__, rom: string, v: string) => `${romanToInt(rom)}:${v}`)
+        .replace(/\s*-\s*/g, "-");
+
+      const code = RU_ABBR_TO_CODE[rawBook];
+      if (code) {
+        refs.push(normalizeScriptureRef(`${code}.${passage.replace(/\s+/g, "")}`));
+      }
+      const zachPart = zachNum ? ` (зач. ${zachNum}${zachNote})` : "";
+      return `${rawBook}. ${passage.replace(/-/g, "–")}${zachPart}${trailingDot}`;
+    })
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const uniqueRefs = Array.from(new Set(refs.filter(Boolean)));
+  return {
+    refs: uniqueRefs,
+    html: formatted ? `<p>${formatted}</p>` : ""
+  };
+}
+
 export async function fetchPravoslavieTodayData(targetDateObj: Date): Promise<{
   saints: { id: number; title: string; uri?: string }[];
   holidays: { id: number; title: string; uri?: string }[];
@@ -696,11 +806,17 @@ export async function fetchPravoslavieTodayData(targetDateObj: Date): Promise<{
   fastingStr: string;
   isFasting: boolean;
   chtenHtml: string;
+  refs: string[];
+  texts: { text: string; refs: string[] }[];
+  fasting: { round_week: string; fasting: string; description: string };
 } | null> {
   try {
+    const mm = String(targetDateObj.getMonth() + 1).padStart(2, "0");
+    const dd = String(targetDateObj.getDate()).padStart(2, "0");
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
-    const res = await fetch("https://script.pravoslavie.ru/calendar.php", {
+    const timeoutId = setTimeout(() => controller.abort(), 3200);
+    // ?date=MMDD returns the Russian Orthodox Patriarchate calendar for any Gregorian month/day!
+    const res = await fetch(`https://script.pravoslavie.ru/calendar.php?date=${mm}${dd}`, {
       signal: controller.signal
     });
     clearTimeout(timeoutId);
@@ -735,13 +851,15 @@ export async function fetchPravoslavieTodayData(targetDateObj: Date): Promise<{
     const ikons: { title: string; clean_title?: string }[] = [];
     const seenSaints = new Set<string>();
 
-    // Extract saint names from anchor title attributes or anchor text
-    const anchorMatches = [...saintsBody.matchAll(/<a\s+[^>]*href="([^"]+)"[^>]*?(?:title="([^"]+)")?[^>]*>([\s\S]*?)<\/a>/gi)];
+    // Extract saint names from anchor title attributes (nominative case) or anchor text
+    const anchorMatches = [...saintsBody.matchAll(/<a\s+([^>]*)>([\s\S]*?)<\/a>/gi)];
     anchorMatches.forEach((m, idx) => {
-      const titleAttr = (m[2] || "").trim();
-      const innerTxt = (m[3] || "").replace(/<[^>]+>/g, "").trim();
+      const attrs = m[1] || "";
+      const innerTxt = (m[2] || "").replace(/<[^>]+>/g, "").trim();
       if (innerTxt.toLowerCase() === "икона") return;
 
+      const titleAttrMatch = attrs.match(/title="([^"]+)"/i);
+      const titleAttr = titleAttrMatch ? titleAttrMatch[1].trim() : "";
       const label = titleAttr || innerTxt;
       if (label && !seenSaints.has(label)) {
         seenSaints.add(label);
@@ -758,7 +876,7 @@ export async function fetchPravoslavieTodayData(targetDateObj: Date): Promise<{
       (trapezaBody && !trapezaBody.toLowerCase().includes("поста нет"))
     );
     const fastingStr = [postBody, trapezaBody].filter(Boolean).join(". ") || (isFasting ? "Постный день" : "Поста нет");
-    const cleanChten = chtenBody.replace(/<a[^>]*>([\s\S]*?)<\/a>/gi, "$1").replace(/\s+/g, " ").trim();
+    const parsedChten = parsePravoslavieChten(chtenBody);
 
     return {
       saints,
@@ -767,10 +885,18 @@ export async function fetchPravoslavieTodayData(targetDateObj: Date): Promise<{
       roundWeek: weekBody,
       fastingStr,
       isFasting,
-      chtenHtml: cleanChten ? `<p>${cleanChten}</p>` : ""
+      chtenHtml: parsedChten.html,
+      refs: parsedChten.refs,
+      texts: parsedChten.html ? [{ text: parsedChten.html, refs: parsedChten.refs }] : [],
+      fasting: {
+        round_week: weekBody,
+        fasting: isFasting ? (postBody || "Постный день") : "Поста нет",
+        description: fastingStr
+      }
     };
   } catch {
     return null;
   }
 }
+
 

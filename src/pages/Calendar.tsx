@@ -432,7 +432,8 @@ export default function Calendar() {
           (k.startsWith('ortho_cal_v2_') ||
             k.startsWith('ortho_cal_v3_') ||
             k.startsWith('ortho_cal_v4_') ||
-            k.startsWith('ortho_cal_v5_'))
+            k.startsWith('ortho_cal_v5_') ||
+            k.startsWith('ortho_cal_v6_'))
         ) {
           localStorage.removeItem(k);
           i--;
@@ -582,8 +583,8 @@ export default function Calendar() {
       const day = String(currentDate.getDate()).padStart(2, '0');
       const dateStr = `${year}-${month}-${day}`;
       
-      const cacheKeyDay = `ortho_cal_v6_day_${dateStr}`;
-      const cacheKeyBible = `ortho_cal_v6_bible_${dateStr}`;
+      const cacheKeyDay = `ortho_cal_v7_day_${dateStr}`;
+      const cacheKeyBible = `ortho_cal_v7_bible_${dateStr}`;
 
       const cachedDay = localStorage.getItem(cacheKeyDay);
       const cachedBible = localStorage.getItem(cacheKeyBible);
@@ -766,10 +767,13 @@ export default function Calendar() {
           const baseData = generateLocalFallbackCalendarData(targetDateObj);
 
           if (orthocalInfo || pravoslavieToday) {
-            const combinedRefs =
-              orthocalInfo?.refs && orthocalInfo.refs.length > 0
-                ? orthocalInfo.refs
-                : extractRefsFromDayTexts(pravoslavieToday?.texts);
+            const combinedRefs = Array.from(
+              new Set([
+                ...(pravoslavieToday?.refs || []),
+                ...extractRefsFromDayTexts(pravoslavieToday?.texts),
+                ...(orthocalInfo?.refs || [])
+              ])
+            );
 
             const combinedTexts =
               pravoslavieToday?.texts && pravoslavieToday.texts.length > 0
@@ -797,7 +801,12 @@ export default function Calendar() {
                   ? pravoslavieToday.ikons
                   : baseData.ikons,
               fasting: {
-                type: baseData.fasting.type,
+                type:
+                  pravoslavieToday !== null
+                    ? pravoslavieToday.isFasting
+                      ? 'fasting'
+                      : 'no_fasting'
+                    : baseData.fasting.type,
                 round_week: pravoslavieToday?.fasting?.round_week || baseData.fasting.round_week,
                 fasting: pravoslavieToday?.fasting?.fasting || baseData.fasting.fasting,
                 description:
@@ -875,21 +884,26 @@ export default function Calendar() {
                 // Candidate 1: Server API /api/bible (started immediately at t = 0ms!)
                 const serverCandidate = fetchServerBibleCards(dateStr, isSelectedToday);
 
-                // Candidate 2: Direct CORS Bolls Bible single batch POST (started immediately via Orthocal or Day refs!)
+                // Candidate 2: Direct CORS Bolls Bible single batch POST (started immediately via Day/Pravoslavie/Orthocal refs!)
                 const bollsCandidate = (async (): Promise<string> => {
-                  const [resolvedDay, orthocalDirect] = await Promise.all([
+                  const [resolvedDay, pravDirect, orthocalDirect] = await Promise.all([
                     dayPromise.catch(() => null),
+                    fetchPravoslavieTodayData(currentDate).catch(() => null),
                     fetchOrthocalDayInfo(currentDate).catch(() => null)
                   ]);
-                  let authenticRefs = extractRefsFromDayTexts(resolvedDay?.texts);
-                  if (authenticRefs.length === 0 && orthocalDirect?.refs?.length) {
-                    authenticRefs = orthocalDirect.refs;
-                  }
+                  const authenticRefs = Array.from(
+                    new Set([
+                      ...extractRefsFromDayTexts(resolvedDay?.texts),
+                      ...(pravDirect?.refs || []),
+                      ...(orthocalDirect?.refs || [])
+                    ])
+                  );
                   if (authenticRefs.length === 0) {
                     throw new Error("No scripture refs in day data");
                   }
                   const summaryText =
                     resolvedDay?.texts?.[0]?.text ||
+                    pravDirect?.chtenHtml ||
                     orthocalDirect?.summaryHtml ||
                     '';
                   const bollsHtml = await fetchReadingsFromRefs(authenticRefs, summaryText);
@@ -952,18 +966,26 @@ export default function Calendar() {
               const adjM = String(adjDate.getMonth() + 1).padStart(2, '0');
               const adjD = String(adjDate.getDate()).padStart(2, '0');
               const adjStr = `${adjY}-${adjM}-${adjD}`;
-              const adjKeyDay = `ortho_cal_v6_day_${adjStr}`;
-              const adjKeyBible = `ortho_cal_v6_bible_${adjStr}`;
+              const adjKeyDay = `ortho_cal_v7_day_${adjStr}`;
+              const adjKeyBible = `ortho_cal_v7_bible_${adjStr}`;
 
-              if (!localStorage.getItem(adjKeyDay)) {
-                fetchCalendarDayForDate(adjStr, adjDate)
-                  .then(j => {
-                    if (!j._isFallback) safeLocalStorageSet(adjKeyDay, JSON.stringify(j));
-                  })
-                  .catch(() => {});
-              }
+              const adjDayPromise = !localStorage.getItem(adjKeyDay)
+                ? fetchCalendarDayForDate(adjStr, adjDate)
+                    .then(j => {
+                      if (!j._isFallback) safeLocalStorageSet(adjKeyDay, JSON.stringify(j));
+                      return j;
+                    })
+                    .catch(() => null)
+                : Promise.resolve(JSON.parse(localStorage.getItem(adjKeyDay) || 'null'));
+
               if (!localStorage.getItem(adjKeyBible)) {
                 fetchServerBibleCards(adjStr, false)
+                  .catch(async () => {
+                    const dayObj = await adjDayPromise;
+                    const refs = extractRefsFromDayTexts(dayObj?.texts);
+                    if (refs.length === 0) return '';
+                    return fetchReadingsFromRefs(refs, dayObj?.texts?.[0]?.text || '');
+                  })
                   .then(cards => {
                     if (cards && cards.length > 100) {
                       safeLocalStorageSet(adjKeyBible, JSON.stringify({ html: cards, _isFallback: false }));
@@ -1385,8 +1407,8 @@ export default function Calendar() {
                     const month = String(currentDate.getMonth() + 1).padStart(2, '0');
                     const day = String(currentDate.getDate()).padStart(2, '0');
                     const dStr = `${year}-${month}-${day}`;
-                    localStorage.removeItem(`ortho_cal_v6_day_${dStr}`);
-                    localStorage.removeItem(`ortho_cal_v6_bible_${dStr}`);
+                    localStorage.removeItem(`ortho_cal_v7_day_${dStr}`);
+                    localStorage.removeItem(`ortho_cal_v7_bible_${dStr}`);
                     setReloadTrigger(prev => prev + 1);
                   }}
                   className="whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-700 hover:bg-amber-800 text-white font-izhitsa rounded-lg transition-colors text-xs shadow-xs cursor-pointer active:scale-95"
@@ -1610,8 +1632,8 @@ export default function Calendar() {
                   <div className="flex flex-wrap items-center gap-2 pt-1">
                     <button
                       onClick={() => {
-                        localStorage.removeItem(`ortho_cal_v5_bible_${dateStr}`);
-                        localStorage.removeItem(`ortho_cal_v5_day_${dateStr}`);
+                        localStorage.removeItem(`ortho_cal_v7_bible_${dateStr}`);
+                        localStorage.removeItem(`ortho_cal_v7_day_${dateStr}`);
                         setBibleContent(null);
                         setBibleError(null);
                         setBibleLoading(true);

@@ -24,7 +24,7 @@ export default function UpdatePopup() {
   const [needUpdate, setNeedUpdate] = (rSW && rSW.needUpdate) || [false, () => {}];
   const updateServiceWorker = (rSW && rSW.updateServiceWorker) || ((reload?: boolean) => { if (reload) window.location.reload(); });
 
-  const CURRENT_VERSION = '1.2.2'; 
+  const CURRENT_VERSION = '1.2.3'; 
   const [show, setShow] = useState(false);
   const [type, setType] = useState<'update' | 'offline' | 'new-version'>('update');
 
