@@ -172,8 +172,25 @@ export function parseScriptureRef(refStr: string): ParsedRef | null {
   }
 }
 
-// In-memory cache for chapters during session
+// Russian book abbreviation to canonical code map
+export const RU_ABBR_TO_CODE: Record<string, string> = {
+  "Мф": "Mt", "Мк": "Mk", "Лк": "Lk", "Ин": "Jn", "Деян": "Act",
+  "Иак": "Jas", "1Пет": "1Pet", "2Пет": "2Pet", "1Ин": "1Jn", "2Ин": "2Jn", "3Ин": "3Jn",
+  "Иуд": "Jud", "Рим": "Rom", "1Кор": "1Cor", "2Кор": "2Cor", "Гал": "Gal",
+  "Еф": "Eph", "Флп": "Phil", "Кол": "Col", "1Фес": "1Thess", "2Фес": "2Thess",
+  "1Тим": "1Tim", "2Тим": "2Tim", "Тит": "Tit", "Флм": "Phlm", "Евр": "Heb",
+  "Откр": "Rev", "Апок": "Apoc",
+  "Быт": "Gen", "Исх": "Ex", "Лев": "Lev", "Чис": "Num", "Втор": "Deut",
+  "Нав": "Josh", "Суд": "Judg", "Руфь": "Ruth", "1Цар": "1Sam", "2Цар": "2Sam",
+  "3Цар": "1Kgs", "4Цар": "2Kgs", "Иов": "Job", "Пс": "Ps", "Притч": "Prov",
+  "Еккл": "Eccl", "Песн": "Song", "Ис": "Isa", "Иер": "Jer", "Иез": "Ezek",
+  "Дан": "Dan", "Иоил": "Joel", "Ион": "Jonah", "Мих": "Mic", "Авв": "Hab",
+  "Соф": "Zeph", "Зах": "Zech", "Мал": "Mal", "Прем": "Wis", "Сир": "Sir"
+};
+
+// In-memory cache and in-flight request deduplication for chapters
 const CHAPTER_MEMORY_CACHE = new Map<string, BibleVerse[]>();
+const IN_FLIGHT_CHAPTERS = new Map<string, Promise<BibleVerse[]>>();
 
 async function getChapterVerses(bookId: number, chapter: number): Promise<BibleVerse[]> {
   const cacheKey = `${bookId}-${chapter}`;
@@ -181,14 +198,56 @@ async function getChapterVerses(bookId: number, chapter: number): Promise<BibleV
     return CHAPTER_MEMORY_CACHE.get(cacheKey)!;
   }
 
-  const url = `https://bolls.life/get-chapter/SYNOD/${bookId}/${chapter}/`;
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`Bolls API error: ${res.status}`);
+  // Try persistent localStorage cache on client
+  const storageKey = `ortho_synod_ch_${cacheKey}`;
+  if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+    try {
+      const cachedStr = localStorage.getItem(storageKey);
+      if (cachedStr) {
+        const parsed: BibleVerse[] = JSON.parse(cachedStr);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          CHAPTER_MEMORY_CACHE.set(cacheKey, parsed);
+          return parsed;
+        }
+      }
+    } catch {
+      // ignore storage read error
+    }
   }
-  const data: BibleVerse[] = await res.json();
-  CHAPTER_MEMORY_CACHE.set(cacheKey, data);
-  return data;
+
+  if (IN_FLIGHT_CHAPTERS.has(cacheKey)) {
+    return IN_FLIGHT_CHAPTERS.get(cacheKey)!;
+  }
+
+  const fetchPromise = (async () => {
+    try {
+      const url = `https://bolls.life/get-chapter/SYNOD/${bookId}/${chapter}/`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4500);
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        throw new Error(`Bolls API error: ${res.status}`);
+      }
+      const data: BibleVerse[] = await res.json();
+      CHAPTER_MEMORY_CACHE.set(cacheKey, data);
+
+      if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(data));
+        } catch {
+          // ignore quota error
+        }
+      }
+      return data;
+    } finally {
+      IN_FLIGHT_CHAPTERS.delete(cacheKey);
+    }
+  })();
+
+  IN_FLIGHT_CHAPTERS.set(cacheKey, fetchPromise);
+  return fetchPromise;
 }
 
 export function extractRefsFromDayTexts(texts?: { text: string; refs?: string[] }[]): string[] {
@@ -205,88 +264,255 @@ export function extractRefsFromDayTexts(texts?: { text: string; refs?: string[] 
       for (const m of linkMatches) {
         refs.push(decodeURIComponent(m[1]));
       }
-      // 2. Azbyka class="bibref": e.g. Ин.10:9-16 or Jn.10:9-16
+      // 2. Latin abbreviations: e.g. Jn.10:9-16
       const rawMatches = [...t.text.matchAll(/\b([1-3]?[A-Za-z]+)\.(\d+:\d+(?:[–-]\d+(?::\d+)?)?(?:,\s*\d+(?::\d+(?:[–-]\d+)?)?)*)/g)];
       for (const m of rawMatches) {
         refs.push(`${m[1]}.${m[2].replace(/\s+/g, '')}`);
       }
+      // 3. Russian abbreviations: e.g. Ин. 10:9–16, Гал. 6:11–18, 1Кор. 16:13-24
+      const cleanPlain = t.text.replace(/&ndash;/g, "-").replace(/&nbsp;/g, " ").replace(/<[^>]+>/g, " ");
+      const ruMatches = [...cleanPlain.matchAll(/(?:^|[\s(;—–-])([1-4]?[А-ЯЁ][а-яё]+)\.\s*(\d+:\d+(?:\s*[–-]\s*\d+(?::\d+)?)?(?:\s*,\s*\d+(?::\d+(?:\s*[–-]\s*\d+)?)?)*)/g)];
+      for (const m of ruMatches) {
+        const ruBook = m[1];
+        const code = RU_ABBR_TO_CODE[ruBook];
+        if (code) {
+          refs.push(`${code}.${m[2].replace(/\s+/g, '')}`);
+        }
+      }
     }
   }
 
-  return Array.from(new Set(refs.map(r => r.trim()).filter(Boolean)));
+  return Array.from(new Set(refs.map(r => r.trim().replace(/[–—]/g, "-").replace(/\*+$/, "")).filter(Boolean)));
+}
+
+// In-memory cache for fetched reading cards by ref+summary signature
+const REF_CARD_MEMORY_CACHE = new Map<string, BibleVerse[]>();
+
+function buildVerseNumbers(startV: number, endV: number): number[] {
+  const safeStart = Math.max(1, startV || 1);
+  const safeEnd = Math.min(safeStart + 80, Math.max(safeStart, endV || safeStart));
+  const arr: number[] = [];
+  for (let v = safeStart; v <= safeEnd; v++) {
+    arr.push(v);
+  }
+  return arr;
 }
 
 export async function fetchReadingsFromRefs(
   refs: string[],
   rawHtmlSummary: string = ""
 ): Promise<string> {
-  const cards: string[] = [];
   const seenRefs = new Set<string>();
+  const validParsed: { cleanRef: string; parsed: ParsedRef }[] = [];
 
   for (const rawRef of refs) {
-    const cleanRef = rawRef.trim().replace(/\*+$/, ""); // remove polyelios asterisk like Jn.10:9-16*
+    const cleanRef = rawRef.trim().replace(/[–—]/g, "-").replace(/\*+$/, "");
     if (!cleanRef || seenRefs.has(cleanRef)) continue;
     seenRefs.add(cleanRef);
 
     const parsed = parseScriptureRef(cleanRef);
-    if (!parsed) continue;
+    if (parsed) {
+      validParsed.push({ cleanRef, parsed });
+    }
+  }
 
-    try {
-      const { bookInfo, segments, passageDisplay } = parsed;
-      let verses: BibleVerse[] = [];
+  if (validParsed.length === 0) return "";
 
-      for (const seg of segments) {
-        if (seg.startCh === seg.endCh) {
-          const chData = await getChapterVerses(bookInfo.id, seg.startCh);
-          const segVerses = chData.filter(v => v.verse >= seg.startV && v.verse <= seg.endV);
-          verses.push(...segVerses);
-        } else {
-          for (let ch = seg.startCh; ch <= seg.endCh; ch++) {
-            const chData = await getChapterVerses(bookInfo.id, ch);
-            if (ch === seg.startCh) {
-              verses.push(...chData.filter(v => v.verse >= seg.startV));
-            } else if (ch === seg.endCh) {
-              verses.push(...chData.filter(v => v.verse <= seg.endV));
-            } else {
-              verses.push(...chData);
-            }
+  // Build batch queries for all uncached references in ONE single HTTP POST request to bolls.life/get-verses/
+  interface BatchTask {
+    refIndex: number;
+    translation: string;
+    book: number;
+    chapter: number;
+    verses: number[];
+  }
+
+  const refVersesMap = new Map<number, BibleVerse[]>();
+  const batchTasks: BatchTask[] = [];
+
+  validParsed.forEach(({ cleanRef, parsed }, idx) => {
+    if (REF_CARD_MEMORY_CACHE.has(cleanRef)) {
+      refVersesMap.set(idx, REF_CARD_MEMORY_CACHE.get(cleanRef)!);
+      return;
+    }
+
+    // Check persistent localStorage cache for this specific ref
+    if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+      try {
+        const cached = localStorage.getItem(`ortho_synod_ref_${cleanRef}`);
+        if (cached) {
+          const parsedVerses: BibleVerse[] = JSON.parse(cached);
+          if (Array.isArray(parsedVerses) && parsedVerses.length > 0) {
+            REF_CARD_MEMORY_CACHE.set(cleanRef, parsedVerses);
+            refVersesMap.set(idx, parsedVerses);
+            return;
+          }
+        }
+      } catch {
+        // ignore storage error
+      }
+    }
+
+    refVersesMap.set(idx, []);
+    for (const seg of parsed.segments) {
+      if (seg.startCh === seg.endCh) {
+        batchTasks.push({
+          refIndex: idx,
+          translation: "SYNOD",
+          book: parsed.bookInfo.id,
+          chapter: seg.startCh,
+          verses: buildVerseNumbers(seg.startV, seg.endV)
+        });
+      } else {
+        for (let ch = seg.startCh; ch <= seg.endCh; ch++) {
+          if (ch === seg.startCh) {
+            batchTasks.push({
+              refIndex: idx,
+              translation: "SYNOD",
+              book: parsed.bookInfo.id,
+              chapter: ch,
+              verses: buildVerseNumbers(seg.startV, seg.startV + 65)
+            });
+          } else if (ch === seg.endCh) {
+            batchTasks.push({
+              refIndex: idx,
+              translation: "SYNOD",
+              book: parsed.bookInfo.id,
+              chapter: ch,
+              verses: buildVerseNumbers(1, seg.endV)
+            });
+          } else {
+            batchTasks.push({
+              refIndex: idx,
+              translation: "SYNOD",
+              book: parsed.bookInfo.id,
+              chapter: ch,
+              verses: buildVerseNumbers(1, 70)
+            });
           }
         }
       }
+    }
+  });
 
-      if (verses.length === 0) continue;
+  if (batchTasks.length > 0) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const res = await fetch("https://bolls.life/get-verses/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          batchTasks.map(t => ({
+            translation: t.translation,
+            book: t.book,
+            chapter: t.chapter,
+            verses: t.verses
+          }))
+        ),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
 
-      // Extract liturgical subtitle & zachalo if available in day summary
-      let subtitle = `${bookInfo.abbr} ${passageDisplay}`;
-      if (rawHtmlSummary) {
-        // e.g. "Утр. – Ин.10:9–16 (зач. 36)"
-        const escapedAbbr = bookInfo.abbr.replace(".", "\\.");
-        const reg = new RegExp(
-          `([^>.;*]+\\b${escapedAbbr}\\s*\\d+:[^<*]+?(?:\\([^)]*зач[^)]*\\))?)`,
-          "i"
-        );
-        const match = rawHtmlSummary.match(reg);
-        if (match) {
-          subtitle = match[1]
-            .replace(/&ndash;/g, "–")
-            .replace(/<[^>]+>/g, " ")
-            .replace(/\s+/g, " ")
-            .trim();
-        }
+      if (!res.ok) {
+        throw new Error(`Bolls batch API error: ${res.status}`);
       }
 
-      const versesHtml = verses
-        .map(
-          v => `
+      const batchResults: BibleVerse[][] = await res.json();
+      batchResults.forEach((versesArr, taskIdx) => {
+        const task = batchTasks[taskIdx];
+        if (task && Array.isArray(versesArr)) {
+          const list = refVersesMap.get(task.refIndex) || [];
+          list.push(...versesArr);
+          refVersesMap.set(task.refIndex, list);
+        }
+      });
+
+      // Cache newly fetched refs in memory & localStorage
+      validParsed.forEach(({ cleanRef }, idx) => {
+        const fetched = refVersesMap.get(idx);
+        if (fetched && fetched.length > 0 && !REF_CARD_MEMORY_CACHE.has(cleanRef)) {
+          REF_CARD_MEMORY_CACHE.set(cleanRef, fetched);
+          if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+            try {
+              localStorage.setItem(`ortho_synod_ref_${cleanRef}`, JSON.stringify(fetched));
+            } catch {
+              // ignore storage quota
+            }
+          }
+        }
+      });
+    } catch (err) {
+      console.warn("Bolls batch get-verses failed, falling back to chapter text:", err);
+      // Fallback to individual get-text if batch POST fails
+      for (let idx = 0; idx < validParsed.length; idx++) {
+        const { cleanRef, parsed } = validParsed[idx];
+        if ((refVersesMap.get(idx)?.length || 0) > 0) continue;
+        try {
+          const verses: BibleVerse[] = [];
+          for (const seg of parsed.segments) {
+            for (let ch = seg.startCh; ch <= seg.endCh; ch++) {
+              const chData = await getChapterVerses(parsed.bookInfo.id, ch);
+              if (seg.startCh === seg.endCh) {
+                verses.push(...chData.filter(v => v.verse >= seg.startV && v.verse <= seg.endV));
+              } else if (ch === seg.startCh) {
+                verses.push(...chData.filter(v => v.verse >= seg.startV));
+              } else if (ch === seg.endCh) {
+                verses.push(...chData.filter(v => v.verse <= seg.endV));
+              } else {
+                verses.push(...chData);
+              }
+            }
+          }
+          if (verses.length > 0) {
+            refVersesMap.set(idx, verses);
+            REF_CARD_MEMORY_CACHE.set(cleanRef, verses);
+          }
+        } catch (fallbackErr) {
+          console.warn(`Could not fetch fallback chapter for ${cleanRef}:`, fallbackErr);
+        }
+      }
+    }
+  }
+
+  const cards: string[] = [];
+
+  validParsed.forEach(({ parsed }, idx) => {
+    const verses = refVersesMap.get(idx) || [];
+    if (verses.length === 0) return;
+
+    const { bookInfo, passageDisplay } = parsed;
+
+    // Extract liturgical subtitle & zachalo if available in day summary
+    let subtitle = `${bookInfo.abbr} ${passageDisplay}`;
+    if (rawHtmlSummary) {
+      const escapedAbbr = bookInfo.abbr.replace(".", "\\.");
+      const reg = new RegExp(
+        `([^>.;*]+\\b${escapedAbbr}\\s*\\d+:[^<*]+?(?:\\([^)]*зач[^)]*\\))?)`,
+        "i"
+      );
+      const match = rawHtmlSummary.match(reg);
+      if (match) {
+        subtitle = match[1]
+          .replace(/&ndash;/g, "–")
+          .replace(/<[^>]+>/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+    }
+
+    const versesHtml = verses
+      .map(
+        v => `
         <p class="mb-3 leading-relaxed text-[var(--color-ink)]/90 text-sm sm:text-base">
           <sup class="text-[var(--color-cinnabar)] font-mono font-bold mr-1.5 text-xs align-super">${v.verse}</sup>
           <span>${v.text.replace(/<[^>]+>/g, "")}</span>
         </p>
       `
-        )
-        .join("");
+      )
+      .join("");
 
-      cards.push(`
+    cards.push(`
         <div class="bg-[#fdfbf6] p-5 rounded-2xl border border-[var(--color-cinnabar)]/10 shadow-sm mb-6 space-y-3 hover:shadow-md transition-shadow">
           <div class="border-b border-[var(--color-cinnabar)]/10 pb-2 mb-4">
             <h4 class="font-izhitsa text-lg sm:text-xl text-[var(--color-cinnabar)] leading-tight">
@@ -301,10 +527,7 @@ export async function fetchReadingsFromRefs(
           </div>
         </div>
       `);
-    } catch (err) {
-      console.warn(`Could not fetch scripture for ref ${cleanRef}:`, err);
-    }
-  }
+  });
 
   return cards.join("\n");
 }

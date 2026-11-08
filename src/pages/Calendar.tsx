@@ -37,6 +37,7 @@ type AzbykaResponse = {
     description: string | null;
     voice: number;
   };
+  _isFallback?: boolean;
 };
 
 const safeLocalStorageSet = (key: string, value: string) => {
@@ -362,55 +363,54 @@ const getFallbackBibleReadingsHTML = (date: Date): string => {
 
 const PROXIES = [
   (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  (url: string) => `https://corsproxy.org/?url=${encodeURIComponent(url)}`,
-  (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+  (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+  (url: string) => `https://corsproxy.org/?url=${encodeURIComponent(url)}`
 ];
 
 const fetchWithProxyFallback = async (originalUrl: string): Promise<string> => {
-  let lastError: Error | null = null;
-  
-  // Check if device is offline to fail fast without hanging on proxies
   if (typeof navigator !== 'undefined' && !navigator.onLine) {
     throw new Error('Оффлайн режим (сеть недоступна)');
   }
 
-  // Try direct fetch first (without proxies). In some environments (e.g., cordova, capacitor, or relaxed CORS), this works perfectly.
-  try {
+  const expectsJson = originalUrl.endsWith('.json');
+
+  const tryFetchCandidate = async (candidateUrl: string, timeoutMs: number): Promise<string> => {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 seconds limit for direct fetch
-    const res = await fetch(originalUrl, { signal: controller.signal });
-    clearTimeout(timeoutId);
-    if (res.ok) {
-      const text = await res.text();
-      if (text && text.trim().length > 100 && !text.includes('id="root"')) {
-        return text;
-      }
-    }
-  } catch (e) {
-    console.warn(`Direct fetch to ${originalUrl} failed or was blocked by CORS. Resorting to proxies:`, e);
-  }
-
-  for (const getProxyUrl of PROXIES) {
-    const proxyUrl = getProxyUrl(originalUrl);
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout for proxy calls
-
-      const res = await fetch(proxyUrl, { signal: controller.signal });
-      clearTimeout(timeoutId);
-
-      if (res.ok) {
-        const text = await res.text();
-        if (text && text.trim().length > 100 && !text.includes('Too Many Requests') && !text.includes('Rate limit exceeded')) {
-          return text;
-        }
+      const res = await fetch(candidateUrl, { signal: controller.signal });
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
       }
-    } catch (e) {
-      console.warn(`Proxy failed for ${originalUrl} via ${proxyUrl}:`, e);
-      lastError = e instanceof Error ? e : new Error(String(e));
+      const text = await res.text();
+      const trimmed = text ? text.trim() : '';
+      if (
+        trimmed.length <= 100 ||
+        trimmed.includes('id="root"') ||
+        trimmed.includes('Too Many Requests') ||
+        trimmed.includes('Rate limit exceeded') ||
+        trimmed.includes('Just a moment...') ||
+        trimmed.includes('cf-browser-verification')
+      ) {
+        throw new Error('Invalid or challenged proxy response');
+      }
+      if (expectsJson && !trimmed.startsWith('{')) {
+        throw new Error('Expected JSON response');
+      }
+      return text;
+    } finally {
+      clearTimeout(timeoutId);
     }
+  };
+
+  try {
+    // Race all proxy candidates in parallel with a fast 2.5s timeout instead of waiting 36s sequentially
+    return await Promise.any(
+      PROXIES.map(getProxyUrl => tryFetchCandidate(getProxyUrl(originalUrl), 2500))
+    );
+  } catch {
+    throw new Error('Все доступные CORS-прокси вернули ошибку или недоступны.');
   }
-  throw lastError || new Error('Все доступные CORS-прокси вернули ошибку или недоступны.');
 };
 
 export default function Calendar() {
@@ -663,305 +663,272 @@ export default function Calendar() {
         return;
       }
 
-      try {
-        currentDayData = currentDayData || data;
+      let cancelled = false;
 
-        // Fetch calendar data if not cached
-        if (!isDayLoaded) {
-          let json: any = null;
-          try {
-            const res = await fetch(`/api/calendar?date=${dateStr}`);
-            if (!res.ok) {
-              throw new Error(`Ошибка сервера: ${res.status}`);
-            }
-            const contentType = res.headers.get("content-type");
-            if (contentType && !contentType.includes("application/json")) {
-              throw new Error("Ответ сервера не содержит JSON. Возможно, бэкенд отсутствует (статический хостинг).");
-            }
-            const textResult = await res.text();
-            if (textResult.includes("<!DOCTYPE html") || textResult.includes("<html")) {
-              throw new Error("Запрос API вернул HTML-страницу. Вероятно, активный Node.js сервер недоступен.");
-            }
-            json = JSON.parse(textResult);
-            if (!json || typeof json !== 'object') {
-              throw new Error("Неверный формат ответа.");
-            }
-            json._isFallback = false;
-            setIsOfflineMode(false);
-          } catch (apiError) {
-            console.warn("Failed to fetch calendar from server API, attempting client-side fallback proxy:", apiError);
-            try {
-              const calendarHtml = await fetchWithProxyFallback(`https://azbyka.ru/days/api/day/${dateStr}.json`);
-              json = JSON.parse(calendarHtml);
-              json._isFallback = false;
-              setIsOfflineMode(false);
-            } catch (fallbackError) {
-              console.error("Both server API and client-side proxies failed to fetch calendar. Activating local liturgical calendar engine:", fallbackError);
-              json = generateLocalFallbackCalendarData(currentDate);
-              json._isFallback = true;
-              setIsOfflineMode(true);
-            }
-          }
-
-          setData(json);
-          currentDayData = json;
-          safeLocalStorageSet(cacheKeyDay, JSON.stringify(json));
-          setLoading(false);
+      const parseRawBibleHtmlToCards = (rawHtml: string): string => {
+        if (!rawHtml) return '';
+        if (
+          rawHtml.includes('bg-[#fdfbf6]') ||
+          rawHtml.includes('border-[var(--color-cinnabar)]') ||
+          rawHtml.includes('font-izhitsa')
+        ) {
+          return rawHtml;
         }
 
-        // Fetch bible readings if not cached
-        if (!isBibleLoaded) {
-          try {
-            const isToday = (date: Date) => {
-              const today = new Date();
-              return date.getDate() === today.getDate() &&
-                     date.getMonth() === today.getMonth() &&
-                     date.getFullYear() === today.getFullYear();
-            };
-            const isSelectedToday = isToday(currentDate);
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(rawHtml, 'text/html');
+        const titleDivs = doc.querySelectorAll('.days__book-title');
+        if (titleDivs.length === 0) return '';
 
-            // Multi-Tier Fetch for authentic scripture readings
-            let html = '';
-            let apiFetchSuccess = false;
+        const readingBlocks: string[] = [];
+        titleDivs.forEach((titleDiv) => {
+          const h2 = titleDiv.querySelector('h2');
+          if (!h2) return;
 
-            // Tier 1: Try local/proxy server API with timeout
-            try {
-              const controller = new AbortController();
-              const timeoutId = setTimeout(() => controller.abort(), 8000);
-              const res = await fetch(`/api/bible?date=${dateStr}&today=${isSelectedToday ? 'true' : 'false'}`, {
-                signal: controller.signal
-              });
-              clearTimeout(timeoutId);
-
-              if (res.ok) {
-                const contentType = res.headers.get("content-type");
-                if (contentType && contentType.includes("text/html")) {
-                  const text = await res.text();
-                  if (!text.includes('id="root"') && (text.includes('bg-[#fdfbf6]') || text.includes('font-izhitsa') || text.includes('days__book-title'))) {
-                    html = text;
-                    apiFetchSuccess = true;
-                  }
-                }
-              }
-            } catch (apiError) {
-              console.warn("Server API /api/bible unavailable or slow in standalone PWA/mobile:", apiError);
-            }
-
-            // Tier 2: Directly fetch authentic scripture readings via Bolls Bible API (free, open, CORS-enabled Synodal Bible)
-            // This guarantees genuine daily lectionary readings in installed standalone PWAs, mobile devices, or when server proxy is unreachable
-            if (!apiFetchSuccess && currentDayData?.texts) {
-              const authenticRefs = extractRefsFromDayTexts(currentDayData.texts);
-              const summaryText = currentDayData.texts?.[0]?.text || '';
-              if (authenticRefs.length > 0) {
-                try {
-                  const bollsHtml = await fetchReadingsFromRefs(authenticRefs, summaryText);
-                  if (bollsHtml && bollsHtml.trim().length > 100) {
-                    html = bollsHtml;
-                    apiFetchSuccess = true;
-                  }
-                } catch (bollsErr) {
-                  console.warn("Client Bolls Bible fetch error:", bollsErr);
-                }
-              }
-            }
-
-            // Tier 3: Client-side proxy fallback for azbyka biblia/days HTML
-            if (!apiFetchSuccess) {
-              try {
-                const bibleUrl = `https://azbyka.ru/biblia/days/${dateStr}`;
-                html = await fetchWithProxyFallback(bibleUrl);
-              } catch (fallbackError) {
-                console.warn("Both server API and client-side proxies failed. Checking Bolls Bible or local lectionary:", fallbackError);
-                let bollsResolved = false;
-                if (currentDayData?.texts) {
-                  const authenticRefs = extractRefsFromDayTexts(currentDayData.texts);
-                  if (authenticRefs.length > 0) {
-                    try {
-                      const bollsHtml = await fetchReadingsFromRefs(authenticRefs, currentDayData.texts?.[0]?.text || '');
-                      if (bollsHtml && bollsHtml.trim().length > 100) {
-                        html = bollsHtml;
-                        bollsResolved = true;
-                      }
-                    } catch (e) {
-                      console.warn("Final Bolls attempt failed:", e);
-                    }
-                  }
-                }
-
-                if (!bollsResolved) {
-                  const localHtml = getFallbackBibleReadingsHTML(currentDate);
-                  setBibleContent(localHtml);
-                  setBibleLoading(false);
-                  setIsOfflineMode(true);
-                  safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: localHtml, _isFallback: true }));
-                  return;
-                }
-              }
-            }
-
-            // If the response is already our pre-formatted reading cards HTML
-            if (html.includes('bg-[#fdfbf6]') || html.includes('border-[var(--color-cinnabar)]') || html.includes('prose') || html.includes('font-izhitsa')) {
-              setBibleContent(html);
-              safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html, _isFallback: false }));
-              setIsOfflineMode(false);
-              setBibleError(null);
-              setBibleLoading(false);
-              return;
-            }
-
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            
-            const titleDivs = doc.querySelectorAll('.days__book-title');
-            
-            if (titleDivs.length > 0) {
-              const readingBlocks: string[] = [];
-              titleDivs.forEach((titleDiv) => {
-                const h2 = titleDiv.querySelector('h2');
-                if (!h2) return;
-                
-                let titleText = '';
-                let subtitleText = '';
-                
-                const h2Clone = h2.cloneNode(true) as HTMLElement;
-                const subtitleSpan = h2Clone.querySelector('.h2-subtitle');
-                if (subtitleSpan) {
-                  subtitleText = subtitleSpan.textContent?.trim() || '';
-                  subtitleSpan.remove();
-                }
-                titleText = h2Clone.textContent?.trim() || '';
-                
-                const versesHtml: string[] = [];
-                let sibling = titleDiv.nextElementSibling;
-                while (sibling && !sibling.classList.contains('days__book-title')) {
-                  if (sibling.classList.contains('tbl-content') || sibling.querySelector('.verse')) {
-                    const russianVerses = sibling.querySelectorAll('.verse[data-lang="r"], .verse.lang-r');
-                    russianVerses.forEach((verseEl) => {
-                      // Remove checkmark checkboxes, zachala tags and icons
-                      verseEl.querySelectorAll('.checkbox, .icon-check, .zachala').forEach(el => el.remove());
-                      // Expand and inline inner links (like theological lexicon terms) to avoid breaking styles
-                      verseEl.querySelectorAll('a').forEach(link => {
-                        const span = doc.createElement('span');
-                        span.innerHTML = link.innerHTML;
-                        link.parentNode?.replaceChild(span, link);
-                      });
-                      
-                      const lineNum = verseEl.getAttribute('data-line') || '';
-                      const verseText = verseEl.innerHTML.replace(/\[\s*\]/g, '').replace(/\s+/g, ' ').trim();
-                      versesHtml.push(`
-                        <p class="mb-3 leading-relaxed text-[var(--color-ink)]/90 text-sm sm:text-base">
-                          <sup class="text-[var(--color-cinnabar)] font-mono font-bold mr-1.5 text-xs align-super">${lineNum}</sup>
-                          <span>${verseText}</span>
-                        </p>
-                      `);
-                    });
-                  }
-                  sibling = sibling.nextElementSibling;
-                }
-                
-                if (versesHtml.length > 0) {
-                  readingBlocks.push(`
-                    <div class="bg-[#fdfbf6] p-5 rounded-2xl border border-[var(--color-cinnabar)]/10 shadow-sm mb-6 space-y-3 hover:shadow-md transition-shadow">
-                      <div class="border-b border-[var(--color-cinnabar)]/10 pb-2 mb-4">
-                        <h4 class="font-izhitsa text-lg sm:text-xl text-[var(--color-cinnabar)] leading-tight">
-                          ${titleText}
-                        </h4>
-                        <p class="font-sans text-xs text-[var(--color-ink)]/50 uppercase tracking-wider font-semibold mt-1">
-                          ${subtitleText}
-                        </p>
-                      </div>
-                      <div class="space-y-2 font-sans">
-                        ${versesHtml.join('')}
-                      </div>
-                    </div>
-                  `);
-                }
-              });
-              
-              if (readingBlocks.length > 0) {
-                const finalBibleContent = readingBlocks.join('');
-                setBibleContent(finalBibleContent);
-                safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: finalBibleContent, _isFallback: false }));
-                setIsOfflineMode(false);
-              } else {
-                let bollsResolved = false;
-                if (currentDayData?.texts) {
-                  const authenticRefs = extractRefsFromDayTexts(currentDayData.texts);
-                  if (authenticRefs.length > 0) {
-                    try {
-                      const bollsHtml = await fetchReadingsFromRefs(authenticRefs, currentDayData.texts[0]?.text || '');
-                      if (bollsHtml && bollsHtml.trim().length > 100) {
-                        setBibleContent(bollsHtml);
-                        safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: bollsHtml, _isFallback: false }));
-                        setIsOfflineMode(false);
-                        bollsResolved = true;
-                      }
-                    } catch (e) {
-                      console.warn("Bolls fallback error:", e);
-                    }
-                  }
-                }
-                if (!bollsResolved) {
-                  const localHtml = getFallbackBibleReadingsHTML(currentDate);
-                  setBibleContent(localHtml);
-                  safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: localHtml, _isFallback: true }));
-                }
-              }
-            } else {
-              // titleDivs.length === 0
-              let bollsResolved = false;
-              if (currentDayData?.texts) {
-                const authenticRefs = extractRefsFromDayTexts(currentDayData.texts);
-                if (authenticRefs.length > 0) {
-                  try {
-                    const bollsHtml = await fetchReadingsFromRefs(authenticRefs, currentDayData.texts[0]?.text || '');
-                    if (bollsHtml && bollsHtml.trim().length > 100) {
-                      setBibleContent(bollsHtml);
-                      safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: bollsHtml, _isFallback: false }));
-                      setIsOfflineMode(false);
-                      bollsResolved = true;
-                    }
-                  } catch (e) {
-                    console.warn("Bolls fallback error:", e);
-                  }
-                }
-              }
-              if (!bollsResolved) {
-                const localHtml = getFallbackBibleReadingsHTML(currentDate);
-                setBibleContent(localHtml);
-                safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: localHtml, _isFallback: true }));
-              }
-            }
-          } catch (e) {
-            console.error('Error fetching bible text:', e);
-            let bollsResolved = false;
-            if (currentDayData?.texts) {
-              const authenticRefs = extractRefsFromDayTexts(currentDayData.texts);
-              if (authenticRefs.length > 0) {
-                try {
-                  const bollsHtml = await fetchReadingsFromRefs(authenticRefs, currentDayData.texts[0]?.text || '');
-                  if (bollsHtml && bollsHtml.trim().length > 100) {
-                    setBibleContent(bollsHtml);
-                    safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: bollsHtml, _isFallback: false }));
-                    setIsOfflineMode(false);
-                    bollsResolved = true;
-                  }
-                } catch {}
-              }
-            }
-            if (!bollsResolved) {
-              const localHtml = getFallbackBibleReadingsHTML(currentDate);
-              setBibleContent(localHtml);
-              safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: localHtml, _isFallback: true }));
-            }
-          } finally {
-            setBibleLoading(false);
+          let titleText = '';
+          let subtitleText = '';
+          const h2Clone = h2.cloneNode(true) as HTMLElement;
+          const subtitleSpan = h2Clone.querySelector('.h2-subtitle');
+          if (subtitleSpan) {
+            subtitleText = subtitleSpan.textContent?.trim() || '';
+            subtitleSpan.remove();
           }
+          titleText = h2Clone.textContent?.trim() || '';
+
+          const versesHtml: string[] = [];
+          let sibling = titleDiv.nextElementSibling;
+          while (sibling && !sibling.classList.contains('days__book-title')) {
+            if (sibling.classList.contains('tbl-content') || sibling.querySelector('.verse')) {
+              const russianVerses = sibling.querySelectorAll('.verse[data-lang="r"], .verse.lang-r');
+              russianVerses.forEach((verseEl) => {
+                verseEl.querySelectorAll('.checkbox, .icon-check, .zachala').forEach(el => el.remove());
+                verseEl.querySelectorAll('a').forEach(link => {
+                  const span = doc.createElement('span');
+                  span.innerHTML = link.innerHTML;
+                  link.parentNode?.replaceChild(span, link);
+                });
+
+                const lineNum = verseEl.getAttribute('data-line') || '';
+                const verseText = verseEl.innerHTML.replace(/\[\s*\]/g, '').replace(/\s+/g, ' ').trim();
+                versesHtml.push(`
+                  <p class="mb-3 leading-relaxed text-[var(--color-ink)]/90 text-sm sm:text-base">
+                    <sup class="text-[var(--color-cinnabar)] font-mono font-bold mr-1.5 text-xs align-super">${lineNum}</sup>
+                    <span>${verseText}</span>
+                  </p>
+                `);
+              });
+            }
+            sibling = sibling.nextElementSibling;
+          }
+
+          if (versesHtml.length > 0) {
+            readingBlocks.push(`
+              <div class="bg-[#fdfbf6] p-5 rounded-2xl border border-[var(--color-cinnabar)]/10 shadow-sm mb-6 space-y-3 hover:shadow-md transition-shadow">
+                <div class="border-b border-[var(--color-cinnabar)]/10 pb-2 mb-4">
+                  <h4 class="font-izhitsa text-lg sm:text-xl text-[var(--color-cinnabar)] leading-tight">
+                    ${titleText}
+                  </h4>
+                  <p class="font-sans text-xs text-[var(--color-ink)]/50 uppercase tracking-wider font-semibold mt-1">
+                    ${subtitleText}
+                  </p>
+                </div>
+                <div class="space-y-2 font-sans">
+                  ${versesHtml.join('')}
+                </div>
+              </div>
+            `);
+          }
+        });
+
+        return readingBlocks.join('');
+      };
+
+      const fetchCalendarDayForDate = async (targetDateStr: string, targetDateObj: Date): Promise<any> => {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 4000);
+          const res = await fetch(`/api/calendar?date=${targetDateStr}`, { signal: controller.signal });
+          clearTimeout(timeoutId);
+
+          if (!res.ok) {
+            throw new Error(`Ошибка сервера: ${res.status}`);
+          }
+          const contentType = res.headers.get("content-type");
+          if (contentType && !contentType.includes("application/json")) {
+            throw new Error("Ответ сервера не содержит JSON.");
+          }
+          const textResult = await res.text();
+          if (textResult.includes("<!DOCTYPE html") || textResult.includes("<html")) {
+            throw new Error("Запрос API вернул HTML-страницу.");
+          }
+          const json = JSON.parse(textResult);
+          if (!json || typeof json !== 'object') {
+            throw new Error("Неверный формат ответа.");
+          }
+          json._isFallback = false;
+          return json;
+        } catch {
+          try {
+            const calendarHtml = await fetchWithProxyFallback(`https://azbyka.ru/days/api/day/${targetDateStr}.json`);
+            const json = JSON.parse(calendarHtml);
+            json._isFallback = false;
+            return json;
+          } catch {
+            const json = generateLocalFallbackCalendarData(targetDateObj);
+            json._isFallback = true;
+            return json;
+          }
+        }
+      };
+
+      const fetchServerBibleCards = async (targetDateStr: string, isTodayFlag: boolean): Promise<string> => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4500);
+        try {
+          const res = await fetch(`/api/bible?date=${targetDateStr}&today=${isTodayFlag ? 'true' : 'false'}`, {
+            signal: controller.signal
+          });
+          if (!res.ok) {
+            throw new Error(`HTTP ${res.status}`);
+          }
+          const text = await res.text();
+          if (text.includes('id="root"')) {
+            throw new Error("SPA root HTML returned");
+          }
+          const cards = parseRawBibleHtmlToCards(text);
+          if (!cards || cards.trim().length <= 100) {
+            throw new Error("Empty server bible cards");
+          }
+          return cards;
+        } finally {
+          clearTimeout(timeoutId);
+        }
+      };
+
+      try {
+        const today = new Date();
+        const isSelectedToday =
+          currentDate.getDate() === today.getDate() &&
+          currentDate.getMonth() === today.getMonth() &&
+          currentDate.getFullYear() === today.getFullYear();
+
+        // Start Day Metadata and Bible Readings IN PARALLEL at millisecond 0 (no sequential waterfall!)
+        const dayPromise: Promise<any> = isDayLoaded
+          ? Promise.resolve(currentDayData)
+          : fetchCalendarDayForDate(dateStr, currentDate).then((json) => {
+              if (!cancelled) {
+                setData(json);
+                setIsOfflineMode(Boolean(json._isFallback));
+                setLoading(false);
+              }
+              safeLocalStorageSet(cacheKeyDay, JSON.stringify(json));
+              return json;
+            });
+
+        const biblePromise: Promise<void> = isBibleLoaded
+          ? Promise.resolve()
+          : (async () => {
+              try {
+                // Candidate 1: Server API /api/bible (started immediately at t = 0ms!)
+                const serverCandidate = fetchServerBibleCards(dateStr, isSelectedToday);
+
+                // Candidate 2: Client-side Bolls Bible single batch POST (started as soon as day refs are known)
+                const bollsCandidate = (async (): Promise<string> => {
+                  const resolvedDay = await dayPromise;
+                  const authenticRefs = extractRefsFromDayTexts(resolvedDay?.texts);
+                  if (authenticRefs.length === 0) {
+                    throw new Error("No scripture refs in day data");
+                  }
+                  const summaryText = resolvedDay?.texts?.[0]?.text || '';
+                  const bollsHtml = await fetchReadingsFromRefs(authenticRefs, summaryText);
+                  if (!bollsHtml || bollsHtml.trim().length <= 100) {
+                    throw new Error("Empty Bolls response");
+                  }
+                  return bollsHtml;
+                })();
+
+                let finalCardsHtml = '';
+                try {
+                  // Race server API and Bolls batch API — whichever finishes first wins immediately!
+                  finalCardsHtml = await Promise.any([serverCandidate, bollsCandidate]);
+                } catch {
+                  // Fallback Candidate 3: Proxy HTML parse
+                  const rawProxyHtml = await fetchWithProxyFallback(`https://azbyka.ru/biblia/days/${dateStr}`);
+                  finalCardsHtml = parseRawBibleHtmlToCards(rawProxyHtml);
+                }
+
+                if (finalCardsHtml && finalCardsHtml.trim().length > 100) {
+                  if (!cancelled) {
+                    setBibleContent(finalCardsHtml);
+                    setIsOfflineMode(false);
+                    setBibleError(null);
+                  }
+                  safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: finalCardsHtml, _isFallback: false }));
+                } else {
+                  const localHtml = getFallbackBibleReadingsHTML(currentDate);
+                  if (!cancelled) {
+                    setBibleContent(localHtml);
+                    setIsOfflineMode(true);
+                  }
+                  safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: localHtml, _isFallback: true }));
+                }
+              } catch (e) {
+                console.warn("All online bible sources failed, engaging local lectionary:", e);
+                const localHtml = getFallbackBibleReadingsHTML(currentDate);
+                if (!cancelled) {
+                  setBibleContent(localHtml);
+                  setIsOfflineMode(true);
+                }
+                safeLocalStorageSet(cacheKeyBible, JSON.stringify({ html: localHtml, _isFallback: true }));
+              } finally {
+                if (!cancelled) {
+                  setBibleLoading(false);
+                }
+              }
+            })();
+
+        await Promise.all([dayPromise, biblePromise]);
+
+        // Silently prefetch tomorrow (+1d) and yesterday (-1d) in background so next/prev day navigation is 0ms!
+        if (!cancelled) {
+          setTimeout(() => {
+            if (cancelled) return;
+            for (const offset of [1, -1]) {
+              const adjDate = new Date(currentDate);
+              adjDate.setDate(currentDate.getDate() + offset);
+              const adjY = adjDate.getFullYear();
+              const adjM = String(adjDate.getMonth() + 1).padStart(2, '0');
+              const adjD = String(adjDate.getDate()).padStart(2, '0');
+              const adjStr = `${adjY}-${adjM}-${adjD}`;
+              const adjKeyDay = `ortho_cal_v5_day_${adjStr}`;
+              const adjKeyBible = `ortho_cal_v5_bible_${adjStr}`;
+
+              if (!localStorage.getItem(adjKeyDay)) {
+                fetchCalendarDayForDate(adjStr, adjDate)
+                  .then(j => {
+                    if (!j._isFallback) safeLocalStorageSet(adjKeyDay, JSON.stringify(j));
+                  })
+                  .catch(() => {});
+              }
+              if (!localStorage.getItem(adjKeyBible)) {
+                fetchServerBibleCards(adjStr, false)
+                  .then(cards => {
+                    if (cards && cards.length > 100) {
+                      safeLocalStorageSet(adjKeyBible, JSON.stringify({ html: cards, _isFallback: false }));
+                    }
+                  })
+                  .catch(() => {});
+              }
+            }
+          }, 400);
         }
       } catch (err) {
         console.error('Error fetching calendar day data:', err);
-        setError(err instanceof Error ? err.message : 'Произошла ошибка при загрузке календаря');
-        setLoading(false);
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Произошла ошибка при загрузке календаря');
+          setLoading(false);
+          setBibleLoading(false);
+        }
       }
     };
 
