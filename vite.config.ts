@@ -64,10 +64,9 @@ export default defineConfig(({mode}) => {
       rootAssetsPlugin(),
       VitePWA({
         registerType: 'prompt',
-        injectRegister: 'script',
+        injectRegister: false,
         devOptions: {
-          enabled: true,
-          type: 'module'
+          enabled: false
         },
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'icon_256.png'],
         manifest: {
@@ -116,7 +115,7 @@ export default defineConfig(({mode}) => {
           navigateFallbackDenylist: [/^\/api\//],
           runtimeCaching: [
             {
-              urlPattern: /^\/api\/.*/i,
+              urlPattern: /\/api\/.*/i,
               handler: 'NetworkFirst',
               options: {
                 cacheName: 'api-cache',
@@ -127,6 +126,21 @@ export default defineConfig(({mode}) => {
                 },
                 cacheableResponse: {
                   statuses: [200]
+                }
+              }
+            },
+            {
+              urlPattern: /^https:\/\/(?:orthocal\.info|script\.pravoslavie\.ru)\/.*/i,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'orthodox-calendar-cors-cache',
+                networkTimeoutSeconds: 4,
+                expiration: {
+                  maxEntries: 100,
+                  maxAgeSeconds: 60 * 60 * 24 * 14
+                },
+                cacheableResponse: {
+                  statuses: [0, 200]
                 }
               }
             },
@@ -156,7 +170,7 @@ export default defineConfig(({mode}) => {
     server: {
       host: '0.0.0.0',
       port: 3000,
-      hmr: process.env.DISABLE_HMR === 'true' ? false : { overlay: false },
+      hmr: false,
     },
   };
 });

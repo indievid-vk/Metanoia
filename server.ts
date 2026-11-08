@@ -390,22 +390,49 @@ async function startServer() {
   const distPath = path.join(process.cwd(), "dist");
 
   // PWA Core handlers: Always serve ServiceWorker, Workbox, and Manifest with correct headers
-  app.get(["/sw.js", "/dist/sw.js"], (req, res, next) => {
+  app.get(["/sw.js", "/dist/sw.js"], (req, res) => {
     const swPath = path.join(distPath, "sw.js");
-    if (fs.existsSync(swPath)) {
-      res.setHeader("Content-Type", "application/javascript; charset=utf-8");
-      res.setHeader("Service-Worker-Allowed", "/");
-      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Content-Type", "application/javascript; charset=utf-8");
+    res.setHeader("Service-Worker-Allowed", "/");
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    if (process.env.NODE_ENV === "production" && fs.existsSync(swPath)) {
       res.sendFile(swPath);
       return;
     }
-    next();
+    // Passive no-op Service Worker for dev/preview mode (no skipWaiting/clients.claim loop)
+    res.send(`
+self.addEventListener('install', () => {});
+self.addEventListener('activate', () => {});
+`);
   });
 
   app.get(["/registerSW.js", "/dist/registerSW.js"], (req, res) => {
     const regPath = path.join(distPath, "registerSW.js");
     const publicRegPath = path.join(process.cwd(), "public", "registerSW.js");
     res.setHeader("Content-Type", "application/javascript; charset=utf-8");
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    if (process.env.NODE_ENV !== "production") {
+      // In dev/preview mode, clean up any stale Service Workers and workbox precaches once without triggering reload loops
+      res.send(`
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((regs) => {
+    for (const reg of regs) {
+      reg.unregister();
+    }
+  }).catch(() => {});
+}
+if ('caches' in window) {
+  caches.keys().then((names) => {
+    for (const name of names) {
+      if (name.includes('workbox-precache') || name.includes('api-cache')) {
+        caches.delete(name);
+      }
+    }
+  }).catch(() => {});
+}
+`);
+      return;
+    }
     if (fs.existsSync(regPath)) {
       res.sendFile(regPath);
     } else if (fs.existsSync(publicRegPath)) {
@@ -448,6 +475,16 @@ async function startServer() {
       return;
     }
     res.status(404).send("icon_256.png not found");
+  });
+
+  // If a previously installed PWA requests hashed build assets from /assets/*, serve them from dist/assets if available
+  app.use("/assets", (req, res, next) => {
+    const assetFile = path.join(distPath, "assets", req.path);
+    if (fs.existsSync(assetFile) && fs.statSync(assetFile).isFile()) {
+      res.sendFile(assetFile);
+      return;
+    }
+    next();
   });
 
   // Vite middleware for rendering dev build assets or static serving for production

@@ -24,7 +24,7 @@ export default function UpdatePopup() {
   const [needUpdate, setNeedUpdate] = (rSW && rSW.needUpdate) || [false, () => {}];
   const updateServiceWorker = (rSW && rSW.updateServiceWorker) || ((reload?: boolean) => { if (reload) window.location.reload(); });
 
-  const CURRENT_VERSION = '1.2.1'; 
+  const CURRENT_VERSION = '1.2.2'; 
   const [show, setShow] = useState(false);
   const [type, setType] = useState<'update' | 'offline' | 'new-version'>('update');
 
@@ -40,9 +40,11 @@ export default function UpdatePopup() {
     return () => window.removeEventListener('offline', handleOffline);
   }, []);
 
-  // 1. Check for service worker updates ONLY if online
+  const isDevMode = Boolean((import.meta as any).env?.DEV);
+
+  // 1. Check for service worker updates ONLY if online and not in dev preview mode
   useEffect(() => {
-    if (!isOnline()) return;
+    if (!isOnline() || isDevMode) return;
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(registrations => {
@@ -55,7 +57,7 @@ export default function UpdatePopup() {
       });
 
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (isOnline()) {
+        if (isOnline() && navigator.serviceWorker.controller) {
           localStorage.setItem('app_just_updated', 'true');
         }
       });
@@ -74,11 +76,11 @@ export default function UpdatePopup() {
     };
     window.addEventListener('visibilitychange', handleVisibilityChange);
     return () => window.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, []);
+  }, [isDevMode]);
 
-  // 2. Service worker state change listener (ONLY act if online)
+  // 2. Service worker state change listener (ONLY act if online and not in dev preview mode)
   useEffect(() => {
-    if (!isOnline()) return;
+    if (!isOnline() || isDevMode) return;
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.ready.then(reg => {

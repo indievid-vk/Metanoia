@@ -531,3 +531,246 @@ export async function fetchReadingsFromRefs(
 
   return cards.join("\n");
 }
+
+const ORTHOCAL_BOOK_MAP: Record<string, string> = {
+  "Matt": "Mt", "Matthew": "Mt",
+  "Mark": "Mk",
+  "Luke": "Lk",
+  "John": "Jn",
+  "Acts": "Act", "Act": "Act",
+  "Rom": "Rom", "Romans": "Rom",
+  "1 Cor": "1Cor", "1Cor": "1Cor",
+  "2 Cor": "2Cor", "2Cor": "2Cor",
+  "Gal": "Gal", "Galatians": "Gal",
+  "Eph": "Eph", "Ephesians": "Eph",
+  "Phil": "Phil", "Philippians": "Phil",
+  "Col": "Col", "Colossians": "Col",
+  "1 Thess": "1Thess", "1Thess": "1Thess",
+  "2 Thess": "2Thess", "2Thess": "2Thess",
+  "1 Tim": "1Tim", "1Tim": "1Tim",
+  "2 Tim": "2Tim", "2Tim": "2Tim",
+  "Titus": "Tit", "Tit": "Tit",
+  "Phlm": "Phlm", "Philemon": "Phlm",
+  "Heb": "Heb", "Hebrews": "Heb",
+  "Jas": "Jas", "James": "Jas",
+  "1 Pet": "1Pet", "1Pet": "1Pet",
+  "2 Pet": "2Pet", "2Pet": "2Pet",
+  "1 John": "1Jn", "1Jn": "1Jn",
+  "2 John": "2Jn", "2Jn": "2Jn",
+  "3 John": "3Jn", "3Jn": "3Jn",
+  "Jude": "Jud", "Jud": "Jud",
+  "Rev": "Rev",
+  "Gen": "Gen", "Exod": "Ex", "Lev": "Lev", "Num": "Num", "Deut": "Deut",
+  "Josh": "Josh", "Judg": "Judg",
+  "1 Sam": "1Sam", "2 Sam": "2Sam",
+  "1 Kgs": "1Sam", "2 Kgs": "2Sam", "3 Kgs": "1Kgs", "4 Kgs": "2Kgs",
+  "Job": "Job", "Ps": "Ps", "Prov": "Prov", "Eccl": "Eccl", "Song": "Song",
+  "Isa": "Isa", "Jer": "Jer", "Ezek": "Ezek", "Dan": "Dan", "Joel": "Joel",
+  "Jonah": "Jonah", "Mic": "Mic", "Hab": "Hab", "Zeph": "Zeph", "Zech": "Zech",
+  "Mal": "Mal", "Wis": "Wis", "Sir": "Sir"
+};
+
+export interface OrthocalDayInfo {
+  refs: string[];
+  summaryHtml: string;
+  tone: number;
+  fastLevel: number;
+  fastExceptionDesc: string;
+}
+
+const ORTHOCAL_MEMORY_CACHE = new Map<string, OrthocalDayInfo>();
+
+export async function fetchOrthocalDayInfo(dateObj: Date): Promise<OrthocalDayInfo | null> {
+  const y = dateObj.getFullYear();
+  const m = dateObj.getMonth() + 1;
+  const d = dateObj.getDate();
+  const key = `${y}-${m}-${d}`;
+
+  if (ORTHOCAL_MEMORY_CACHE.has(key)) {
+    return ORTHOCAL_MEMORY_CACHE.get(key)!;
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+    const res = await fetch(`https://orthocal.info/api/julian/${y}/${m}/${d}/`, {
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    if (!res.ok) return null;
+
+    const json = await res.json();
+    const refs: string[] = [];
+    const matinsList: string[] = [];
+    const epistleList: string[] = [];
+    const gospelList: string[] = [];
+    const vespersList: string[] = [];
+
+    if (Array.isArray(json.readings)) {
+      for (const r of json.readings) {
+        const shortDisp: string = r.short_display || "";
+        if (!shortDisp) continue;
+
+        // Match book prefix and chapter.verse part e.g. "1 Thess 2.20-3.8" or "Heb 12.6-13, 25-27"
+        const mBook = shortDisp.match(/^([1-4]?\s*[A-Za-z]+)\s+(\d+[\d.,\s\-–;]+)$/);
+        if (!mBook) continue;
+
+        const rawBook = mBook[1].trim();
+        const canonicalCode = ORTHOCAL_BOOK_MAP[rawBook];
+        if (!canonicalCode) continue;
+
+        const bookMeta = BOOK_METAS[canonicalCode];
+        if (!bookMeta) continue;
+
+        const passageColon = mBook[2]
+          .replace(/(\d+)\.(\d+)/g, "$1:$2")
+          .replace(/;/g, ",")
+          .replace(/\s+/g, "");
+
+        const refStr = `${canonicalCode}.${passageColon}`;
+        refs.push(refStr);
+
+        const ruDisplay = `${bookMeta.abbr} ${passageColon.replace(/-/g, "–").replace(/,/g, ", ")}`;
+        const src = String(r.source || "").toLowerCase();
+        if (src.includes("matins")) {
+          matinsList.push(ruDisplay);
+        } else if (src.includes("epistle")) {
+          epistleList.push(ruDisplay);
+        } else if (src.includes("gospel")) {
+          gospelList.push(ruDisplay);
+        } else if (src.includes("vespers")) {
+          vespersList.push(ruDisplay);
+        } else {
+          gospelList.push(ruDisplay);
+        }
+      }
+    }
+
+    const summaryParts: string[] = [];
+    if (matinsList.length > 0) {
+      summaryParts.push(`<i>Утр.:</i> ${matinsList.join("; ")}.`);
+    }
+    if (epistleList.length > 0 || gospelList.length > 0) {
+      const litParts: string[] = [];
+      if (epistleList.length > 0) litParts.push(`Ап.: ${epistleList.join("; ")}.`);
+      if (gospelList.length > 0) litParts.push(`Ев.: ${gospelList.join("; ")}.`);
+      summaryParts.push(`<i>Лит.:</i> ${litParts.join(" ")}`);
+    }
+    if (vespersList.length > 0) {
+      summaryParts.push(`<i>Веч.:</i> ${vespersList.join("; ")}.`);
+    }
+
+    const result: OrthocalDayInfo = {
+      refs: Array.from(new Set(refs)),
+      summaryHtml: summaryParts.length > 0 ? `<p>${summaryParts.join(" ")}</p>` : "",
+      tone: typeof json.tone === "number" ? json.tone : 0,
+      fastLevel: typeof json.fast_level === "number" ? json.fast_level : 0,
+      fastExceptionDesc: String(json.fast_exception_desc || "")
+    };
+
+    ORTHOCAL_MEMORY_CACHE.set(key, result);
+    return result;
+  } catch {
+    return null;
+  }
+}
+
+const RU_MONTHS_GENITIVE = [
+  "января", "февраля", "марта", "апреля", "мая", "июня",
+  "июля", "августа", "сентября", "октября", "ноября", "декабря"
+];
+
+function decodeHtmlNumericEntities(str: string): string {
+  return str
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&nbsp;/g, " ")
+    .replace(/&ndash;/g, "–")
+    .replace(/&quot;/g, '"');
+}
+
+export async function fetchPravoslavieTodayData(targetDateObj: Date): Promise<{
+  saints: { id: number; title: string; uri?: string }[];
+  holidays: { id: number; title: string; uri?: string }[];
+  ikons: { title: string; clean_title?: string }[];
+  roundWeek: string;
+  fastingStr: string;
+  isFasting: boolean;
+  chtenHtml: string;
+} | null> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const res = await fetch("https://script.pravoslavie.ru/calendar.php", {
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    if (!res.ok) return null;
+
+    const rawText = decodeHtmlNumericEntities(await res.text());
+    const extractFnBody = (fnName: string): string => {
+      const reg = new RegExp(`function\\s+${fnName}\\s*\\(\\)\\s*\\{\\s*daysd\\.write\\("([\\s\\S]*?)"\\);\\s*\\}`, "i");
+      const m = rawText.match(reg);
+      return m ? m[1].replace(/\\"/g, '"').trim() : "";
+    };
+
+    const dayBody = extractFnBody("print_day");
+    const expectedDayPrefix = `${targetDateObj.getDate()} ${RU_MONTHS_GENITIVE[targetDateObj.getMonth()]} ${targetDateObj.getFullYear()}`;
+    if (!dayBody.includes(expectedDayPrefix)) {
+      return null;
+    }
+
+    const holidayBody = extractFnBody("print_holiday").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    const weekBody = extractFnBody("print_week").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    const postBody = extractFnBody("print_post").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    const trapezaBody = extractFnBody("print_trapeza").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    const saintsBody = extractFnBody("print_saints");
+    const chtenBody = extractFnBody("print_chten");
+
+    const holidays: { id: number; title: string; uri?: string }[] = [];
+    if (holidayBody) {
+      holidays.push({ id: 90001, title: holidayBody });
+    }
+
+    const saints: { id: number; title: string; uri?: string }[] = [];
+    const ikons: { title: string; clean_title?: string }[] = [];
+    const seenSaints = new Set<string>();
+
+    // Extract saint names from anchor title attributes or anchor text
+    const anchorMatches = [...saintsBody.matchAll(/<a\s+[^>]*href="([^"]+)"[^>]*?(?:title="([^"]+)")?[^>]*>([\s\S]*?)<\/a>/gi)];
+    anchorMatches.forEach((m, idx) => {
+      const titleAttr = (m[2] || "").trim();
+      const innerTxt = (m[3] || "").replace(/<[^>]+>/g, "").trim();
+      if (innerTxt.toLowerCase() === "икона") return;
+
+      const label = titleAttr || innerTxt;
+      if (label && !seenSaints.has(label)) {
+        seenSaints.add(label);
+        if (label.toLowerCase().includes("икона божией матери") || label.toLowerCase().includes("образ")) {
+          ikons.push({ title: label, clean_title: label });
+        } else {
+          saints.push({ id: 50000 + idx, title: label });
+        }
+      }
+    });
+
+    const isFasting = Boolean(
+      (postBody && !postBody.toLowerCase().includes("поста нет")) ||
+      (trapezaBody && !trapezaBody.toLowerCase().includes("поста нет"))
+    );
+    const fastingStr = [postBody, trapezaBody].filter(Boolean).join(". ") || (isFasting ? "Постный день" : "Поста нет");
+    const cleanChten = chtenBody.replace(/<a[^>]*>([\s\S]*?)<\/a>/gi, "$1").replace(/\s+/g, " ").trim();
+
+    return {
+      saints,
+      holidays,
+      ikons,
+      roundWeek: weekBody,
+      fastingStr,
+      isFasting,
+      chtenHtml: cleanChten ? `<p>${cleanChten}</p>` : ""
+    };
+  } catch {
+    return null;
+  }
+}
+
