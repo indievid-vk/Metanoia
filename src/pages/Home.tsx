@@ -69,6 +69,7 @@ export default function Home() {
   const navigate = useNavigate();
   const [currentGroupIdx, setCurrentGroupIdx] = useState(0);
   const [commandmentGroups, setCommandmentGroups] = useState<any[][]>([]);
+  const [coverLoaded, setCoverLoaded] = useState(false);
 
   useEffect(() => {
     // Process commandments into groups of 3 individual verses/quotes
@@ -175,11 +176,15 @@ export default function Home() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-[radial-gradient(circle_at_center,rgba(255,220,150,0.15)_0%,transparent_60%)] pointer-events-none mix-blend-screen" />
 
         <div className="relative w-full h-full flex flex-col items-center justify-center z-20 origin-center">
-          <div className="relative flex items-center justify-center" style={{ aspectRatio: '369/500', maxHeight: '100%', maxWidth: '100%' }}>
+          <div
+            className={`relative flex items-center justify-center transition-opacity duration-300 ${coverLoaded ? 'opacity-100' : 'opacity-0'}`}
+            style={{ aspectRatio: '369/500', maxHeight: '100%', maxWidth: '100%' }}
+          >
             
             <img 
               src={getAssetPath("/images/home-bg.webp")} 
               alt="Обложка Помощь кающимся" 
+              onLoad={() => setCoverLoaded(true)}
               className="w-full h-full object-contain block"
             />
 

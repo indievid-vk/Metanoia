@@ -234,7 +234,13 @@ function NavButton({ to, current, imgSrc, label, onClick, isCentral }: { to: str
       className={`flex flex-col items-center justify-center ${isCentral ? 'w-[72px]' : 'w-[54px]'} transition-all transform-gpu`}
     >
       <div className={`relative mb-1 transition-all duration-300 ${isActive ? 'scale-110 drop-shadow-sm' : 'opacity-85'}`}>
-        <img src={imgSrc} alt={label} className={`${isCentral ? 'w-[48px] h-[48px]' : 'w-9 h-9'} object-contain drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]`} />
+        <img
+          src={imgSrc}
+          alt={label}
+          width={isCentral ? 48 : 36}
+          height={isCentral ? 48 : 36}
+          className={`${isCentral ? 'w-[48px] h-[48px]' : 'w-9 h-9'} object-contain drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]`}
+        />
       </div>
       <span className={`text-[9px] uppercase font-izhitsa tracking-[0.05em] transition-colors ${isActive ? 'text-[var(--color-cinnabar)]' : 'text-[var(--color-ink)]/70'} ${isCentral ? 'mt-1' : ''}`}>
         {label}

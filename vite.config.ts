@@ -68,13 +68,13 @@ export default defineConfig(({mode}) => {
         devOptions: {
           enabled: false
         },
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'icon_256.png'],
+        includeAssets: ['icon_192.png', 'icon_512.png'],
         manifest: {
           name: 'Помощь кающимся',
           short_name: 'Кающимся',
           description: 'Дневник для подготовки к исповеди и духовная литература',
           theme_color: '#C33B3B',
-          background_color: '#F4EBD8',
+          background_color: '#F2EAD3',
           display: 'standalone',
           orientation: 'portrait',
           scope: './',
@@ -84,23 +84,14 @@ export default defineConfig(({mode}) => {
             {
               src: 'icon_192.png',
               sizes: '192x192',
-              type: 'image/png'
-            },
-            {
-              src: 'icon_256.png',
-              sizes: '256x256',
-              type: 'image/png'
-            },
-            {
-              src: 'icon_512.png',
-              sizes: '512x512',
-              type: 'image/png'
+              type: 'image/png',
+              purpose: 'any'
             },
             {
               src: 'icon_512.png',
               sizes: '512x512',
               type: 'image/png',
-              purpose: 'any maskable'
+              purpose: 'any'
             }
           ]
         },
