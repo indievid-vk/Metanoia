@@ -512,7 +512,7 @@ export default function Calendar() {
       try {
         new Notification('Тестовое уведомление: Пасхальное благословение', {
           body: 'Система напоминаний о праздниках работает исправно! Слышен колокольный звон.',
-          icon: '/icon.png'
+          icon: '/icon_512.png'
         });
       } catch (e) {
         console.warn("Could not trigger test desktop notification", e);

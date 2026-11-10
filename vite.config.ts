@@ -68,7 +68,7 @@ export default defineConfig(({mode}) => {
         devOptions: {
           enabled: false
         },
-        includeAssets: ['icon_192.png', 'icon_512.png'],
+        includeAssets: ['icon_512.png'],
         manifest: {
           name: 'Помощь кающимся',
           short_name: 'Кающимся',
@@ -81,12 +81,6 @@ export default defineConfig(({mode}) => {
           start_url: './',
           id: './',
           icons: [
-            {
-              src: 'icon_192.png',
-              sizes: '192x192',
-              type: 'image/png',
-              purpose: 'any'
-            },
             {
               src: 'icon_512.png',
               sizes: '512x512',

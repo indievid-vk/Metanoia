@@ -520,8 +520,8 @@ export function checkDailyReminders(silent = false): OrthodoxHoliday[] {
             if (reg && 'showNotification' in reg) {
               await reg.showNotification(reminder.name, {
                 body: reminder.description,
-                icon: '/icon_192.png',
-                badge: '/icon_192.png',
+                icon: '/icon_512.png',
+                badge: '/icon_512.png',
                 vibrate: [200, 100, 200],
                 data: { url: './#/calendar' }
               } as any);
@@ -537,7 +537,7 @@ export function checkDailyReminders(silent = false): OrthodoxHoliday[] {
           try {
             new Notification(reminder.name, {
               body: reminder.description,
-              icon: '/icon_192.png',
+              icon: '/icon_512.png',
             });
             console.log("Fired legacy system notification:", reminder.name);
           } catch (e) {

@@ -480,14 +480,14 @@ if ('caches' in window) {
     }
   });
 
-  app.get(["/icon_256.png", "/public/icon_256.png"], (req, res) => {
-    const iconPath = path.join(process.cwd(), "public", "icon_256.png");
+  app.get(["/icon_512.png", "/icon_256.png", "/icon_192.png", "/public/icon_512.png"], (req, res) => {
+    const iconPath = path.join(process.cwd(), "public", "icon_512.png");
     if (fs.existsSync(iconPath)) {
       res.setHeader("Content-Type", "image/png");
       res.sendFile(iconPath);
       return;
     }
-    res.status(404).send("icon_256.png not found");
+    res.status(404).send("icon_512.png not found");
   });
 
   // If a previously installed PWA requests hashed build assets from /assets/*, serve them from dist/assets if available
