@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
-import { useSinsStore, Passion } from '../store';
+import { useSinsStore, Passion, Sin } from '../store';
 import { MOCK_SINS, PASSIONS } from '../data/constants';
 import { DecorativeDivider } from '../components/DecorativeDivider';
 
@@ -11,21 +11,26 @@ export default function MyConfession() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [expandedSins, setExpandedSins] = useState<Record<string, boolean>>({});
 
-  const allSins = [...MOCK_SINS, ...customSins];
-  
-  // Filter only selected sins
-  const selectedSinsList = allSins.filter(sin => selectedSins[sin.id]);
+  const allSins = useMemo(() => [...MOCK_SINS, ...customSins], [customSins]);
 
-  // Group by passion
-  const groupedSins = PASSIONS.reduce((acc, passion) => {
-    const sinsForPassion = selectedSinsList.filter(s => s.passion === passion);
-    if (sinsForPassion.length > 0) {
-      acc[passion] = sinsForPassion;
+  const selectedSinsList = useMemo(
+    () => allSins.filter(sin => selectedSins[sin.id]),
+    [allSins, selectedSins]
+  );
+
+  const groupedSins = useMemo<Partial<Record<Passion, Sin[]>>>(() => {
+    const acc: Partial<Record<Passion, Sin[]>> = {};
+    for (const passion of PASSIONS) {
+      const sinsForPassion = selectedSinsList.filter(s => s.passion === passion);
+      if (sinsForPassion.length > 0) {
+        acc[passion] = sinsForPassion;
+      }
     }
     return acc;
-  }, {} as Record<Passion, typeof selectedSinsList>);
+  }, [selectedSinsList]);
 
-  const hasSins = Object.keys(groupedSins).length > 0;
+  const groupedEntries = Object.entries(groupedSins) as [Passion, Sin[]][];
+  const hasSins = groupedEntries.length > 0;
 
   const handleConfessed = () => {
     clearConfession();
@@ -65,7 +70,7 @@ export default function MyConfession() {
               "Исповедую Господу Богу моему и пред тобою, честный отче, все мои грехи..."
             </p>
 
-            {Object.entries(groupedSins).map(([passion, sins]) => (
+            {groupedEntries.map(([passion, sins]) => (
               <div key={passion} className="mb-6 last:mb-0">
                 <h3 className="font-izhitsa text-xl text-[var(--color-cinnabar)] border-b border-[var(--color-cinnabar)]/20 pb-1 mb-3">
                   Грехи против {passion.toLowerCase()}

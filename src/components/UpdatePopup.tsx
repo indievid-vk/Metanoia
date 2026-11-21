@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, CheckCircle, RefreshCcw } from 'lucide-react';
 // @ts-ignore - Virtual module from vite-plugin-pwa
@@ -6,12 +6,14 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 
 export default function UpdatePopup() {
   const isOnline = () => typeof navigator !== 'undefined' && navigator.onLine;
+  const swUpdateIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const rSW = useRegisterSW({
     onRegistered(r) {
       if (r && isOnline()) {
         r.update().catch(err => console.warn('PWA immediate update check skipped/failed:', err));
-        setInterval(() => {
+        if (swUpdateIntervalRef.current) clearInterval(swUpdateIntervalRef.current);
+        swUpdateIntervalRef.current = setInterval(() => {
           if (isOnline()) {
             r.update().catch(err => console.warn('PWA background update check skipped/failed:', err));
           }
@@ -24,7 +26,7 @@ export default function UpdatePopup() {
   const [needUpdate, setNeedUpdate] = (rSW && rSW.needUpdate) || [false, () => {}];
   const updateServiceWorker = (rSW && rSW.updateServiceWorker) || ((reload?: boolean) => { if (reload) window.location.reload(); });
 
-  const CURRENT_VERSION = '1.2.4'; 
+  const CURRENT_VERSION = '1.2.5'; 
   const [show, setShow] = useState(false);
   const [type, setType] = useState<'update' | 'offline' | 'new-version'>('update');
 
@@ -46,6 +48,12 @@ export default function UpdatePopup() {
   useEffect(() => {
     if (!isOnline() || isDevMode) return;
 
+    const handleControllerChange = () => {
+      if (isOnline() && navigator.serviceWorker.controller) {
+        localStorage.setItem('app_just_updated', 'true');
+      }
+    };
+
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(registrations => {
         if (!isOnline()) return;
@@ -56,11 +64,7 @@ export default function UpdatePopup() {
         console.warn('Failed to get SW registrations:', err);
       });
 
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (isOnline() && navigator.serviceWorker.controller) {
-          localStorage.setItem('app_just_updated', 'true');
-        }
-      });
+      navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
     }
 
     const handleVisibilityChange = () => {
@@ -74,55 +78,60 @@ export default function UpdatePopup() {
         }
       }
     };
-    window.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => window.removeEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+      }
+    };
   }, [isDevMode]);
 
   // 2. Service worker state change listener (ONLY act if online and not in dev preview mode)
   useEffect(() => {
-    if (!isOnline() || isDevMode) return;
+    if (!isOnline() || isDevMode || !('serviceWorker' in navigator)) return;
 
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.ready.then(reg => {
-        if (!isOnline()) return;
+    let active = true;
+    let activeReg: ServiceWorkerRegistration | null = null;
 
-        if (reg.waiting) {
+    const attachStateListener = (sw: ServiceWorker) => {
+      const handleStateChange = () => {
+        if (active && sw.state === 'installed' && isOnline()) {
           if (typeof setNeedUpdate === 'function') {
             setNeedUpdate(true);
           }
         }
+      };
+      sw.addEventListener('statechange', handleStateChange);
+    };
 
-        if (reg.installing) {
-          const sw = reg.installing;
-          const handleStateChange = () => {
-            if (sw.state === 'installed' && isOnline()) {
-              if (typeof setNeedUpdate === 'function') {
-                setNeedUpdate(true);
-              }
-            }
-          };
-          sw.addEventListener('statechange', handleStateChange);
-        }
+    const handleUpdateFound = () => {
+      const sw = activeReg?.installing;
+      if (sw) attachStateListener(sw);
+    };
 
-        const handleUpdateFound = () => {
-          const sw = reg.installing;
-          if (sw) {
-            const handleStateChange = () => {
-              if (sw.state === 'installed' && isOnline()) {
-                if (typeof setNeedUpdate === 'function') {
-                  setNeedUpdate(true);
-                }
-              }
-            };
-            sw.addEventListener('statechange', handleStateChange);
-          }
-        };
-        reg.addEventListener('updatefound', handleUpdateFound);
-      }).catch(err => {
-        console.warn('SW ready check failed in listener:', err);
-      });
-    }
-  }, [setNeedUpdate]);
+    navigator.serviceWorker.ready.then(reg => {
+      if (!active || !isOnline()) return;
+      activeReg = reg;
+
+      if (reg.waiting && typeof setNeedUpdate === 'function') {
+        setNeedUpdate(true);
+      }
+      if (reg.installing) {
+        attachStateListener(reg.installing);
+      }
+      reg.addEventListener('updatefound', handleUpdateFound);
+    }).catch(err => {
+      console.warn('SW ready check failed in listener:', err);
+    });
+
+    return () => {
+      active = false;
+      if (activeReg) {
+        activeReg.removeEventListener('updatefound', handleUpdateFound);
+      }
+    };
+  }, [isDevMode, setNeedUpdate]);
 
   // Sync state with global flags for UI
   useEffect(() => {
@@ -202,6 +211,10 @@ export default function UpdatePopup() {
 
   useEffect(() => {
     return () => {
+      if (swUpdateIntervalRef.current) {
+        clearInterval(swUpdateIntervalRef.current);
+        swUpdateIntervalRef.current = null;
+      }
       (window as any).pwaPopupActive = false;
       (window as any).pwaPopupVisible = false;
       window.dispatchEvent(new CustomEvent('pwa-popup-closed'));

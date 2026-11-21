@@ -2,24 +2,29 @@ import React, { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import trebyData from '../data/treby.json';
 import { DecorativeDivider } from '../components/DecorativeDivider';
+import { sanitizeHtml } from '../utils/sanitizeHtml';
 
 export default function Treby() {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
     const secId = searchParams.get('sec');
-    if (secId) {
-      setTimeout(() => {
-        const el = document.getElementById(secId);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          el.classList.add('bg-amber-100/40', 'transition-all', 'duration-1000');
-          setTimeout(() => {
-            el.classList.remove('bg-amber-100/40');
-          }, 3000);
-        }
-      }, 400);
-    }
+    if (!secId) return;
+    let highlightTimer: ReturnType<typeof setTimeout> | null = null;
+    const scrollTimer = setTimeout(() => {
+      const el = document.getElementById(secId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        el.classList.add('bg-amber-100/40', 'transition-all', 'duration-1000');
+        highlightTimer = setTimeout(() => {
+          el.classList.remove('bg-amber-100/40');
+        }, 3000);
+      }
+    }, 400);
+    return () => {
+      clearTimeout(scrollTimer);
+      if (highlightTimer) clearTimeout(highlightTimer);
+    };
   }, [searchParams]);
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-12 px-4">
@@ -50,7 +55,7 @@ export default function Treby() {
                       <div 
                         key={pIndex} 
                         className={pIndex === 0 ? "text-lg font-izhitsa italic text-[var(--color-cinnabar)]/80 mb-6 block" : ""}
-                        dangerouslySetInnerHTML={{ __html: paragraph }} 
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(paragraph) }} 
                       />
                     ))}
                   </div>
@@ -67,7 +72,7 @@ export default function Treby() {
                           {sub.content.map((paragraph, pIndex) => (
                             <div 
                               key={pIndex} 
-                              dangerouslySetInnerHTML={{ __html: paragraph }} 
+                              dangerouslySetInnerHTML={{ __html: sanitizeHtml(paragraph) }} 
                             />
                           ))}
                         </div>

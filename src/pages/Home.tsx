@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import gospelCommandmentsData from '../data/commandments.json';
 import { getAssetPath } from '../utils';
 import { DecorativeDivider } from '../components/DecorativeDivider';
 
@@ -53,75 +52,92 @@ function InteractiveButton({ onClick, className, label }: InteractiveButtonProps
   );
 }
 
-const BEATITUDES = [
-  "Блаженны нищие духом, ибо их есть Царство Небесное.",
-  "Блаженны плачущие, ибо они утешатся.",
-  "Блаженны кроткие, ибо они наследуют землю.",
-  "Блаженны алчущие и жаждущие правды, ибо они насытятся.",
-  "Блаженны милостивые, ибо они помилованы будут.",
-  "Блаженны чистые сердцем, ибо они Бога узрят.",
-  "Блаженны миротворцы, ибо они будут наречены сынами Божиими.",
-  "Блаженны изгнанные за правду, ибо их есть Царство Небесное.",
-  "Блаженны вы, когда будут поносить вас и гнать и всячески неправедно злословить за Меня. Радуйтесь и веселитесь, ибо велика ваша награда на небесах."
-];
+interface CommandmentQuote {
+  title: string;
+  content: string;
+}
 
 export default function Home() {
   const navigate = useNavigate();
   const [currentGroupIdx, setCurrentGroupIdx] = useState(0);
-  const [commandmentGroups, setCommandmentGroups] = useState<any[][]>([]);
+  const [commandmentGroups, setCommandmentGroups] = useState<CommandmentQuote[][]>([]);
   const [coverLoaded, setCoverLoaded] = useState(false);
 
   useEffect(() => {
-    // Process commandments into groups of 3 individual verses/quotes
-    const gospelCommandmentsInput = Array.isArray(gospelCommandmentsData) 
-      ? gospelCommandmentsData 
-      : (gospelCommandmentsData as any).default || [];
-      
-    const flattened: any[] = [];
-    gospelCommandmentsInput.forEach((section: any) => {
-      if (section.content && section.content.trim()) {
-        const verses = section.content.split('\n\n')
-          .map((v: string) => v.trim())
-          .filter((v: string) => v.length > 5); 
-        
-        verses.forEach((verse: string) => {
-          flattened.push({
-            title: section.title,
-            content: verse
+    let active = true;
+
+    // Dynamically load commandments.json (336 KB) so the home cover renders immediately
+    import('../data/commandments.json').then((mod) => {
+      if (!active) return;
+      const gospelCommandmentsInput = Array.isArray(mod.default) ? mod.default : [];
+
+      const flattened: CommandmentQuote[] = [];
+      gospelCommandmentsInput.forEach((section: { title: string; content?: string }) => {
+        if (section.content && section.content.trim()) {
+          const verses = section.content
+            .split('\n\n')
+            .map((v: string) => v.trim())
+            .filter((v: string) => v.length > 5);
+
+          verses.forEach((verse: string) => {
+            flattened.push({
+              title: section.title,
+              content: verse
+            });
           });
-        });
+        }
+      });
+
+      const groups: CommandmentQuote[][] = [];
+      for (let i = 0; i < flattened.length; i += 3) {
+        groups.push(flattened.slice(i, i + 3));
       }
+      setCommandmentGroups(groups);
+
+      // Select next group in cycle on each mount
+      if (groups.length > 0) {
+        try {
+          const storedIdx = localStorage.getItem('lastCommandmentGroupIdx');
+          const lastIdx = storedIdx ? parseInt(storedIdx, 10) : -1;
+          const safeLastIdx = Number.isNaN(lastIdx) ? -1 : lastIdx;
+          const nextIdx = (safeLastIdx + 1) % groups.length;
+          setCurrentGroupIdx(nextIdx);
+          localStorage.setItem('lastCommandmentGroupIdx', nextIdx.toString());
+        } catch (e) {
+          console.warn('LocalStorage access failed:', e);
+          setCurrentGroupIdx(0);
+        }
+      }
+    }).catch((err) => {
+      console.warn('Failed to load commandments for banner:', err);
     });
 
-    const groups = [];
-    for (let i = 0; i < flattened.length; i += 3) {
-      groups.push(flattened.slice(i, i + 3));
-    }
-    setCommandmentGroups(groups);
-
-    // Select next group in cycle on each mount
-    if (groups.length > 0) {
-      try {
-        const storedIdx = localStorage.getItem('lastCommandmentGroupIdx');
-        const lastIdx = storedIdx ? parseInt(storedIdx, 10) : -1;
-        const nextIdx = (lastIdx + 1) % groups.length;
-        setCurrentGroupIdx(nextIdx);
-        localStorage.setItem('lastCommandmentGroupIdx', nextIdx.toString());
-      } catch (e) {
-        console.warn('LocalStorage access failed:', e);
-        setCurrentGroupIdx(0);
-      }
-    }
+    return () => {
+      active = false;
+    };
   }, []);
 
   const currentGroup = commandmentGroups[currentGroupIdx] || [];
+  const totalGroups = commandmentGroups.length;
+  const maxDots = 7;
+  const visibleDotIndices = totalGroups <= maxDots
+    ? Array.from({ length: totalGroups }, (_, i) => i)
+    : Array.from({ length: maxDots }, (_, i) => {
+        const half = Math.floor(maxDots / 2);
+        const start = Math.max(0, Math.min(currentGroupIdx - half, totalGroups - maxDots));
+        return start + i;
+      });
 
   return (
     <div className="w-full h-full flex flex-col items-center overflow-hidden">
-      {/* Background stardust texture blending over Layout's parchment color */}
-      <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden mix-blend-multiply opacity-20">
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
-      </div>
+      {/* Subtle offline-safe paper grain texture blending over Layout's parchment color */}
+      <div
+        className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden opacity-20"
+        style={{
+          backgroundImage: 'radial-gradient(rgba(58, 30, 18, 0.12) 0.75px, transparent 0.75px)',
+          backgroundSize: '14px 14px'
+        }}
+      />
 
       {/* Cyclical Commandment Banner */}
       {currentGroup.length > 0 && (
@@ -154,12 +170,12 @@ export default function Home() {
                 </motion.div>
               </div>
 
-              {/* Minimal Indicators */}
+              {/* Sliding Window Minimal Indicators (max 7 DOM nodes instead of 100+) */}
               <div className="flex justify-center gap-1.5 mt-0.5 pointer-events-none">
-                {commandmentGroups.map((_, idx) => (
+                {visibleDotIndices.map((idx) => (
                   <div 
                     key={idx} 
-                    className={`w-1.5 h-1.5 rounded-full transition-all duration-500 ${idx === currentGroupIdx ? 'bg-[var(--color-cinnabar)] w-4' : 'bg-[var(--color-cinnabar)]/30'}`}
+                    className={`h-1.5 rounded-full transition-all duration-500 ${idx === currentGroupIdx ? 'bg-[var(--color-cinnabar)] w-4' : 'bg-[var(--color-cinnabar)]/30 w-1.5'}`}
                   />
                 ))}
               </div>

@@ -9,6 +9,24 @@ const bibleCache = new Map<string, { data: string; expiresAt: number }>();
 const inFlightCalendar = new Map<string, Promise<any>>();
 const inFlightBible = new Map<string, Promise<string>>();
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const MAX_CACHE_ENTRIES = 200;
+const DATE_REGEX = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+
+function isValidIsoDate(dateStr: unknown): dateStr is string {
+  if (typeof dateStr !== "string" || !DATE_REGEX.test(dateStr)) return false;
+  const parsed = new Date(`${dateStr}T12:00:00Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().startsWith(dateStr);
+}
+
+function setBoundedCache<T>(map: Map<string, { data: T; expiresAt: number }>, key: string, value: T) {
+  if (map.size >= MAX_CACHE_ENTRIES && !map.has(key)) {
+    const oldestKey = map.keys().next().value;
+    if (oldestKey !== undefined) {
+      map.delete(oldestKey);
+    }
+  }
+  map.set(key, { data: value, expiresAt: Date.now() + CACHE_TTL_MS });
+}
 
 async function fetchWithRetry(url: string, headers: Record<string, string>, retries = 1, timeoutMs = 4500): Promise<Response> {
   let lastError: any = null;
@@ -96,10 +114,7 @@ async function getOrFetchCalendarDay(date: string): Promise<any> {
       }, 1, 4500);
 
       const json = await response.json();
-      calendarCache.set(date, {
-        data: json,
-        expiresAt: Date.now() + CACHE_TTL_MS
-      });
+      setBoundedCache(calendarCache, date, json);
       return json;
     } finally {
       inFlightCalendar.delete(date);
@@ -300,10 +315,7 @@ async function getOrFetchBibleHtml(targetDate: string): Promise<string> {
         throw new Error("Не удалось извлечь стихи богослужебных чтений");
       }
 
-      bibleCache.set(targetDate, {
-        data: fullHtml,
-        expiresAt: Date.now() + CACHE_TTL_MS
-      });
+      setBoundedCache(bibleCache, targetDate, fullHtml);
       return fullHtml;
     } finally {
       inFlightBible.delete(targetDate);
@@ -336,7 +348,13 @@ async function startServer() {
   const app = express();
   const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
-  app.use(express.json());
+  app.disable("x-powered-by");
+  app.use((_req, res, next) => {
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+    next();
+  });
+  app.use(express.json({ limit: "100kb" }));
 
   // Pre-warm today and adjacent dates on startup so initial requests are instant cache hits
   const todayStr = new Date().toISOString().split("T")[0];
@@ -349,19 +367,18 @@ async function startServer() {
     res.sendStatus(204);
   });
 
-  // 1. Calendar API proxy with memory caching
+  // 1. Calendar API proxy with strict date validation and bounded memory caching
   app.get("/api/calendar", async (req, res) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
     const { date } = req.query;
-    if (!date || typeof date !== "string") {
-      res.status(400).json({ error: "date parameter is required in YYYY-MM-DD format" });
+    if (!isValidIsoDate(date)) {
+      res.status(400).json({ error: "date parameter is required in valid YYYY-MM-DD format" });
       return;
     }
 
     const isHit = calendarCache.has(date) && calendarCache.get(date)!.expiresAt > Date.now();
     try {
       const json = await getOrFetchCalendarDay(date);
-      // Trigger background pre-warming of Bible readings for this date and adjacent dates
       prewarmAdjacentDates(date);
 
       res.setHeader("X-Cache", isHit ? "HIT" : "MISS");
@@ -376,11 +393,18 @@ async function startServer() {
     }
   });
 
-  // 2. Bible Readings API proxy with memory caching and parallel racing
+  // 2. Bible Readings API proxy with strict date validation, bounded caching and parallel racing
   app.get("/api/bible", async (req, res) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
     const { date } = req.query;
-    const targetDate = typeof date === "string" && date ? date : new Date().toISOString().split("T")[0];
+    let targetDate = new Date().toISOString().split("T")[0];
+    if (date !== undefined && date !== "") {
+      if (!isValidIsoDate(date)) {
+        res.status(400).json({ error: "date parameter must be in valid YYYY-MM-DD format" });
+        return;
+      }
+      targetDate = date;
+    }
 
     const isHit = bibleCache.has(targetDate) && bibleCache.get(targetDate)!.expiresAt > Date.now();
     try {
@@ -490,11 +514,17 @@ if ('caches' in window) {
     res.status(404).send("icon_512.png not found");
   });
 
-  // If a previously installed PWA requests hashed build assets from /assets/*, serve them from dist/assets if available
+  // If a previously installed PWA requests hashed build assets from /assets/*, serve them safely from dist/assets
+  const assetsDir = path.resolve(distPath, "assets");
   app.use("/assets", (req, res, next) => {
-    const assetFile = path.join(distPath, "assets", req.path);
-    if (fs.existsSync(assetFile) && fs.statSync(assetFile).isFile()) {
-      res.sendFile(assetFile);
+    const relativeReqPath = req.path.replace(/^\/+/, "");
+    const resolvedAsset = path.resolve(assetsDir, relativeReqPath);
+    if (
+      resolvedAsset.startsWith(assetsDir + path.sep) &&
+      fs.existsSync(resolvedAsset) &&
+      fs.statSync(resolvedAsset).isFile()
+    ) {
+      res.sendFile(resolvedAsset);
       return;
     }
     next();

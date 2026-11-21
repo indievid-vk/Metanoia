@@ -1,26 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { ChevronLeft, Loader2, Info, Search, Bell } from 'lucide-react';
-import { getHolidaysForDate, playBellChime, checkDailyReminders, getReminderSettings } from '../utils/reminderEngine';
+import { ChevronLeft, Info, Search, Bell } from 'lucide-react';
+import { getHolidaysForDate, playBellChime, checkDailyReminders, getReminderSettings, OrthodoxHoliday } from '../utils/reminderEngine';
 import { getAssetPath } from '../utils';
 import InstallPrompt from './InstallPrompt';
 import UpdatePopup from './UpdatePopup';
 import ToastContainer from './Toast';
-import SearchOverlay from './SearchOverlay';
+
+// Lazy-load SearchOverlay so the full-text search index (~1.5 MB JSON) is only downloaded when Search is opened
+const SearchOverlay = lazy(() => import('./SearchOverlay'));
 
 export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const mainRef = useRef<HTMLElement>(null);
   const [showSearch, setShowSearch] = useState(false);
 
-  const [todayHolidays, setTodayHolidays] = useState<any[]>([]);
+  const [todayHolidays, setTodayHolidays] = useState<OrthodoxHoliday[]>([]);
   const [bannerDismissed, setBannerDismissed] = useState<boolean>(false);
 
   useEffect(() => {
-    const mainElement = document.querySelector('main');
-    if (mainElement) {
-      mainElement.scrollTop = 0;
+    if (mainRef.current) {
+      mainRef.current.scrollTop = 0;
     }
   }, [location.pathname]);
 
@@ -34,27 +36,33 @@ export default function Layout() {
   }, []);
 
   useEffect(() => {
-    // 2. Load holidays for the in-app banner respecting flexible settings
-    const settings = getReminderSettings();
-    let active: any[] = [];
-    if (settings.enabled) {
-      active = checkDailyReminders(true); // Silent check based on user settings
-    }
-    
-    if (active && active.length > 0) {
-      setTodayHolidays(active);
-    } else {
-      // Fallback: if no reminders are enabled/configured or none triggered, show today's holiday by default
-      const defaultHolidays = getHolidaysForDate(new Date());
-      setTodayHolidays(defaultHolidays);
-    }
-    
-    const lastDismissed = localStorage.getItem('holiday_banner_dismissed_date');
-    const todayStr = new Date().toDateString();
-    if (lastDismissed === todayStr) {
-      setBannerDismissed(true);
-    }
-  }, [location.pathname]);
+    // 2. Load holidays for the in-app banner once on mount (and refresh if returning on a new day)
+    const loadTodayHolidays = () => {
+      const settings = getReminderSettings();
+      let active: OrthodoxHoliday[] = [];
+      if (settings.enabled) {
+        active = checkDailyReminders(true); // Silent check based on user settings
+      }
+
+      if (active && active.length > 0) {
+        setTodayHolidays(active);
+      } else {
+        setTodayHolidays(getHolidaysForDate(new Date()));
+      }
+
+      const lastDismissed = localStorage.getItem('holiday_banner_dismissed_date');
+      setBannerDismissed(lastDismissed === new Date().toDateString());
+    };
+
+    loadTodayHolidays();
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        loadTodayHolidays();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, []);
 
   const handleDismissBanner = () => {
     setBannerDismissed(true);
@@ -163,11 +171,15 @@ export default function Layout() {
         )}
       </AnimatePresence>
 
-      {/* Global Search Dialog */}
-      <SearchOverlay isOpen={showSearch} onClose={() => setShowSearch(false)} />
+      {/* Global Search Dialog (mounted lazily only when opened) */}
+      {showSearch && (
+        <Suspense fallback={null}>
+          <SearchOverlay isOpen={showSearch} onClose={() => setShowSearch(false)} />
+        </Suspense>
+      )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden relative flex flex-col">
+      <main ref={mainRef} className="flex-1 overflow-y-auto overflow-x-hidden relative flex flex-col">
           <div 
             className={isHome ? "absolute inset-0" : "w-full p-4 pb-[130px]"}
           >
@@ -205,6 +217,10 @@ function getPageTitle(path: string) {
   if (path.startsWith('/temple/divine-services')) return 'Богослужения';
   if (path.startsWith('/temple/liturgy')) return 'Божественная Литургия';
   if (path.startsWith('/temple/confession')) return 'Исповедь';
+  if (path.startsWith('/temple/rules')) return 'Правила в храме';
+  if (path.startsWith('/temple/sacraments')) return 'Таинства Церкви';
+  if (path.startsWith('/temple/treby')) return 'Записка церковная';
+  if (path.startsWith('/temple/prosphora')) return 'Просфора и святая вода';
   if (path.startsWith('/temple')) return 'В Храм';
   if (path.startsWith('/prayer-book')) return 'Молитва';
   if (path.startsWith('/calendar')) return 'Календарь';
@@ -216,11 +232,12 @@ function getPageTitle(path: string) {
   if (path.startsWith('/gospel-life/ascetics')) return 'Аскетика дня';
   if (path.startsWith('/gospel-life/commandments')) return 'Евангельские заповеди';
   if (path.startsWith('/gospel-life/dogmas')) return 'Догматы богословия';
+  if (path.startsWith('/gospel-life/angels')) return 'Мир Ангелов';
+  if (path.startsWith('/gospel-life/scripture')) return 'Священное Писание';
+  if (path.startsWith('/gospel-life/death')) return 'Учение о смерти';
+  if (path.startsWith('/gospel-life/treby')) return 'Записка церковная';
   if (path.startsWith('/gospel-life')) return 'Жизнь по Евангелию';
   if (path.startsWith('/my-confession')) return 'Моя исповедь';
-  if (path === '/angels') return 'Мир Ангелов';
-  if (path === '/scripture') return 'Писание';
-  if (path === '/spiritual-literature') return 'Библиотека';
   if (path === '/about') return 'О приложении';
   return 'Помощь кающимся';
 }

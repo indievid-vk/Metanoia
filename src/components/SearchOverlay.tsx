@@ -28,8 +28,9 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    let focusTimer: ReturnType<typeof setTimeout> | null = null;
     if (isOpen) {
-      setTimeout(() => {
+      focusTimer = setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
       document.body.style.overflow = 'hidden';
@@ -37,12 +38,13 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
       document.body.style.overflow = '';
     }
     return () => {
+      if (focusTimer) clearTimeout(focusTimer);
       document.body.style.overflow = '';
     };
   }, [isOpen]);
 
   useEffect(() => {
-    // Handle Esc key to close
+    if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
@@ -50,11 +52,18 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, [isOpen, onClose]);
 
   useEffect(() => {
-    const matched = performGlobalSearch(query);
-    setResults(matched);
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setResults([]);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setResults(performGlobalSearch(trimmed));
+    }, 150);
+    return () => clearTimeout(timer);
   }, [query]);
 
   const handleResultClick = (url: string) => {

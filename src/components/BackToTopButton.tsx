@@ -21,9 +21,9 @@ export function BackToTopButton({ threshold = 300, targetId = 'toc' }: BackToTop
     };
 
     if (mainElement) {
-      mainElement.addEventListener('scroll', handleScroll);
+      mainElement.addEventListener('scroll', handleScroll, { passive: true });
     } else {
-      window.addEventListener('scroll', handleScroll);
+      window.addEventListener('scroll', handleScroll, { passive: true });
     }
 
     return () => {

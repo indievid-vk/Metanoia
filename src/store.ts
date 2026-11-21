@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 
 export type Passion = 'Чревоугодие' | 'Блуд' | 'Сребролюбие' | 'Гнев' | 'Печаль' | 'Уныние' | 'Тщеславие' | 'Гордость';
 export type SinSeverity = 'Смертный' | 'Тяжкий' | 'Простительный';
@@ -17,7 +17,7 @@ export interface UserSinData {
   note: string;
 }
 
-// Custom hook for LocalStorage
+// Custom hook for LocalStorage with functional updater to avoid stale closures
 function useLocalStorage<T>(key: string, initialValue: T) {
   const [storedValue, setStoredValue] = useState<T>(() => {
     try {
@@ -29,15 +29,17 @@ function useLocalStorage<T>(key: string, initialValue: T) {
     }
   });
 
-  const setValue = (value: T | ((val: T) => T)) => {
-    try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
-      setStoredValue(valueToStore);
-      window.localStorage.setItem(key, JSON.stringify(valueToStore));
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  const setValue = useCallback((value: T | ((val: T) => T)) => {
+    setStoredValue(prev => {
+      const valueToStore = value instanceof Function ? value(prev) : value;
+      try {
+        window.localStorage.setItem(key, JSON.stringify(valueToStore));
+      } catch (error) {
+        console.error(error);
+      }
+      return valueToStore;
+    });
+  }, [key]);
 
   return [storedValue, setValue] as const;
 }
@@ -52,23 +54,23 @@ export function useSinsStore() {
   // p_user_sins: Sin[] - custom user sins
   const [customSins, setCustomSins] = useLocalStorage<Sin[]>('p_user_sins', []);
 
-  const toggleSin = (id: string) => {
+  const toggleSin = useCallback((id: string) => {
     setSelectedSins(prev => ({ ...prev, [id]: !prev[id] }));
-  };
+  }, [setSelectedSins]);
 
-  const removeSelectedSin = (id: string) => {
+  const removeSelectedSin = useCallback((id: string) => {
     setSelectedSins(prev => {
       const next = { ...prev };
       delete next[id];
       return next;
     });
-  };
+  }, [setSelectedSins]);
 
-  const updateNote = (id: string, note: string) => {
+  const updateNote = useCallback((id: string, note: string) => {
     setSinNotes(prev => ({ ...prev, [id]: note }));
-  };
+  }, [setSinNotes]);
 
-  const addCustomSin = (passion: Passion, title: string, description: string, severity: SinSeverity) => {
+  const addCustomSin = useCallback((passion: Passion, title: string, description: string, severity: SinSeverity) => {
     const newSin: Sin = {
       id: `custom_${Date.now()}`,
       passion,
@@ -79,25 +81,26 @@ export function useSinsStore() {
     };
     setCustomSins(prev => [...prev, newSin]);
     return newSin.id;
-  };
+  }, [setCustomSins]);
 
-  const deleteCustomSin = (id: string) => {
+  const deleteCustomSin = useCallback((id: string) => {
     setCustomSins(prev => prev.filter(s => s.id !== id));
-    // Also clean up selection and notes
-    const newSelected = { ...selectedSins };
-    delete newSelected[id];
-    setSelectedSins(newSelected);
-    
-    const newNotes = { ...sinNotes };
-    delete newNotes[id];
-    setSinNotes(newNotes);
-  };
+    setSelectedSins(prev => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setSinNotes(prev => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }, [setCustomSins, setSelectedSins, setSinNotes]);
 
-  const clearConfession = () => {
+  const clearConfession = useCallback(() => {
     setSelectedSins({});
     setSinNotes({});
-    // We might want to keep custom sins, just unselect them
-  };
+  }, [setSelectedSins, setSinNotes]);
 
   return {
     selectedSins,

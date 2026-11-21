@@ -5,6 +5,7 @@ import templeRulesData from '../data/templeRules.json';
 import { BackToTopButton } from '../components/BackToTopButton';
 import { getAssetPath } from '../utils';
 import { DecorativeDivider } from '../components/DecorativeDivider';
+import { sanitizeHtml } from '../utils/sanitizeHtml';
 
 export default function TempleRules() {
   const [activeSection, setActiveSection] = useState<string>('');
@@ -13,18 +14,22 @@ export default function TempleRules() {
 
   useEffect(() => {
     const secId = searchParams.get('sec');
-    if (secId) {
-      setTimeout(() => {
-        const el = document.getElementById(secId);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          el.classList.add('bg-amber-100/40', 'transition-all', 'duration-1000');
-          setTimeout(() => {
-            el.classList.remove('bg-amber-100/40');
-          }, 3000);
-        }
-      }, 400);
-    }
+    if (!secId) return;
+    let highlightTimer: ReturnType<typeof setTimeout> | null = null;
+    const scrollTimer = setTimeout(() => {
+      const el = document.getElementById(secId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        el.classList.add('bg-amber-100/40', 'transition-all', 'duration-1000');
+        highlightTimer = setTimeout(() => {
+          el.classList.remove('bg-amber-100/40');
+        }, 3000);
+      }
+    }, 400);
+    return () => {
+      clearTimeout(scrollTimer);
+      if (highlightTimer) clearTimeout(highlightTimer);
+    };
   }, [searchParams]);
 
   useEffect(() => {
@@ -189,7 +194,7 @@ export default function TempleRules() {
                       <div 
                         key={pIndex} 
                         className={pIndex === 0 ? "drop-cap" : ""}
-                        dangerouslySetInnerHTML={{ __html: paragraph }} 
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(paragraph) }} 
                       />
                     ))}
                   </div>
@@ -206,7 +211,7 @@ export default function TempleRules() {
                           {sub.content.map((paragraph, pIndex) => (
                             <div 
                               key={pIndex} 
-                              dangerouslySetInnerHTML={{ __html: paragraph }} 
+                              dangerouslySetInnerHTML={{ __html: sanitizeHtml(paragraph) }} 
                             />
                           ))}
                         </div>

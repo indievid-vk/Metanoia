@@ -26,11 +26,13 @@ export const downloadFile = async (url: string, fileName: string) => {
     document.body.appendChild(link);
     link.click();
     
-    // Short delay before cleanup to ensure trigger
+    // Keep blob URL alive long enough for mobile browsers / WebViews to initiate large downloads
     setTimeout(() => {
-      document.body.removeChild(link);
+      if (link.parentNode) {
+        document.body.removeChild(link);
+      }
       URL.revokeObjectURL(blobUrl);
-    }, 100);
+    }, 15000);
 
     toast.success('Файл успешно сохранен');
 

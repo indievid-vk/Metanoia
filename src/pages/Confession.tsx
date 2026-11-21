@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ChevronDown, ChevronUp, Plus, Check, Trash2, X, Minimize2, ArrowUp } from 'lucide-react';
 import { useSinsStore, Passion, SinSeverity } from '../store';
@@ -24,20 +24,26 @@ export default function Confession() {
         setExpandedPassion(decodedPassion);
       }
     }
+    let scrollTimer: ReturnType<typeof setTimeout> | null = null;
+    let highlightTimer: ReturnType<typeof setTimeout> | null = null;
     if (sinIdParam) {
       setExpandedSin(sinIdParam);
-      setTimeout(() => {
+      scrollTimer = setTimeout(() => {
         const elId = `sin-${sinIdParam}`;
         const el = document.getElementById(elId);
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           el.classList.add('bg-amber-100/40', 'transition-all', 'duration-1000');
-          setTimeout(() => {
+          highlightTimer = setTimeout(() => {
             el.classList.remove('bg-amber-100/40');
           }, 3000);
         }
       }, 500);
     }
+    return () => {
+      if (scrollTimer) clearTimeout(scrollTimer);
+      if (highlightTimer) clearTimeout(highlightTimer);
+    };
   }, [searchParams]);
   
   // Custom sin modal state
@@ -51,13 +57,20 @@ export default function Confession() {
   const [isMemoOpen, setIsMemoOpen] = useState(false);
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
 
-  const allSins = [...MOCK_SINS, ...customSins];
-  const selectedSinsList = allSins.filter(s => selectedSins[s.id]);
+  const allSins = useMemo(() => [...MOCK_SINS, ...customSins], [customSins]);
+  const selectedSinsList = useMemo(
+    () => allSins.filter(s => selectedSins[s.id]),
+    [allSins, selectedSins]
+  );
 
-  const selectedSinsByPassion = PASSIONS.map(passion => ({
-    passion,
-    sins: selectedSinsList.filter(s => s.passion === passion)
-  })).filter(group => group.sins.length > 0);
+  const selectedSinsByPassion = useMemo(
+    () =>
+      PASSIONS.map(passion => ({
+        passion,
+        sins: selectedSinsList.filter(s => s.passion === passion)
+      })).filter(group => group.sins.length > 0),
+    [selectedSinsList]
+  );
 
   const handleAddCustomSin = (e: React.FormEvent) => {
     e.preventDefault();

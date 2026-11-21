@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Calendar as CalendarIcon, BookOpen, Info, Image as ImageIcon, Users, ChevronLeft, ChevronRight, Sparkles, Award, Bell, BellOff, Volume2, VolumeX, Settings, RotateCw } from 'lucide-react';
 import { DecorativeDivider } from '../components/DecorativeDivider';
 import { motion, AnimatePresence } from 'motion/react';
@@ -19,6 +19,7 @@ import {
   OrthodoxHoliday, 
   ReminderSettings 
 } from '../utils/reminderEngine';
+import { sanitizeHtml } from '../utils/sanitizeHtml';
 
 type AzbykaResponse = {
   saints: {
@@ -567,15 +568,18 @@ export default function Calendar() {
     }
   };
 
-  // Run the reminder check on mount
+  // Run the reminder check once on mount
   useEffect(() => {
     const timer = setTimeout(() => {
       checkDailyReminders(false);
     }, 1500);
     return () => clearTimeout(timer);
-  }, [currentDate]);
+  }, []);
 
   useEffect(() => {
+    let cancelled = false;
+    let prefetchTimer: ReturnType<typeof setTimeout> | null = null;
+
     const fetchCalendar = async () => {
       setIsOfflineMode(false);
       const year = currentDate.getFullYear();
@@ -652,8 +656,6 @@ export default function Calendar() {
         setBibleError(null);
         setBibleContent(null);
       }
-
-      let cancelled = false;
 
       const parseRawBibleHtmlToCards = (rawHtml: string): string => {
         if (!rawHtml) return '';
@@ -957,7 +959,7 @@ export default function Calendar() {
 
         // Silently prefetch tomorrow (+1d) and yesterday (-1d) in background so next/prev day navigation is 0ms!
         if (!cancelled) {
-          setTimeout(() => {
+          prefetchTimer = setTimeout(() => {
             if (cancelled) return;
             for (const offset of [1, -1]) {
               const adjDate = new Date(currentDate);
@@ -1007,6 +1009,10 @@ export default function Calendar() {
     };
 
     fetchCalendar();
+    return () => {
+      cancelled = true;
+      if (prefetchTimer) clearTimeout(prefetchTimer);
+    };
   }, [currentDate, reloadTrigger]);
 
   const handlePrevDay = () => {
@@ -1040,17 +1046,19 @@ export default function Calendar() {
     setSelectedItem({ title, url: fullUrl });
   };
 
-  const featuredReminder = upcomingReminders[0] || (() => {
-    const todayHolidays = getHolidaysForDate(new Date());
+  const featuredReminder = useMemo(() => {
+    if (upcomingReminders[0]) return upcomingReminders[0];
+    const now = new Date();
+    const todayHolidays = getHolidaysForDate(now);
     if (todayHolidays.length > 0) {
-      const dStr = new Date().toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
+      const dStr = now.toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
       return {
         ...todayHolidays[0],
         name: `${dStr}: ${todayHolidays[0].name}`
       };
     }
     return null;
-  })();
+  }, [upcomingReminders]);
 
   return (
     <div className="pb-12 px-4 max-w-4xl mx-auto">
@@ -1440,7 +1448,7 @@ export default function Calendar() {
               {data.fasting.round_week && (
                 <div className="mb-2">
                   <div 
-                    dangerouslySetInnerHTML={{ __html: data.fasting.round_week }} 
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(data.fasting.round_week) }} 
                     className="text-lg font-izhitsa leading-relaxed text-[var(--color-cinnabar)]/95 [&_a]:text-[var(--color-cinnabar)] [&_a]:underline hover:[&_a]:text-red-700"
                   />
                 </div>
@@ -1482,7 +1490,7 @@ export default function Calendar() {
                   <div className="mt-2 text-base font-izhitsa text-[var(--color-ink)] leading-tight">
                     {data.fasting.fasting ? (
                       <div className="space-y-1.5">
-                        <div dangerouslySetInnerHTML={{ __html: data.fasting.fasting }} className="[&_a]:text-[var(--color-cinnabar)] [&_a]:underline font-izhitsa font-medium text-[var(--color-cinnabar)]" />
+                        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(data.fasting.fasting) }} className="[&_a]:text-[var(--color-cinnabar)] [&_a]:underline font-izhitsa font-medium text-[var(--color-cinnabar)]" />
                         {data.fasting.type === 'fasting' && isFishAllowed(data.fasting) && !data.fasting.fasting.toLowerCase().includes('рыб') && (
                           <div className="text-amber-800 font-sans text-xs font-medium flex items-center gap-1 mt-1">
                             <span>✦ В этот день разрешается рыба и морепродукты</span>
@@ -1507,7 +1515,7 @@ export default function Calendar() {
 
               {data.fasting.description && (
                 <div className="bg-[#fdfcf7] p-4 rounded-xl border border-[var(--color-cinnabar)]/10 italic text-sm text-[var(--color-ink)]/80 leading-relaxed">
-                  <p dangerouslySetInnerHTML={{ __html: data.fasting.description }} className="[&_a]:text-[var(--color-cinnabar)] [&_a]:underline font-sans" />
+                  <p dangerouslySetInnerHTML={{ __html: sanitizeHtml(data.fasting.description) }} className="[&_a]:text-[var(--color-cinnabar)] [&_a]:underline font-sans" />
                 </div>
               )}
             </div>
@@ -1611,7 +1619,7 @@ export default function Calendar() {
                   <li key={i} className="border-l-2 border-[var(--color-cinnabar)]/20 pl-4 py-1.5 leading-relaxed">
                     <div 
                        className="font-sans text-[var(--color-ink)] text-base [&_a]:text-[var(--color-cinnabar)] [&_a]:underline [&_a]:font-izhitsa hover:[&_a]:text-red-750 [&_a]:transition-colors font-medium prose max-w-none"
-                      dangerouslySetInnerHTML={{ __html: textObj.text }}
+                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(textObj.text) }}
                     />
                   </li>
                 ))}
@@ -1668,7 +1676,7 @@ export default function Calendar() {
                     [&_.lex]:hidden
                     [&_.ch_verses]:mt-2
                   "
-                  dangerouslySetInnerHTML={{ __html: bibleContent }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(bibleContent) }}
                 />
               ) : (
                 <p className="text-sm font-sans text-stone-500 italic">Духовные чтения временно недоступны.</p>

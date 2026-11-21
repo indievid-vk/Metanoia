@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Download, Share, PlusSquare, MoreVertical, Loader2, Smartphone, Monitor } from 'lucide-react';
+import { X, Download, Share, PlusSquare, Loader2, Smartphone } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
-import confetti from 'canvas-confetti';
 import { toast } from '../hooks/useToast';
 
 export default function InstallPrompt() {
@@ -17,17 +16,13 @@ export default function InstallPrompt() {
   const [showWelcomeInstalled, setShowWelcomeInstalled] = useState(false);
 
   useEffect(() => {
-    // Detect Platform
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIOS = /iphone|ipad|ipod/.test(userAgent) || 
                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const isAndroid = userAgent.includes('android');
     
-    // Check if app is opened in installed standalone mode
-    // @ts-ignore
     const standalone = window.matchMedia('(display-mode: standalone)').matches 
-      // @ts-ignore
-      || window.navigator.standalone 
+      || (window.navigator as any).standalone 
       || document.referrer.includes('android-app://')
       || window.location.search.includes('mode=standalone');
 
@@ -38,15 +33,17 @@ export default function InstallPrompt() {
       const welcomeShown = localStorage.getItem('hasSeenWelcome') || localStorage.getItem('installed_welcome_shown');
       if (!welcomeShown) {
         setShowWelcomeInstalled(true);
-        try {
-          confetti({
-            particleCount: 80,
-            spread: 70,
-            origin: { y: 0.6 }
+        import('canvas-confetti')
+          .then(({ default: confetti }) => {
+            confetti({
+              particleCount: 80,
+              spread: 70,
+              origin: { y: 0.6 }
+            });
+          })
+          .catch((e) => {
+            console.warn('Confetti effect error:', e);
           });
-        } catch (e) {
-          console.warn('Confetti effect error:', e);
-        }
       }
       return;
     }
@@ -54,53 +51,36 @@ export default function InstallPrompt() {
     setPlatform(isIOS ? 'ios' : isAndroid ? 'android' : 'other');
     setShowFAB(true);
 
-    // Initial check for globally captured prompt
     if ((window as any).deferredPrompt) {
       setDeferredPrompt((window as any).deferredPrompt);
     }
 
-    // Initial prompt logic
     const hasSeenInSession = sessionStorage.getItem('hasSeenWelcome_v1');
     const hasPromptedForever = localStorage.getItem('pwaPromptedForever_v1');
 
+    let autoShowTimer: ReturnType<typeof setTimeout> | null = null;
     if (!hasSeenInSession && !hasPromptedForever) {
-      // For iOS we show instructions by timeout because there's no event
       if (isIOS) {
-        const timer = setTimeout(() => {
+        autoShowTimer = setTimeout(() => {
           if (!window.matchMedia('(display-mode: standalone)').matches && !(window as any).pwaPopupActive) {
             setShow(true);
             sessionStorage.setItem('hasSeenWelcome_v1', 'true');
           }
         }, 3500);
-        return () => clearTimeout(timer);
-      }
-      
-      // For Android/Other, we wait for the event to show the prompt with the button
-      // If we already have the prompt (captured globally), show it soon
-      if ((window as any).deferredPrompt) {
-        const timer = setTimeout(() => {
+      } else if ((window as any).deferredPrompt) {
+        autoShowTimer = setTimeout(() => {
           if (!(window as any).pwaPopupActive) {
             setShow(true);
             sessionStorage.setItem('hasSeenWelcome_v1', 'true');
           }
         }, 3000);
-        return () => clearTimeout(timer);
       }
-
-      // NO AUTOMATIC FALLBACK for manual instructions on Android.
-      // We only want to auto-show if we have the native prompt capability.
-      // If no native prompt event fires within 30s, we don't show anything automatically.
-      // The user can still use the FAB to see manual instructions if needed.
     }
 
-    // Listen for custom event from index.html listener
     const handlePromptAvailable = () => {
-      console.log('Prompt became available via global listener');
       const event = (window as any).deferredPrompt;
       setDeferredPrompt(event);
       
-      // Auto-show if we haven't prompted yet and no other popup is active
-      // We check for isAndroid explicitly to ensure we want the button version
       if (!sessionStorage.getItem('hasSeenWelcome_v1') && 
           !localStorage.getItem('pwaPromptedForever_v1') && 
           !(window as any).pwaPopupActive &&
@@ -110,32 +90,24 @@ export default function InstallPrompt() {
       }
     };
 
-    // Listen for coordination with other PWA popups
     const handlePopupClosed = () => {
-      console.log('Another PWA popup closed, checking if we should show install prompt');
       const promptEvent = (window as any).deferredPrompt;
-      const hasSeenInSession = sessionStorage.getItem('hasSeenWelcome_v1');
-      const hasPromptedForever = localStorage.getItem('pwaPromptedForever_v1');
+      const seenSession = sessionStorage.getItem('hasSeenWelcome_v1');
+      const promptedForever = localStorage.getItem('pwaPromptedForever_v1');
       
-      if (!hasSeenInSession && !hasPromptedForever && !(window as any).pwaPopupActive) {
-        // If we have a native prompt event, show it regardless of platform (Android/Desktop)
+      if (!seenSession && !promptedForever && !(window as any).pwaPopupActive) {
         if (promptEvent) {
           setDeferredPrompt(promptEvent);
           setShow(true);
           sessionStorage.setItem('hasSeenWelcome_v1', 'true');
-        } else if (platform === 'ios') {
+        } else if (isIOS) {
           setShow(true);
           sessionStorage.setItem('hasSeenWelcome_v1', 'true');
         }
       }
     };
 
-    window.addEventListener('pwa-prompt-available', handlePromptAvailable);
-    window.addEventListener('pwa-popup-closed', handlePopupClosed);
-
-    // Listen for beforeinstallprompt just in case (though global should catch it)
     const handleBeforeInstallPrompt = (e: any) => {
-      console.log('Capture beforeinstallprompt (local)');
       e.preventDefault();
       setDeferredPrompt(e);
       (window as any).deferredPrompt = e;
@@ -148,11 +120,7 @@ export default function InstallPrompt() {
       }
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as any);
-
-    // Listen for app installed
     const handleAppInstalled = () => {
-      console.log('App installed successfully');
       setShow(false);
       setShowFAB(false);
       setDeferredPrompt(null);
@@ -160,9 +128,13 @@ export default function InstallPrompt() {
       localStorage.setItem('pwaPromptedForever_v1', 'true');
     };
 
+    window.addEventListener('pwa-prompt-available', handlePromptAvailable);
+    window.addEventListener('pwa-popup-closed', handlePopupClosed);
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as any);
     window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
+      if (autoShowTimer) clearTimeout(autoShowTimer);
       window.removeEventListener('pwa-prompt-available', handlePromptAvailable);
       window.removeEventListener('pwa-popup-closed', handlePopupClosed);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as any);

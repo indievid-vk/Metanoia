@@ -53,15 +53,25 @@ const getJulianPascha = (year: number): Date => {
   return new Date(julianDate.getTime() + 13 * 24 * 60 * 60 * 1000);
 };
 
+let sharedAudioCtx: AudioContext | null = null;
+
+function getSharedAudioContext(): AudioContext | null {
+  const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+  if (!AudioCtx) return null;
+  if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
+    sharedAudioCtx = new AudioCtx();
+  }
+  return sharedAudioCtx;
+}
+
 /**
  * Play a synthesized, rich, multi-harmonic church bell chime using Web Audio API.
- * Supports different beautiful, authentic sounding presets chosen by the user.
+ * Reuses a single shared AudioContext to avoid browser context-limit exhaustion.
  */
 export function playBellChime(customType?: 'blagovest' | 'prazdnichny' | 'trezvon' | 'soft' | 'bilo') {
   try {
-    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContext) return;
-    const ctx = new AudioContext();
+    const ctx = getSharedAudioContext();
+    if (!ctx) return;
     
     const settings = getReminderSettings();
     const type = customType || settings.soundType || 'blagovest';
